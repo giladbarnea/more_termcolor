@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from more_termcolor.manager import COLOR_CODES
 
@@ -37,6 +37,12 @@ def color_to_code(_color: str, _obj=None) -> int:
         return _obj
     else:
         return _obj[_color]
+
+
+def to_code(color: Union[str, int]) -> int:
+    if isinstance(color, int):
+        return color
+    return color_to_code(color)
 
 
 def code_to_ansi(_code: int) -> str:

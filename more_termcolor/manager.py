@@ -30,7 +30,7 @@ from typing import TypedDict, Literal
 #
 #
 # class SatBG(TypedDict):
-#     grey: Literal[100]
+#     faint: Literal[100]
 #     red: Literal[101]
 #     green: Literal[102]
 #     yellow: Literal[103]
@@ -52,7 +52,7 @@ from typing import TypedDict, Literal
 #
 #
 # class BG(TypedDict):
-#     grey: Literal[40]
+#     faint: Literal[40]
 #     red: Literal[41]
 #     green: Literal[42]
 #     yellow: Literal[43]
@@ -64,7 +64,7 @@ from typing import TypedDict, Literal
 #
 # class ColorCodes(TypedDict):
 #     bold: Literal[1]
-#     grey: Literal[2]
+#     faint: Literal[2]
 #     italic: Literal[3]
 #     ul: Literal[4]
 #     inverse: Literal[7]
@@ -106,7 +106,7 @@ from typing import TypedDict, Literal
 #
 # @dataclass
 # class SatBG(Indexable):
-#     grey = 100
+#     faint = 100
 #     red = 101
 #     green = 102
 #     yellow = 103
@@ -130,7 +130,7 @@ from typing import TypedDict, Literal
 #
 # @dataclass
 # class BG(Indexable):
-#     grey = 40
+#     faint = 40
 #     red = 41
 #     green = 42
 #     yellow = 43
@@ -146,7 +146,7 @@ from typing import TypedDict, Literal
 #     sat: Sat = Sat()
 #     reset: Reset = Reset()
 #     bold = 1
-#     grey = 2
+#     faint = 2
 #     italic = 3
 #     ul = 4
 #     inverse = 7
