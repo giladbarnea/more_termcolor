@@ -3,7 +3,7 @@ from typing import Union
 from more_termcolor import convert, settings
 
 
-def reset_text(text: str, reset_color='normal'):
+def reset_text(text: str, reset_color='all'):
     return f'{text}{convert.reset_to_ansi(reset_color)}'
 
 
@@ -19,35 +19,35 @@ def _termcolors():
         print(paint(f'{i}\thello\t', convert.code_to_color(i)))
 
 
-def yellow(text: any, reset_normal: bool = True):
+def yellow(text: any, reset_all: bool = True):
     # 33
-    return paint(text, 'yellow', reset='normal' if reset_normal is True else False)
+    return paint(text, 'yellow', reset='all' if reset_all is True else False)
 
 
-def red(text: any, reset_normal: bool = True):
+def red(text: any, reset_all: bool = True):
     # text = re.sub(r'(?<=\033)(.*)(\[\d{,3}m)', lambda m: m.groups()[0] + '[31m', text)
     # 31
-    return paint(text, 'red', reset='normal' if reset_normal is True else False)
+    return paint(text, 'red', reset='all' if reset_all is True else False)
 
 
-def green(text: any, reset_normal: bool = True):
+def green(text: any, reset_all: bool = True):
     # 32
-    return paint(text, 'green', reset='normal' if reset_normal is True else False)
+    return paint(text, 'green', reset='all' if reset_all is True else False)
 
 
-def bold(text: any, reset_normal: bool = True):
+def bold(text: any, reset_all: bool = True):
     # 1
-    return paint(text, 'bold', reset='normal' if reset_normal is True else False)
+    return paint(text, 'bold', reset='all' if reset_all is True else False)
 
 
-def grey(text: any, reset_normal: bool = True):
+def grey(text: any, reset_all: bool = True):
     # 2
-    return paint(text, 'grey', reset='normal' if reset_normal is True else False)
+    return paint(text, 'grey', reset='all' if reset_all is True else False)
 
 
-def lightgrey(text: any, reset_normal: bool = True):
+def lightgrey(text: any, reset_all: bool = True):
     # 90
-    return paint(text, 'lightgrey', reset='normal' if reset_normal is True else False)
+    return paint(text, 'lightgrey', reset='all' if reset_all is True else False)
 
 
 def satwhite(text: any):
@@ -55,24 +55,24 @@ def satwhite(text: any):
     return paint(text, 97)
 
 
-def ul(text, reset_normal: bool = True):
+def ul(text, reset_all: bool = True):
     """
-    If specified `True` (default), `reset_normal` passes `{ 'reset' : 'normal' }` which resets `normal` (everything).
+    If specified `True` (default), `reset_all` passes `{ 'reset' : 'all' }` which resets `all` (everything).
     Otherwise, passes `{ 'reset' : 'ul' }` which resets only ul
     """
     # 4
-    return paint(text, 'ul', reset='normal' if reset_normal is True else 'ul')
+    return paint(text, 'ul', reset='all' if reset_all is True else 'ul')
 
 
-def italic(text, reset_normal: bool = True):
+def italic(text, reset_all: bool = True):
     """
-    If specified `True` (default), `reset_normal` passes `{ 'reset' : 'normal' }` which resets `normal` (everything).
+    If specified `True` (default), `reset_all` passes `{ 'reset' : 'all' }` which resets `all` (everything).
     Otherwise, passes `{ 'reset' : 'italic' }` which resets only italic
     """
-    return paint(text, 'italic', reset='normal' if reset_normal is True else 'italic')
+    return paint(text, 'italic', reset='all' if reset_all is True else 'italic')
 
 
-def paint(text: any, *colors: Union[str, int], reset: Union[str, bool] = 'normal'):
+def paint(text: any, *colors: Union[str, int], reset: Union[str, bool] = 'all'):
     if settings.debug:
         print(f'text: {text}', f'colors: {colors}', f'reset: {reset}')
     start = ''
