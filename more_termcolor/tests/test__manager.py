@@ -19,3 +19,13 @@ def test__standard_background_colors__sanity():
         print(f'\n{color} ({kode})',
               f'\033[{kode}m{color}\033[0m',
               sep='\n', end='\n')
+
+
+def test__saturated_colors__sanity():
+    print(paint('\nsaturated colors: sanity', 'bold', 'sat white', 'ul'))
+    for color, kode in COLOR_CODES['sat'].items():
+        if isinstance(kode, dict):
+            continue  # skip 'bg'
+        print(f'\n{color} ({kode})',
+              f'\033[{kode}m{color}\033[0m',
+              sep='\n', end='\n')
