@@ -241,6 +241,5 @@ COLOR_CODES = dict(
                          cyan=106,
                          white=107)
                  ),
-        lightgrey=90,  # actually sat black
         
         )
