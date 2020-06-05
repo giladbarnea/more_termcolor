@@ -18,13 +18,18 @@ def test__nested_colors__simple():
 
 
 def test__nested_colors__advanced():
+    # '\x1b[1;97mbold_satwhite\x1b[0m'
     bold_satwhite = paint('bold_satwhite', 'bold', 'sat white')
+    
+    # '\x1b[1;97mbold_satwhite\x1b[2mfaint\x1b[0mbold_satwhite\x1b[0m'
     bold_satwhite__faint__bold_satwhite = paint(f'bold_satwhite{faint}bold_satwhite', 'bold', 'sat white')
     
-    print('PRINTING!!!', bold_satwhite__faint__bold_satwhite)
+    # print('\nPRINTING!!!', bold_satwhite__faint__bold_satwhite, sep='\n', end='\n')
+    # '\x1b[1;97mbold_satwhite\x1b[0m\x1b[2mfaint\x1b[0m\x1b[1;97mbold_satwhite\x1b[0m'
+    expected = f'{bold_satwhite}{faint}{bold_satwhite}'
     # needs to happen:
     # '\x1b[1;97mbold_satwhite\033[0;2mfaint\x1b[0;1;97mbold_satwhite\x1b[0m'
-    assert bold_satwhite__faint__bold_satwhite == f'{bold_satwhite}{faint}{bold_satwhite}'
+    assert bold_satwhite__faint__bold_satwhite == expected
     
     # {c(f'pass a str {i("args", False)}. like running {i("/bin/sh -c ...", False)}')}
     # {c(f'-s {i("strategy", False)} --strategy={i("strategy", False)}')}
