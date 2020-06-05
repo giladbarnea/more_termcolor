@@ -1,6 +1,6 @@
 from typing import Optional, Union
 
-from more_termcolor.manager import COLOR_CODES
+from more_termcolor.core import COLOR_CODES
 
 
 def code_to_color(_code: int, _obj=None) -> Optional[str]:

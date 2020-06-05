@@ -172,7 +172,8 @@ from typing import TypedDict, Literal
 # * fg: 38;2;<r>;<g>;<b>m
 # * bg: 38;2;<r>;<g>;<b>m
 
-COLOR_CODES = dict(
+
+FORMATTING_CODES = dict(
         bold=1,
         faint=2,
         italic=3,
@@ -186,7 +187,12 @@ COLOR_CODES = dict(
         # 16-231 → fg 38:5:<c>, bg 48:5:<c>
         fraktur=20,  # ?
         doubleul=21,
-        reset=dict(all=0,
+        frame=51,  # ?
+        circle=52,  # ?
+        ol=53,  # overline
+        
+        )
+RESET_CODES = dict(all=0,
                    bold=22,
                    faint=22,
                    italic=23,
@@ -196,13 +202,13 @@ COLOR_CODES = dict(
                    inverse=27,
                    conceal=28,
                    strike=29,
-                   # 37 also resets non-sat colors (keeps sat)
-                   fg=39,
+                   fg=39,  # resets std and sat
                    bg=49,
                    frame=54,
                    circle=54,
                    ol=55,
-                   ),
+                   )
+STD_CODES = dict(
         black=30,
         red=31,
         green=32,
@@ -211,8 +217,8 @@ COLOR_CODES = dict(
         magenta=35,
         cyan=36,
         white=37,
-        # 38;5 for 8bit, 38;2 for rgb
-        bg=dict(black=40,
+        )
+BG_CODES = dict(black=40,
                 red=41,
                 green=42,
                 yellow=43,
@@ -221,11 +227,16 @@ COLOR_CODES = dict(
                 cyan=46,
                 white=47,
                 # 48;5 for 8bit, 48;2 for rgb
-                ),
-        frame=51,  # ?
-        circle=52,  # ?
-        ol=53,  # overline
-        sat=dict(black=90,
+                )
+SAT_BG_CODES = dict(black=100,
+                    red=101,
+                    green=102,
+                    yellow=103,
+                    blue=104,
+                    magenta=105,
+                    cyan=106,
+                    white=107)
+SAT_CODES = dict(black=90,
                  red=91,
                  green=92,
                  yellow=93,
@@ -233,14 +244,12 @@ COLOR_CODES = dict(
                  magenta=95,
                  cyan=96,
                  white=97,
-                 bg=dict(black=100,
-                         red=101,
-                         green=102,
-                         yellow=103,
-                         blue=104,
-                         magenta=105,
-                         cyan=106,
-                         white=107)
-                 ),
-        
+                 bg=SAT_BG_CODES)
+COLOR_CODES = dict(
+        **FORMATTING_CODES,  # 1:10, 20, 21, 51:53
+        reset=RESET_CODES,  # 0, 22:29, 39, 49, 54, 55
+        **STD_CODES,  # 30-37
+        # 38;5 for 8bit, 38;2 for rgb
+        bg=BG_CODES,  # 40:47
+        sat=SAT_CODES,  # 90:97, 100:107
         )

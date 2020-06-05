@@ -89,20 +89,16 @@ def paint(text: any, *colors: Union[str, int], reset: Union[str, bool] = 'all'):
     if settings.debug:
         print(f'text: {text}', f'colors: {colors}', f'reset: {reset}')
     start = f'\033[{";".join(map(str, map(convert.to_code, colors)))}m'
-    
-    # for clr in colors:
-    #     if isinstance(clr, int):
-    #         # * 31
-    #         start_code = clr
-    #     else:
-    #         # * 'red'
-    #         start_code = convert.color_to_code(clr)
-    #     # start_ansi = convert.code_to_ansi(start_code)
-    #     start += start_ansi
-    #     if settings.debug:
-    #         print(rf'code: {start_code}, ansi: {repr(start_ansi)}, start: {start}')
-    # this also works: '\033[01;97mHI'
-    
+    # TODO:
+    #  if nested is fmt: 
+    #       reset nested
+    #       if outer is fmt and outer.reset == nested.reset:
+    #           also re-open outer
+    #  else:
+    #       if outer is fmt:
+    #           reset fg
+    #       else:
+    #           re-open outer
     if reset is not False:
         # this means reset is a string.
         # otherwise, (when reset is False), not resetting at all
