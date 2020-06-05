@@ -5,11 +5,11 @@ from pprint import pformat
 
 COLOR_BOUNDARY = r'\033\[\d{,3}(;\d{,3})?m'
 NESTED_RE = re.compile(fr'(?P<outer_open>{COLOR_BOUNDARY})'
-                       r'(?P<outer_content_a>.*)'
+                       r'(?P<outer_content_a>[^\033]*)'
                        fr'(?P<inner_open>{COLOR_BOUNDARY})'
-                       r'(?P<inner_content>.*)'
+                       r'(?P<inner_content>[^\033]*)'
                        fr'(?P<inner_close>{COLOR_BOUNDARY})'
-                       r'(?P<outer_content_b>.*)'
+                       r'(?P<outer_content_b>[^\033]*)'
                        fr'(?P<outer_close>{COLOR_BOUNDARY})'
                        )
 
@@ -28,7 +28,7 @@ def fix_nested_colors(m: re.Match):
     inner_open = dct['inner_open']
     inner_close = dct['inner_close']
     ret = f'{outer_open}{outer_content_a}{outer_close}{inner_open}{inner_content}{inner_close}{outer_open}{outer_content_b}{outer_close}'
-    print('\nfix_nested_colors()', f'ret: ', ret, pformat(dct), sep='\n', end='\n')
+    print('\nfix_nested_colors()', f'ret: ', ret, repr(ret), pformat(dct), sep='\n', end='\n')
     return ret
 
 

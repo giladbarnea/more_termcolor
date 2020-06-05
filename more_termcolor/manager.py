@@ -196,6 +196,7 @@ COLOR_CODES = dict(
                    inverse=27,
                    conceal=28,
                    strike=29,
+                   # 37 also resets non-sat colors (keeps sat)
                    fg=39,
                    bg=49,
                    frame=54,
