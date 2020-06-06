@@ -3,46 +3,50 @@ from typing import Optional, Union
 from more_termcolor.core import COLOR_CODES
 
 
-def code_to_color(_code: int, _obj=None) -> Optional[str]:
+def to_color(code: int, obj=None) -> Optional[str]:
     """Examples:
     ::
-        code_to_color(32) # 'green'
-        code_to_color(103) # 'sat bg yellow'
+        to_color(32) # 'green'
+        to_color(103) # 'sat bg yellow'
     """
-    if _obj is None:
-        _obj = COLOR_CODES
-    for k, v in _obj.items():
+    if isinstance(code, str):
+        if not code.isdigit():
+            # code is actually a color name
+            return code
+        # code is a string '1'
+        code = int(code)
+    if obj is None:
+        obj = COLOR_CODES
+    for k, v in obj.items():
         if not isinstance(v, dict):
-            if v == _code:
+            if v == code:
                 return k
         else:
-            nested = code_to_color(_code, _obj[k])
+            nested = to_color(code, obj[k])
             if nested is not None:
                 return f'{k} {nested}'
     return None  # recursive stop cond
 
 
-def color_to_code(_color: str, _obj=None) -> int:
+def to_code(color: Union[str, int], obj=None) -> int:
     """Examples:
-    ::
-        color_to_code('green') # 32
-        color_to_code('sat bg yellow') # 103
-    """
-    if _obj is None:
-        _obj = COLOR_CODES
-    if ' ' in _color:
-        keys = _color.split()
+        ::
+            to_code('green') # 32
+            to_code('sat bg yellow') # 103
+            to_code(32) # 32
+        """
+    if isinstance(color, int) or color.isdigit():
+        # color is actually a color code
+        return int(color)
+    if obj is None:
+        obj = COLOR_CODES
+    if ' ' in color:
+        keys = color.split()
         for key in keys:
-            _obj = _obj[key]
-        return _obj
+            obj = obj[key]
+        return obj
     else:
-        return _obj[_color]
-
-
-def to_code(color: Union[str, int]) -> int:
-    if isinstance(color, int):
-        return color
-    return color_to_code(color)
+        return obj[color]
 
 
 def code_to_ansi(_code: int) -> str:

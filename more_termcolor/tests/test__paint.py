@@ -78,7 +78,7 @@ outer has fmt:
 """
 import pytest
 
-from more_termcolor import paint
+from more_termcolor.paint import paint
 
 faint = paint('faint', 'faint')
 

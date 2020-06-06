@@ -3,6 +3,7 @@ from typing import Union
 from more_termcolor import convert, settings
 from pprint import pformat
 
+CODES_RE = re.compile(r'(\d{,3})(?:;)?(\d{,3})?(?:;)?(\d{,3})?')
 COLOR_BOUNDARY = r'\033\[\d{,3}(;\d{,3})?m'
 NESTED_RE = re.compile(fr'(?P<outer_open>{COLOR_BOUNDARY})'
                        r'(?P<outer_content_a>[^\033]*)'
@@ -28,7 +29,8 @@ def fix_nested_colors(m: re.Match):
     inner_open = dct['inner_open']
     inner_close = dct['inner_close']
     ret = f'{outer_open}{outer_content_a}{outer_close}{inner_open}{inner_content}{inner_close}{outer_open}{outer_content_b}{outer_close}'
-    print('\nfix_nested_colors()', f'ret: ', ret, repr(ret), pformat(dct), sep='\n', end='\n')
+    if settings.debug:
+        print('\nfix_nested_colors()', f'ret: ', ret, repr(ret), pformat(dct), sep='\n', end='\n')
     return ret
 
 
@@ -90,7 +92,7 @@ def paint(text: any, *colors: Union[str, int], reset: Union[str, bool] = 'all'):
         print(f'text: {text}', f'colors: {colors}', f'reset: {reset}')
     start = f'\033[{";".join(map(str, map(convert.to_code, colors)))}m'
     # TODO:
-    #  if nested is fmt: 
+    #  if nested is fmt:
     #       reset nested
     #       if outer is fmt and outer.reset == nested.reset:
     #           also re-open outer
@@ -99,6 +101,7 @@ def paint(text: any, *colors: Union[str, int], reset: Union[str, bool] = 'all'):
     #           reset fg
     #       else:
     #           re-open outer
+    match = CODES_RE.search(text)
     if reset is not False:
         # this means reset is a string.
         # otherwise, (when reset is False), not resetting at all
@@ -122,16 +125,15 @@ def paint(text: any, *colors: Union[str, int], reset: Union[str, bool] = 'all'):
         print(painted)
     return painted
 
-
-__all__ = ['yellow',
-           'red',
-           'green',
-           'bold',
-           'faint',
-           'satblack',
-           'satwhite',
-           'ul',
-           'italic',
-           'paint']
+# __all__ = ['yellow',
+#            'red',
+#            'green',
+#            'bold',
+#            'faint',
+#            'satblack',
+#            'satwhite',
+#            'ul',
+#            'italic',
+#            'paint']
 # if __name__ == '__main__':
 #     _termcolors()

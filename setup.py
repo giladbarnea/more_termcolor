@@ -5,6 +5,8 @@ from setuptools import find_packages, setup
 import sys
 import re
 
+from more_termcolor import util
+
 packages = find_packages()
 setup_args = dict(name='more_termcolor',
                   version='1.0.0',
@@ -16,7 +18,7 @@ setup_args = dict(name='more_termcolor',
                   # package_dir={'paint': 'more_termcolor'},
                   keywords=["termcolor", "color", "colors", "terminal", "ansi"],
                   # py_modules=[],
-                  extras_require=dict(test=['pytest']))
+                  extras_require=dict(test=['pytest', 'ipdb']))
 
 dry_run = False  # -n, [-]+dry[-_]?run
 confirm = False  # [-]+ok
@@ -36,7 +38,7 @@ if confirm:
     
     print('setup args:')
     pprint(setup_args)
-    if not ((answer := input('continue? y/n\t').lower()) == 'y' or answer == 'yes'):
+    if not util.confirm():
         print('aborting')
         sys.exit()
 
