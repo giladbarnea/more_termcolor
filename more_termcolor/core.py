@@ -173,21 +173,21 @@ from typing import TypedDict, Literal
 # * bg: 38;2;<r>;<g>;<b>m
 
 FORMATTING_COLORS = (
-    'bold',
-    'faint',
-    'italic',
-    'ul',
-    'blink',
-    'fastblink',
-    'inverse',
-    'conceal',
-    'strike',
-    'default',
-    'fraktur',  # ?
-    'doubleul',
-    'frame',  # ?
-    'circle',  # ?
-    'ol',  # overline'
+    'bold',  # 1,
+    'faint',  # 2,
+    'italic',  # 3,
+    'ul',  # 4,
+    'blink',  # 5,
+    'fastblink',  # 6,
+    'inverse',  # 7,
+    'conceal',  # 8,
+    'strike',  # 9,
+    'default',  # 10,
+    'fraktur',  # 20
+    'doubleul',  # 21,
+    'frame',  # 51,
+    'circle',  # 52,
+    'ol',  # 53
     )
 FORMATTING_CODES = (
     1,

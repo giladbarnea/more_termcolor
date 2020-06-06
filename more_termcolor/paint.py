@@ -128,7 +128,9 @@ def paint(text: any, *colors: Union[str, int]):
         if nested_has_formatting:
             proper_nested_reset_codes = [convert.to_reset_code(c) for c in nested_open_codes]
             if outer_has_formatting:
-                proper_nested_reset_codes.extend(outer_open_codes)
+                outer_reset_codes = [convert.to_reset_code(c) for c in outer_open_codes]
+                if outer_reset_codes == proper_nested_reset_codes:
+                    proper_nested_reset_codes.extend(outer_open_codes)
             proper_nested_reset = f'\033[{";".join(map(str, proper_nested_reset_codes))}m'
             if settings.debug:
                 spacyprint(f'replacing nested reset with proper nested reset. before: ', repr(text), text)
