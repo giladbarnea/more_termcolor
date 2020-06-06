@@ -112,7 +112,8 @@ def test__nested_compat_colors__basic():
 def test__nested_compat_colors__adv_0():
     """I    B       /F/B
        3    1   →   22"""
-    italic_bold_italic = paint('Italic' + paint('BoldAndItalic', 'bold') + 'Italic', 'italic')
+    bolditalic = paint('BoldAndItalic', 'bold')
+    italic_bold_italic = paint('Italic' + bolditalic + 'Italic', 'italic')
     util.spacyprint(f'italic_bold_italic:', italic_bold_italic)
     expected = '\x1b[3mItalic\x1b[1mBoldAndItalic\x1b[22;3mItalic\x1b[0m'
     
