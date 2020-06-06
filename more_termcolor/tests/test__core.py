@@ -5,6 +5,7 @@ from more_termcolor import core, util
 from more_termcolor.paint import paint, CODES_RE
 from random import choices
 from more_termcolor.tests import common
+from more_termcolor.util import spacyprint
 
 K = 20
 
@@ -12,9 +13,8 @@ K = 20
 def _print(color, code):
     assert isinstance(color, str)
     assert isinstance(code, int) or (isinstance(code, str) and '{' not in code and CODES_RE.search(code))
-    print(f'\n{color} ({code})',
-          f'\033[{code}m{color}\033[0m',
-          sep='\n', end='\n')
+    spacyprint(f'{color} ({code})',
+                f'\033[{code}m{color}\033[0m')
 
 
 def title(text):

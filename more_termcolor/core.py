@@ -172,26 +172,42 @@ from typing import TypedDict, Literal
 # * fg: 38;2;<r>;<g>;<b>m
 # * bg: 38;2;<r>;<g>;<b>m
 
-
-FORMATTING_COLOR_CODES = dict(
-        bold=1,
-        faint=2,
-        italic=3,
-        ul=4,
-        blink=5,
-        fastblink=6,
-        inverse=7,
-        conceal=8,
-        strike=9,
-        default=10,
-        # 16-231 → fg 38:5:<c>, bg 48:5:<c>
-        fraktur=20,  # ?
-        doubleul=21,
-        frame=51,  # ?
-        circle=52,  # ?
-        ol=53,  # overline
-        
-        )
+FORMATTING_COLORS = (
+    'bold',
+    'faint',
+    'italic',
+    'ul',
+    'blink',
+    'fastblink',
+    'inverse',
+    'conceal',
+    'strike',
+    'default',
+    'fraktur',  # ?
+    'doubleul',
+    'frame',  # ?
+    'circle',  # ?
+    'ol',  # overline'
+    )
+FORMATTING_CODES = (
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    # 16-231 → fg 38:5:<c>, bg 48:5:<c>
+    20,  # ?
+    21,
+    51,  # ?
+    52,  # ?
+    53,  # overline
+    )
+FORMATTING_COLOR_CODES = dict(zip(FORMATTING_COLORS, FORMATTING_CODES))
 RESET_COLOR_CODES = dict(all=0,
                          bold=22,
                          faint=22,
