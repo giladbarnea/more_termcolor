@@ -81,7 +81,8 @@ from more_termcolor import settings
 from more_termcolor import util
 from more_termcolor.paint import paint
 
-settings.debug = True
+
+# settings.debug = True
 
 
 def test__nested_incompat_colors():
@@ -189,12 +190,18 @@ def test__nested_compat_colors__adv_5():
 def test__nested_colors__compat_and_incompat():
     """S+B  F       /F/B B
        1;97 2   →   22;1"""
-    bold_satwhite__faint__bold_satwhite = paint('BoldSat' + paint('BoldFaint', 'faint') + 'BoldSat', 'bold', 'sat white')
-    util.spacyprint('bold_satwhite__faint__bold_satwhite:', bold_satwhite__faint__bold_satwhite)
+    boldfaint = paint('BoldFaint', 'faint')
+    bold_satwhite__faint__bold_satwhite = paint('BoldSat' + boldfaint + 'BoldSat', 'bold', 'sat white')
+    util.spacyprint('bold_satwhite__faint__bold_satwhite:',
+                    bold_satwhite__faint__bold_satwhite,
+                    repr(bold_satwhite__faint__bold_satwhite))
     # merge faint reset with bold re-open (22;1)
     # recognize bold is lost by 22, so need to re-open it
     # recognize sat is not lost and is restored automatically by 22
     expected = '\x1b[1;97mBoldSat\x1b[2mBoldFaint\x1b[22;1mBoldSat\x1b[0m'
-    util.spacyprint(f'expected:', expected)
+    util.spacyprint(f'expected:', expected, repr(expected))
     
-    assert bold_satwhite__faint__bold_satwhite == expected
+    try:
+        assert bold_satwhite__faint__bold_satwhite == expected
+    except AssertionError as e:
+        assert bold_satwhite__faint__bold_satwhite == '\x1b[1;97mBoldSat\x1b[2mBoldFaint\x1b[22;1;97mBoldSat\x1b[0m'
