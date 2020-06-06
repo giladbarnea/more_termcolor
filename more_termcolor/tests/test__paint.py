@@ -77,15 +77,17 @@ outer has fmt:
 
 """
 
-from more_termcolor.paint import paint
+from more_termcolor import settings
 from more_termcolor import util
+from more_termcolor.paint import paint
+
+settings.debug = True
 
 
 def test__nested_incompat_colors():
     """R    G       R
        31   32  →   31"""
-    from more_termcolor import settings
-    settings.debug = True
+    
     green = paint('Green', 'green')
     red_green_red = paint('Red' + green + 'Red', 'red')
     util.spacyprint(f'red_green_red:', red_green_red)
@@ -95,10 +97,11 @@ def test__nested_incompat_colors():
     assert red_green_red == expected
 
 
-def test__nested_compat_colors():
+def test__nested_compat_colors__basic():
     """R    F       /F/B
        31   2   →   22"""
-    red_faint_red = paint('Red' + paint('FaintAndRed', 'faint') + 'Red', 'red')
+    faintred = paint('FaintAndRed', 'faint')
+    red_faint_red = paint('Red' + faintred + 'Red', 'red')
     util.spacyprint(f'red_faint_red:', red_faint_red)
     expected = '\x1b[31mRed\x1b[2mFaintAndRed\x1b[22mRed\x1b[0m'
     util.spacyprint('expected:', expected)

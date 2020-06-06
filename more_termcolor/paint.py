@@ -95,7 +95,7 @@ def paint(text: any, *colors: Union[str, int]):
     outer_open_codes = [convert.to_code(c) for c in colors]
     start = f'\033[{";".join(map(str, outer_open_codes))}m'
     if settings.debug:
-        spacyprint(f'outer_open_codes:', outer_open_codes, f'colors', colors)
+        spacyprint(f'outer_open_codes:', outer_open_codes, f'colors:', colors)
     # TODO:
     #  if nested is fmt:
     #       reset nested
@@ -114,10 +114,10 @@ def paint(text: any, *colors: Union[str, int]):
         # ignore them (*_) because they'd been recursively
         # taken care of.
         nested_open, *_, nested_reset = re.finditer(CODES_RE, text)
-        nested_open_codes = nested_open.groups()
+        nested_open_codes = [int(c) for c in nested_open.groups() if c]
         outer_has_formatting = any(c in core.FORMATTING_CODES for c in outer_open_codes)
         nested_has_formatting = any(c in core.FORMATTING_CODES for c in nested_open_codes)
-        nested_reset_codes = nested_reset.groups()
+        nested_reset_codes = [int(rc) for rc in nested_reset.groups() if rc]
         if settings.debug:
             spacyprint(f'nested_open: {nested_open}',
                        f'nested_reset: {nested_reset}',
@@ -126,23 +126,24 @@ def paint(text: any, *colors: Union[str, int]):
                        f'nested_has_formatting: {nested_has_formatting}',
                        f'nested_reset_codes: {nested_reset_codes}')
         if nested_has_formatting:
-            should_change = nested_reset_codes != [convert.to_reset_code(c) for c in nested_open_codes]
-            print()
-            # nested_reset = f'\033[{";".join(map(str, map(convert.to_reset_code, nested_codes)))}m'
-            # painted = f'{start}{text}{reset}'
-            # try:
-            #     # in painted substrings, replace their reset start_code with current's start start_code
-            #     # [RED]bla[PURPLE]plurp[/PURPLE]bzorg[/RED] → [RED]bla[PURPLE]plurp[RED]bzorg[/RED]
-            #     # what's needed:
-            #     # [RED]bla[PURPLE]plurp[/PURPLE]bzorg[/RED] → [RED]bla[/RED][PURPLE]plurp[/PURPLE][RED]bzorg[/RED]
-            #
-            #     painted = re.sub(NESTED_RE, fix_nested_colors, painted)
-            # except TypeError as e:
-            #     pass
+            proper_nested_reset_codes = [convert.to_reset_code(c) for c in nested_open_codes]
+            if outer_has_formatting:
+                proper_nested_reset_codes.extend(colors)
+            proper_nested_reset = f'\033[{";".join(map(str, proper_nested_reset_codes))}m'
+            if settings.debug:
+                spacyprint(f'replacing nested reset with proper nested reset. before: ', repr(text), text)
+            text = text.replace(nested_reset.group(), proper_nested_reset, 1)
+            if settings.debug:
+                spacyprint(f'after: ', repr(text), text)
+        
         else:
             if outer_has_formatting:
                 # reset fg
-                pass
+                if settings.debug:
+                    spacyprint(f'replacing nested reset with fg reset. before: ', repr(text), text)
+                text = text.replace(nested_reset.group(), '\033[39m', 1)
+                if settings.debug:
+                    spacyprint(f'after: ', repr(text), text)
             else:
                 # replace nested reset with outer open
                 if settings.debug:
