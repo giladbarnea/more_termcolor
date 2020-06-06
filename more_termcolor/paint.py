@@ -16,7 +16,7 @@ NESTED_RE = re.compile(fr'(?P<outer_open>{COLOR_BOUNDARY})'
 
 
 def reset_text(text: str, reset_color='all'):
-    return f'{text}{convert.reset_to_ansi(reset_color)}'
+    return f'{text}{convert.reset(reset_color)}'
 
 
 def fix_nested_colors(m: re.Match):
@@ -105,7 +105,7 @@ def paint(text: any, *colors: Union[str, int], reset: Union[str, bool] = 'all'):
     if reset is not False:
         # this means reset is a string.
         # otherwise, (when reset is False), not resetting at all
-        reset_ansi = convert.reset_to_ansi(reset)
+        reset_ansi = convert.reset(reset)
         # painted = reset_text(f'{start}{text}', reset)
         painted = f'{start}{text}{reset_ansi}'
         try:

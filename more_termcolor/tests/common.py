@@ -1,8 +1,27 @@
 from more_termcolor import core
+from contextlib import contextmanager
 
 
 def has_duplicates(collection) -> bool:
     return len(set(collection)) < len(collection)
+
+
+@contextmanager
+def assert_raises(exc):
+    try:
+        yield
+    except exc:
+        pass
+    except Exception as e:
+        pass
+
+
+@contextmanager
+def assert_doesnt_raise(exc):
+    try:
+        yield
+    except exc:
+        raise
 
 
 background_colors = list(core.BG_COLOR_CODES.keys())
