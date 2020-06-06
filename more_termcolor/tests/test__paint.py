@@ -76,11 +76,8 @@ outer has fmt:
             re-open outer
 
 """
-import pytest
 
 from more_termcolor.paint import paint
-
-faint = paint('faint', 'faint')
 
 
 def _print(*values):
@@ -90,13 +87,11 @@ def _print(*values):
 def test__nested_incompat_colors():
     """R    G       R
        31   32  →   31"""
-    red_green_red = paint('Red' + paint('Green', 'green') + 'Red', 'red')
+    green = paint('Green', 'green')
+    red_green_red = paint('Red' + green + 'Red', 'red')
     _print(f'red_green_red:', red_green_red)
-    expected = '\x1b[31mRed\x1b[32mGreen\x1b[31mRed\x1b[0m'
     # doesn't reset green, just re-opens red (because incompatible)
-    # TODO: decide: easier impl and same visual result if green is reset
-    #  in that case, expected is:
-    #  '\x1b[31mRed\x1b[0m\x1b[32mGreen\x1b[0m\x1b[31mRed\x1b[0m'
+    expected = '\x1b[31mRed\x1b[32mGreen\x1b[31mRed\x1b[0m'
     _print('expected:', expected)
     assert red_green_red == expected
 

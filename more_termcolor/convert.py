@@ -1,9 +1,18 @@
-from typing import Optional, Union
-
+from typing import Union, overload, Optional
+import re
 from more_termcolor import core
 
+RESET_RE = re.compile(r'(?<=reset ).*')
+SATURATED_RE = re.compile(r'(?<=sat ).*')
+BACKGROUND_RE = re.compile(r'(?<=bg ).*')
 
-def to_color(val: Union[str, int], obj=None) -> Optional[str]:
+
+@overload
+def to_color(val: Union[str, int], obj: dict = None) -> str:
+    ...
+
+
+def to_color(val: Union[str, int], obj=None):
     """Examples:
     ::
         to_color(32) # 'green'
@@ -28,7 +37,7 @@ def to_color(val: Union[str, int], obj=None) -> Optional[str]:
     return None  # recursive stop cond
 
 
-def to_code(val: Union[str, int], obj=None) -> int:
+def to_code(val: Union[str, int]) -> int:
     """Examples:
         ::
             to_code('green') # 32
@@ -38,8 +47,7 @@ def to_code(val: Union[str, int], obj=None) -> int:
     if isinstance(val, int) or val.isdigit():
         # val is actually a color code
         return int(val)
-    if obj is None:
-        obj = core.COLOR_CODES
+    obj = core.COLOR_CODES
     if ' ' in val:
         keys = val.split()
         for key in keys:
@@ -49,21 +57,79 @@ def to_code(val: Union[str, int], obj=None) -> int:
         return obj[val]
 
 
-# def code_to_ansi(_code: int) -> str:
-#     return f'\033[{_code}m'
+def _try_get_bg_reset_code(color: str) -> Optional[int]:
+    """Examples:
+    ::
+     ('bg red') → 49
+     ('sat bg red') → 49
+     ('green') → None
+     ('BAD') → None
+     ('sat green') → None
+     ('bg BAD') → KeyError
+    """
+    if match := BACKGROUND_RE.search(color):
+        if (actual_color := match.group()) not in core.BG_COLOR_CODES:
+            raise KeyError(f"`color` ('{color}') matches '{BACKGROUND_RE.pattern}' but `actual_color` ('{actual_color}') not in BG_COLOR_CODES")
+        resetcode = core.RESET_COLOR_CODES['bg']
+        return resetcode
+    return None
 
 
-# def color_to_ansi(_color: str) -> str:
-#     """Examples:
-#     ::
-#         convert.code_to_ansi('green') # '\x1b[32m'
-#         color_to_code('sat bg yellow') # '\x1b[103m'
-#     """
-#     return f'\033[{to_code(_color)}m'
+def _try_get_sat_reset_code(color: str) -> Optional[int]:
+    """Examples:
+    ::
+     ('sat green') → 39
+     ('green') → None
+     ('BAD') → None
+     ('sat BAD') → KeyError
+     ('bg red') → KeyError
+     ('sat bg red') → KeyError
+    """
+    if match := SATURATED_RE.search(color):
+        # e.g. 'sat [bg ]yellow'
+        if (actual_color := match.group()) not in core.SAT_FG_COLOR_CODES:
+            raise KeyError(f"`color` ('{color}') matches '{SATURATED_RE.pattern}' but `actual_color` ('{actual_color}') not in SAT_FG_COLOR_CODES")
+        # 39 resets both std fg and sat fg
+        return core.RESET_COLOR_CODES['fg']
+    return None
+
+
+def to_reset_code(val):
+    """Examples:
+    ::
+     ('bold') → 22
+     ('faint') → 22
+     ('green') → 39
+     ('sat green') → 39
+     ('bg red') → 49
+     ('sat bg red') → 49
+     (22) → 22
+     ('BAD') → KeyError
+    """
+    color = to_color(val)
+    try:
+        resetcode = core.RESET_COLOR_CODES[color]
+    except KeyError as e:
+        if match := RESET_RE.search(color):
+            # happens when passed e.g. '22',
+            # in which case `color` is 'reset bold';
+            # call again with just 'bold'
+            actual_color = match.group()
+            return to_reset_code(actual_color)
+        
+        if color in core.FG_COLOR_CODES:
+            resetcode = core.RESET_COLOR_CODES['fg']
+            return resetcode
+        resetcode = _try_get_bg_reset_code(color)
+        if resetcode:
+            return resetcode
+        resetcode = _try_get_sat_reset_code(color)
+        if resetcode:
+            return resetcode
+        raise
+    return resetcode
+
 
 def reset(val: Union[str, int]):
-    color = to_color(val)
-    return f'\033[{core.RESET_COLOR_CODES[color]}m'
-
-# def reset_to_ansi(_reset='normal') -> str:
-#     return f'\033[{COLOR_CODES["reset"][_reset]}m'
+    resetcode = to_reset_code(val)
+    return f'\033[{resetcode}m'

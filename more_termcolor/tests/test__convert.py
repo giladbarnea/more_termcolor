@@ -1,8 +1,5 @@
-from more_termcolor import convert, core
+from more_termcolor import convert, core, settings
 from more_termcolor.tests import common
-
-
-# flat_color_codes = common.flatten_dict(core.COLOR_CODES)
 
 
 def test__to_code__sanity():
@@ -75,6 +72,51 @@ def test__to_color__sanity():
     
     for color, code in core.SAT_BG_COLOR_CODES.items():
         assert convert.to_color(code) == f'sat bg {color}'
+
+
+def test__to_reset_code():
+    assert convert.to_reset_code('bold') == 22
+    assert convert.to_reset_code('faint') == 22
+    assert convert.to_reset_code('green') == 39 == core.RESET_COLOR_CODES['fg']
+    assert convert.to_reset_code(22) == 22
+    assert convert.to_reset_code('bg red') == 49
+    assert convert.to_reset_code('sat red') == 39
+    with common.assert_raises(KeyError, convert.BACKGROUND_RE.pattern, r"`actual_color` ('BAD') not in BG_COLOR_CODES"):
+        convert.to_reset_code('bg BAD')
+        convert.to_reset_code('sat bg BAD')
+    assert convert.to_reset_code('sat bg yellow') == 49
+    with common.assert_raises(KeyError, 'BAD'):
+        convert.to_reset_code('BAD')
+    with common.assert_raises(KeyError, 'sat'):
+        convert.to_reset_code('sat')
+    with common.assert_raises(KeyError, 'bg'):
+        convert.to_reset_code('bg')
+
+
+def test___try_get_sat_reset_code():
+    assert convert._try_get_sat_reset_code('green') is None
+    
+    # provides safety only for 'sat ...' (unlike to_reset_code())
+    assert convert._try_get_sat_reset_code('BAD') is None
+    
+    assert convert._try_get_sat_reset_code('sat green') == 39
+    with common.assert_raises(KeyError, convert.SATURATED_RE.pattern, "`actual_color` ('bg red')", "SAT_FG_COLOR_CODES"):
+        convert._try_get_sat_reset_code('sat bg red')
+    with common.assert_raises(KeyError, convert.SATURATED_RE.pattern, "`actual_color` ('red')", "SAT_FG_COLOR_CODES"):
+        convert._try_get_sat_reset_code('bg red')
+
+
+def test___try_get_bg_reset_code():
+    assert convert._try_get_bg_reset_code('green') is None
+    
+    # provides safety only for 'bg ...' (unlike to_reset_code())
+    assert convert._try_get_bg_reset_code('BAD') is None
+    with common.assert_raises(KeyError, convert.BACKGROUND_RE.pattern, r"`actual_color` ('BAD') not in BG_COLOR_CODES"):
+        convert._try_get_bg_reset_code('bg BAD')
+    
+    assert convert._try_get_bg_reset_code('sat green') is None
+    assert convert._try_get_bg_reset_code('sat bg red') == 49
+    assert convert._try_get_bg_reset_code('bg red') == 49
 
 
 def test__reset():

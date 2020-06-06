@@ -1,5 +1,6 @@
 from more_termcolor import core
 from contextlib import contextmanager
+import re
 
 
 def has_duplicates(collection) -> bool:
@@ -7,10 +8,14 @@ def has_duplicates(collection) -> bool:
 
 
 @contextmanager
-def assert_raises(exc):
+def assert_raises(exc, *search_in_args):
     try:
         yield
-    except exc:
+    except exc as e:
+        if search_in_args:
+            # at least one exception arg needs to have all search strings
+            if not any(all(re.search(re.escape(s), a) for s in search_in_args) for a in list(map(str, e.args))):
+                raise
         pass
     except Exception as e:
         pass

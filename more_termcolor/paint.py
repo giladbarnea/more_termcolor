@@ -3,7 +3,7 @@ from typing import Union
 from more_termcolor import convert, settings
 from pprint import pformat
 
-CODES_RE = re.compile(r'(\d{,3})(?:;)?(\d{,3})?(?:;)?(\d{,3})?')
+CODES_RE = re.compile(r'(\d{,3})(?:;)?(\d{,3})?(?:;)?(\d{,3})?m')
 COLOR_BOUNDARY = r'\033\[\d{,3}(;\d{,3})?m'
 NESTED_RE = re.compile(fr'(?P<outer_open>{COLOR_BOUNDARY})'
                        r'(?P<outer_content_a>[^\033]*)'
@@ -87,9 +87,9 @@ def italic(text, reset_all: bool = True):
     return paint(text, 'italic', reset='all' if reset_all is True else 'italic')
 
 
-def paint(text: any, *colors: Union[str, int], reset: Union[str, bool] = 'all'):
+def paint(text: any, *colors: Union[str, int]):
     if settings.debug:
-        print(f'text: {text}', f'colors: {colors}', f'reset: {reset}')
+        print(f'text: {text}', f'colors: {colors}')
     start = f'\033[{";".join(map(str, map(convert.to_code, colors)))}m'
     # TODO:
     #  if nested is fmt:
@@ -101,26 +101,29 @@ def paint(text: any, *colors: Union[str, int], reset: Union[str, bool] = 'all'):
     #           reset fg
     #       else:
     #           re-open outer
-    match = CODES_RE.search(text)
-    if reset is not False:
-        # this means reset is a string.
-        # otherwise, (when reset is False), not resetting at all
-        reset_ansi = convert.reset(reset)
-        # painted = reset_text(f'{start}{text}', reset)
-        painted = f'{start}{text}{reset_ansi}'
-        try:
-            # in painted substrings, replace their reset start_code with current's start start_code
-            # [RED]bla[PURPLE]plurp[/PURPLE]bzorg[/RED] → [RED]bla[PURPLE]plurp[RED]bzorg[/RED]
-            # what's needed:
-            # [RED]bla[PURPLE]plurp[/PURPLE]bzorg[/RED] → [RED]bla[/RED][PURPLE]plurp[/PURPLE][RED]bzorg[/RED]
+    try:
+        match = CODES_RE.search(text)
+        #
+        nested_codes = [g for g in match.groups() if g]
+        if nested_codes:
+            reset = f'\033[{";".join(map(str, map(convert.to_reset_code, nested_codes)))}m'
             
-            painted = re.sub(NESTED_RE, fix_nested_colors, painted)
-        except TypeError as e:
-            pass
-        if settings.debug:
-            print(f'reset: {repr(reset)}, painted: {repr(painted)}')
-    else:
-        painted = f'{start}{text}'
+            painted = f'{start}{text}{reset_ansi}'
+            try:
+                # in painted substrings, replace their reset start_code with current's start start_code
+                # [RED]bla[PURPLE]plurp[/PURPLE]bzorg[/RED] → [RED]bla[PURPLE]plurp[RED]bzorg[/RED]
+                # what's needed:
+                # [RED]bla[PURPLE]plurp[/PURPLE]bzorg[/RED] → [RED]bla[/RED][PURPLE]plurp[/PURPLE][RED]bzorg[/RED]
+                
+                painted = re.sub(NESTED_RE, fix_nested_colors, painted)
+            except TypeError as e:
+                pass
+    except Exception as e:
+        reset = f'\033[{";".join(map(str, map(convert.to_reset_code, colors)))}m'
+        # reset = convert.reset('all')
+    painted = f'{start}{text}{reset}'
+    if settings.debug:
+        print(f'painted: {repr(painted)}')
     if settings.print:
         print(painted)
     return painted
