@@ -1,24 +1,34 @@
 """This module does not really assert anything programmatically. It just prints and describes what you're supposed to see with your eyes.
-Optionally pass '--confirm' to prompt before starting each test"""
+Optionally pass '--confirm' to prompt before starting each test, e.g.:
+pytest -sxl more_termcolor/tests/test__core.py --confirm"""
 
 from more_termcolor import core, util
-from more_termcolor.paint import paint, CODES_RE
+from more_termcolor.paint import paint, COLOR_CODES_RE
 from random import choices
 from more_termcolor.tests import common
 from more_termcolor.util import spacyprint
+import re
 
 K = 20
 
 
 def _print(color, code):
-    assert isinstance(color, str)
-    assert isinstance(code, int) or (isinstance(code, str) and '{' not in code and CODES_RE.search(code))
+    # assert isinstance(color, str)
+    assert (isinstance(code, int) or (isinstance(code, str) and re.search(COLOR_CODES_RE, code)))
     spacyprint(f'{color} ({code})',
-                f'\033[{code}m{color}\033[0m')
+               f'\033[{code}m{color}\033[0m')
 
 
 def title(text):
-    return paint(f'\n{text}', 'bold', 'sat white', 'ul')
+    return paint(f'\n{text}\n', 'bold', 'sat white', 'ul')
+
+
+def test__formatting_color_codes__sanity(confirm):
+    print(title(f'formatting colors: sanity'))
+    if confirm and not util.confirm():
+        return
+    for color, code in core.FORMATTING_COLOR_CODES.items():
+        _print(color, code)
 
 
 def test__fg_color_codes__sanity(confirm):

@@ -1,6 +1,3 @@
-from dataclasses import dataclass, asdict
-from pprint import pprint as pp
-
 # ResetKey = Literal['normal', 'italic', 'underline', 'inverse', 'strike']
 
 # https://docs.python.org/3/library/typing.html#typing.TypedDict
@@ -19,7 +16,6 @@ from pprint import pprint as pp
 
 
 # COLOR_CODES = ColorCodes()
-from typing import TypedDict, Literal
 
 # class Reset(TypedDict):
 #     normal: Literal[0]
@@ -174,7 +170,7 @@ from typing import TypedDict, Literal
 
 FORMATTING_COLORS = (
     'bold',  # 1,
-    'faint',  # 2,
+    'faint',  # 2 (aka 'grey'; brighter than satblack 90)
     'italic',  # 3,
     'ul',  # 4,
     'blink',  # 5,
@@ -253,14 +249,15 @@ SAT_BG_COLOR_CODES = dict(black=100,
                           magenta=105,
                           cyan=106,
                           white=107)
-SAT_FG_COLOR_CODES = dict(black=90,
+SAT_FG_COLOR_CODES = dict(black=90, # aka 'lightgrey'; dimmer than faint 2
                           red=91,
                           green=92,
                           yellow=93,
                           blue=94,
                           magenta=95,
                           cyan=96,
-                          white=97)
+                          white=97  # aka 'white'
+                          )
 SAT_COLOR_CODES = dict(**SAT_FG_COLOR_CODES,
                        bg=SAT_BG_COLOR_CODES)
 COLOR_CODES = dict(

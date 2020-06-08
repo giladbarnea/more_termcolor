@@ -77,7 +77,6 @@ outer has fmt:
 
 """
 
-from more_termcolor import settings
 from more_termcolor import util
 from more_termcolor.paint import paint
 

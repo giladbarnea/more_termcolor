@@ -1,4 +1,4 @@
-from more_termcolor import convert, core, settings
+from more_termcolor import convert, core
 from more_termcolor.tests import common
 
 
