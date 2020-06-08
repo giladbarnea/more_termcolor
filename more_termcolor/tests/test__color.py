@@ -77,8 +77,10 @@ outer has fmt:
 
 """
 
+import io
+
 from more_termcolor import util
-from more_termcolor.color import colored
+from more_termcolor.color import colored, cprint
 
 
 # settings.debug = True
@@ -204,3 +206,16 @@ def test__nested_colors__compat_and_incompat():
         assert bold_satwhite__dark__bold_satwhite == expected
     except AssertionError as e:
         assert bold_satwhite__dark__bold_satwhite == '\x1b[1;97mBoldSat\x1b[2mBoldDark\x1b[22;1;97mBoldSat\x1b[0m'
+
+
+#########################################
+# compatibility with original termcolor #
+#########################################
+def test__cprint():
+    f = io.StringIO()
+    cprint('Hello, World!', 'green', 'on_red', attrs=['bold'], file=f)
+    s = f.getvalue()
+    f = io.StringIO()
+    cprint('Hello, World!', 'green', 'on red', 'bold', file=f)
+    assert f.getvalue() == s
+    # text = colored('Hello, World!', 'red', attrs=['reverse', 'blink'])

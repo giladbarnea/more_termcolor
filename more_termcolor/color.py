@@ -2,10 +2,10 @@ import re
 from typing import Union
 
 from more_termcolor import convert, core
-from more_termcolor.util import spacyprint
 
 COLOR_CODES_RE = r'(\d{,3})(?:;)?(\d{,3})?(?:;)?(\d{,3})?'
 COLOR_BOUNDARY_RE = re.compile(fr'\033\[{COLOR_CODES_RE}m')
+ON_COLOR_RE = re.compile(r'on[_ ](\w{3,9})')
 
 
 #####################
@@ -161,7 +161,7 @@ def colored(text: str, *colors: Union[str, int]):
     return ret
 
 
-def cprint(text, color=None, on_color=None, attrs=None, *colors, **kwargs):
+def cprint(text, color=None, on_color=None, attrs=(), *colors, **kwargs):
     """Print colorized text.
     
     Can be used instead of the original termcolor's cprint() and would work exactly the same,
@@ -176,10 +176,12 @@ def cprint(text, color=None, on_color=None, attrs=None, *colors, **kwargs):
     It accepts kw-arguments of print function.
     """
     if on_color:
-        *_, actual_color = on_color.partition('_')
+        actual_color = ON_COLOR_RE.match(on_color).groups()[0]
         on_color = f'on {actual_color}'
-    
-    print((colored(text, color, on_color, *attrs, *colors)), **kwargs)
+    if isinstance(attrs, (str, int)):
+        print((colored(text, color, on_color, attrs, *colors)), **kwargs)
+    else:
+        print((colored(text, color, on_color, *attrs, *colors)), **kwargs)
 
 
 __all__ = [
