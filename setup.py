@@ -9,7 +9,7 @@ from more_termcolor import util
 
 packages = find_packages()
 setup_args = dict(name='more_termcolor',
-                  version='1.0.0',
+                  version='1.0.1',
                   description='Literally more colors, with support for nested colors',
                   author='Gilad Barnea',
                   author_email='giladbrn@gmail.com',

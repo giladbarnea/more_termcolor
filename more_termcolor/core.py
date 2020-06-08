@@ -249,7 +249,7 @@ SAT_BG_COLOR_CODES = dict(black=100,
                           magenta=105,
                           cyan=106,
                           white=107)
-SAT_FG_COLOR_CODES = dict(black=90, # aka 'lightgrey'; dimmer than faint 2
+SAT_FG_COLOR_CODES = dict(black=90,  # aka 'lightgrey'; dimmer than faint 2
                           red=91,
                           green=92,
                           yellow=93,
