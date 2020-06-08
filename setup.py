@@ -13,7 +13,7 @@ from more_termcolor import util
 packages = find_packages(exclude=["tests?", "*.tests*", "*.tests*.*", "tests*.*", ])
 setup_args = dict(name='more_termcolor',
                   version='1.0.3',
-                  description='Literally all colors, supporting substring colors, convenience methods and full termcolor compatability',
+                  description='Literally all colors, supporting multiple substring colors, convenience methods and full original termcolor compatability',
                   license='MIT',
                   author='Gilad Barnea',
                   author_email='giladbrn@gmail.com',
@@ -27,12 +27,12 @@ setup_args = dict(name='more_termcolor',
                       # 'Development Status :: 5 - Production/Stable',
                       'Environment :: Console',
                       'Intended Audience :: Developers',
-                      'License :: OSI Approved :: MIT License',
+                      'License :: MIT License',
                       'Operating System :: OS Independent',
                       "Programming Language :: Python :: 3 :: Only",
                       'Topic :: Terminals'
                       ]
-                  ),
+                  )
 
 dry_run = False  # -n, [-]+dry[-_]?run
 confirm = False  # [-]+ok

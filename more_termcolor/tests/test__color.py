@@ -100,10 +100,10 @@ def test__nested_incompat_colors():
 def test__nested_compat_colors__basic():
     """R    F       /F/B
        31   2   →   22"""
-    darkred = colored('darkAndRed', 'dark')
+    darkred = colored('DarkRed', 'dark')
     red_dark_red = colored('Red' + darkred + 'Red', 'red')
     util.spacyprint(f'red_dark_red:', red_dark_red)
-    expected = '\x1b[31mRed\x1b[2mdarkAndRed\x1b[22mRed\x1b[0m'
+    expected = '\x1b[31mRed\x1b[2mDarkRed\x1b[22mRed\x1b[0m'
     util.spacyprint('expected:', expected)
     # smart reset dark in the middle, and does not re-open red
     assert red_dark_red == expected
@@ -154,10 +154,10 @@ def test__nested_compat_colors__adv_2():
 def test__nested_compat_colors__adv_3():
     """B    F       /F/B B
        1    2   →   22;1"""
-    bold_dark_bold = colored('Bold' + colored('darkAndBold', 'dark') + 'Bold', 'bold')
+    bold_dark_bold = colored('Bold' + colored('DarkAndBold', 'dark') + 'Bold', 'bold')
     util.spacyprint(f'bold_dark_bold:', bold_dark_bold)
-    expected0 = '\x1b[1mBold\x1b[2mdarkAndBold\x1b[22;1mBold\x1b[0m'
-    expected1 = '\x1b[1mBold\x1b[2mdarkAndBold\x1b[0;1mBold\x1b[0m'
+    expected0 = '\x1b[1mBold\x1b[2mDarkAndBold\x1b[22;1mBold\x1b[0m'
+    expected1 = '\x1b[1mBold\x1b[2mDarkAndBold\x1b[0;1mBold\x1b[0m'
     util.spacyprint(f'expected0:', expected0)
     util.spacyprint(f'expected1:', expected1)
     # both options ok
@@ -167,9 +167,9 @@ def test__nested_compat_colors__adv_3():
 def test__nested_compat_colors__adv_4():
     """S    F       /F
        97   2   →   22"""
-    sat_dark_sat = colored('Sat' + colored('darkAndSat', 'dark') + 'Sat', 'sat white')
+    sat_dark_sat = colored('Sat' + colored('DarkAndSat', 'dark') + 'Sat', 'sat white')
     util.spacyprint(f'sat_dark_sat:', sat_dark_sat)
-    expected = '\x1b[97mSat\x1b[2mdarkAndSat\x1b[22mSat\x1b[0m'
+    expected = '\x1b[97mSat\x1b[2mDarkAndSat\x1b[22mSat\x1b[0m'
     # smart reset dark, no re-open sat
     util.spacyprint('expected:', expected)
     assert sat_dark_sat == expected
@@ -189,7 +189,7 @@ def test__nested_compat_colors__adv_5():
 def test__nested_colors__compat_and_incompat():
     """S+B  F       /F/B B
        1;97 2   →   22;1"""
-    bolddark = colored('Bolddark', 'dark')
+    bolddark = colored('BoldDark', 'dark')
     bold_satwhite__dark__bold_satwhite = colored('BoldSat' + bolddark + 'BoldSat', 'bold', 'sat white')
     util.spacyprint('bold_satwhite__dark__bold_satwhite:',
                     bold_satwhite__dark__bold_satwhite,
@@ -197,10 +197,10 @@ def test__nested_colors__compat_and_incompat():
     # merge dark reset with bold re-open (22;1)
     # recognize bold is lost by 22, so need to re-open it
     # recognize sat is not lost and is restored automatically by 22
-    expected = '\x1b[1;97mBoldSat\x1b[2mBolddark\x1b[22;1mBoldSat\x1b[0m'
+    expected = '\x1b[1;97mBoldSat\x1b[2mBoldDark\x1b[22;1mBoldSat\x1b[0m'
     util.spacyprint(f'expected:', expected, repr(expected))
     
     try:
         assert bold_satwhite__dark__bold_satwhite == expected
     except AssertionError as e:
-        assert bold_satwhite__dark__bold_satwhite == '\x1b[1;97mBoldSat\x1b[2mBolddark\x1b[22;1;97mBoldSat\x1b[0m'
+        assert bold_satwhite__dark__bold_satwhite == '\x1b[1;97mBoldSat\x1b[2mBoldDark\x1b[22;1;97mBoldSat\x1b[0m'

@@ -99,7 +99,8 @@ def satyellow(text, *colors):
 def colored(text: str, *colors: Union[str, int]):
     # spacyprint(f'text: {text}', f'colors: {colors}')
     outer_open_codes = [convert.to_code(c) for c in colors]
-    start = f'\033[{";".join(map(str, outer_open_codes))}m'
+    # TODO: remove map str
+    start = f'\033[{";".join(outer_open_codes)}m'
     # spacyprint(f'outer_open_codes:', outer_open_codes, f'colors:', colors)
     # TODO:
     #  if nested is fmt:
@@ -119,10 +120,10 @@ def colored(text: str, *colors: Union[str, int]):
         # ignore them (*_) assuming they'd been recursively
         # taken care of.
         nested_open, *_, nested_reset = re.finditer(COLOR_BOUNDARY_RE, text)
-        nested_open_codes = [int(c) for c in nested_open.groups() if c]
+        nested_open_codes = [c for c in nested_open.groups() if c]
         outer_has_formatting = any(c in core.FORMATTING_CODES for c in outer_open_codes)
         nested_has_formatting = any(c in core.FORMATTING_CODES for c in nested_open_codes)
-        nested_reset_codes = [int(rc) for rc in nested_reset.groups() if rc]
+        nested_reset_codes = [rc for rc in nested_reset.groups() if rc]
         # spacyprint(f'nested_open: {nested_open}',
         #            f'nested_reset: {nested_reset}',
         #            f'nested_open_codes: {nested_open_codes}',
@@ -135,7 +136,7 @@ def colored(text: str, *colors: Union[str, int]):
                 outer_reset_codes = [convert.to_reset_code(c) for c in outer_open_codes]
                 if any(oc in proper_nested_reset_codes for oc in outer_reset_codes):
                     proper_nested_reset_codes.extend(outer_open_codes)
-            proper_nested_reset = f'\033[{";".join(map(str, proper_nested_reset_codes))}m'
+            proper_nested_reset = f'\033[{";".join(proper_nested_reset_codes)}m'
             # spacyprint(f'replacing nested reset with proper nested reset. before: ', repr(text), text)
             text = text.replace(nested_reset.group(), proper_nested_reset, 1)
             # spacyprint(f'after: ', repr(text), text)
@@ -160,12 +161,25 @@ def colored(text: str, *colors: Union[str, int]):
     return ret
 
 
-def cprint(text, color=None, on_color=None, attrs=None, **kwargs):
-    """Print colorized text. Taken as-is from original https://pypi.org/project/termcolor.
-    It accepts arguments of print function.
-    """
+def cprint(text, color=None, on_color=None, attrs=None, *colors, **kwargs):
+    """Print colorized text.
     
-    print((colored(text, color, on_color, attrs)), **kwargs)
+    Can be used instead of the original termcolor's cprint() and would work exactly the same,
+    but also allows for passing any extra colors, or skipping the awkward signature altogether, e.g.:
+    ::
+        # old style
+        cprint('Hello, World!', 'red', 'on_cyan', attrs=['reverse', 'blink'])
+        
+        # is equivalent to:
+        cprint('Hello, World!', 'red', 'on cyan', 'reverse', 'blink')
+    
+    It accepts kw-arguments of print function.
+    """
+    if on_color:
+        *_, actual_color = on_color.partition('_')
+        on_color = f'on {actual_color}'
+    
+    print((colored(text, color, on_color, *attrs, *colors)), **kwargs)
 
 
 __all__ = [
