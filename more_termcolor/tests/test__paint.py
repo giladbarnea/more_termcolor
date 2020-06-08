@@ -78,7 +78,7 @@ outer has fmt:
 """
 
 from more_termcolor import util
-from more_termcolor.paint import paint
+from more_termcolor.color import colored
 
 
 # settings.debug = True
@@ -88,8 +88,8 @@ def test__nested_incompat_colors():
     """R    G       R
        31   32  →   31"""
     
-    green = paint('Green', 'green')
-    red_green_red = paint('Red' + green + 'Red', 'red')
+    green = colored('Green', 'green')
+    red_green_red = colored('Red' + green + 'Red', 'red')
     util.spacyprint(f'red_green_red:', red_green_red)
     # doesn't reset green, just re-opens red (because incompatible)
     expected = '\x1b[31mRed\x1b[32mGreen\x1b[31mRed\x1b[0m'
@@ -100,20 +100,20 @@ def test__nested_incompat_colors():
 def test__nested_compat_colors__basic():
     """R    F       /F/B
        31   2   →   22"""
-    faintred = paint('FaintAndRed', 'faint')
-    red_faint_red = paint('Red' + faintred + 'Red', 'red')
-    util.spacyprint(f'red_faint_red:', red_faint_red)
-    expected = '\x1b[31mRed\x1b[2mFaintAndRed\x1b[22mRed\x1b[0m'
+    darkred = colored('darkAndRed', 'dark')
+    red_dark_red = colored('Red' + darkred + 'Red', 'red')
+    util.spacyprint(f'red_dark_red:', red_dark_red)
+    expected = '\x1b[31mRed\x1b[2mdarkAndRed\x1b[22mRed\x1b[0m'
     util.spacyprint('expected:', expected)
-    # smart reset faint in the middle, and does not re-open red
-    assert red_faint_red == expected
+    # smart reset dark in the middle, and does not re-open red
+    assert red_dark_red == expected
 
 
 def test__nested_compat_colors__adv_0():
     """I    B       /F/B
        3    1   →   22"""
-    bolditalic = paint('BoldAndItalic', 'bold')
-    italic_bold_italic = paint('Italic' + bolditalic + 'Italic', 'italic')
+    bolditalic = colored('BoldAndItalic', 'bold')
+    italic_bold_italic = colored('Italic' + bolditalic + 'Italic', 'italic')
     util.spacyprint(f'italic_bold_italic:', italic_bold_italic)
     expected = '\x1b[3mItalic\x1b[1mBoldAndItalic\x1b[22mItalic\x1b[0m'
     util.spacyprint(f'expected:', expected)
@@ -123,7 +123,7 @@ def test__nested_compat_colors__adv_0():
 def test__nested_compat_colors__adv_1():
     """I    R       /FG
        3    31  →   39"""
-    italic_red_italic = paint('Italic' + paint('RedItalic', 'red') + 'Italic', 'italic')
+    italic_red_italic = colored('Italic' + colored('RedItalic', 'red') + 'Italic', 'italic')
     util.spacyprint(f'italic_red_italic:', italic_red_italic)
     expected = '\x1b[3mItalic\x1b[31mRedItalic\x1b[39mItalic\x1b[0m'
     util.spacyprint(f'expected:', expected)
@@ -133,7 +133,7 @@ def test__nested_compat_colors__adv_1():
 def test__nested_compat_colors__adv_1_b():
     """I    SG      /FG
        3    92  →   39"""
-    italic_satgreen_italic = paint('Italic' + paint('SatGreenItalic', 'sat green') + 'Italic', 'italic')
+    italic_satgreen_italic = colored('Italic' + colored('SatGreenItalic', 'sat green') + 'Italic', 'italic')
     util.spacyprint(f'italic_satgreen_italic:', italic_satgreen_italic)
     expected = '\x1b[3mItalic\x1b[92mSatGreenItalic\x1b[39mItalic\x1b[0m'
     util.spacyprint(f'expected:', expected)
@@ -143,7 +143,7 @@ def test__nested_compat_colors__adv_1_b():
 def test__nested_compat_colors__adv_2():
     """B    I       /I
        1    3   →   23"""
-    bold_italic_bold = paint('Bold' + paint('ItalicAndBold', 'italic') + 'Bold', 'bold')
+    bold_italic_bold = colored('Bold' + colored('ItalicAndBold', 'italic') + 'Bold', 'bold')
     util.spacyprint(f'bold_italic_bold:', bold_italic_bold)
     expected = '\x1b[1mBold\x1b[3mItalicAndBold\x1b[23mBold\x1b[0m'
     util.spacyprint('expected:', expected)
@@ -154,31 +154,31 @@ def test__nested_compat_colors__adv_2():
 def test__nested_compat_colors__adv_3():
     """B    F       /F/B B
        1    2   →   22;1"""
-    bold_faint_bold = paint('Bold' + paint('FaintAndBold', 'faint') + 'Bold', 'bold')
-    util.spacyprint(f'bold_faint_bold:', bold_faint_bold)
-    expected0 = '\x1b[1mBold\x1b[2mFaintAndBold\x1b[22;1mBold\x1b[0m'
-    expected1 = '\x1b[1mBold\x1b[2mFaintAndBold\x1b[0;1mBold\x1b[0m'
+    bold_dark_bold = colored('Bold' + colored('darkAndBold', 'dark') + 'Bold', 'bold')
+    util.spacyprint(f'bold_dark_bold:', bold_dark_bold)
+    expected0 = '\x1b[1mBold\x1b[2mdarkAndBold\x1b[22;1mBold\x1b[0m'
+    expected1 = '\x1b[1mBold\x1b[2mdarkAndBold\x1b[0;1mBold\x1b[0m'
     util.spacyprint(f'expected0:', expected0)
     util.spacyprint(f'expected1:', expected1)
     # both options ok
-    assert bold_faint_bold in (expected0, expected1)
+    assert bold_dark_bold in (expected0, expected1)
 
 
 def test__nested_compat_colors__adv_4():
     """S    F       /F
        97   2   →   22"""
-    sat_faint_sat = paint('Sat' + paint('FaintAndSat', 'faint') + 'Sat', 'sat white')
-    util.spacyprint(f'sat_faint_sat:', sat_faint_sat)
-    expected = '\x1b[97mSat\x1b[2mFaintAndSat\x1b[22mSat\x1b[0m'
-    # smart reset faint, no re-open sat
+    sat_dark_sat = colored('Sat' + colored('darkAndSat', 'dark') + 'Sat', 'sat white')
+    util.spacyprint(f'sat_dark_sat:', sat_dark_sat)
+    expected = '\x1b[97mSat\x1b[2mdarkAndSat\x1b[22mSat\x1b[0m'
+    # smart reset dark, no re-open sat
     util.spacyprint('expected:', expected)
-    assert sat_faint_sat == expected
+    assert sat_dark_sat == expected
 
 
 def test__nested_compat_colors__adv_5():
     """S    R       S
        97   31  →   97"""
-    sat_red_sat = paint('Sat' + paint('Red', 'red') + 'Sat', 'sat white')
+    sat_red_sat = colored('Sat' + colored('Red', 'red') + 'Sat', 'sat white')
     util.spacyprint(f'sat_red_sat:', sat_red_sat)
     expected = '\x1b[97mSat\x1b[31mRed\x1b[97mSat\x1b[0m'
     util.spacyprint(f'expected:', expected)
@@ -189,18 +189,18 @@ def test__nested_compat_colors__adv_5():
 def test__nested_colors__compat_and_incompat():
     """S+B  F       /F/B B
        1;97 2   →   22;1"""
-    boldfaint = paint('BoldFaint', 'faint')
-    bold_satwhite__faint__bold_satwhite = paint('BoldSat' + boldfaint + 'BoldSat', 'bold', 'sat white')
-    util.spacyprint('bold_satwhite__faint__bold_satwhite:',
-                    bold_satwhite__faint__bold_satwhite,
-                    repr(bold_satwhite__faint__bold_satwhite))
-    # merge faint reset with bold re-open (22;1)
+    bolddark = colored('Bolddark', 'dark')
+    bold_satwhite__dark__bold_satwhite = colored('BoldSat' + bolddark + 'BoldSat', 'bold', 'sat white')
+    util.spacyprint('bold_satwhite__dark__bold_satwhite:',
+                    bold_satwhite__dark__bold_satwhite,
+                    repr(bold_satwhite__dark__bold_satwhite))
+    # merge dark reset with bold re-open (22;1)
     # recognize bold is lost by 22, so need to re-open it
     # recognize sat is not lost and is restored automatically by 22
-    expected = '\x1b[1;97mBoldSat\x1b[2mBoldFaint\x1b[22;1mBoldSat\x1b[0m'
+    expected = '\x1b[1;97mBoldSat\x1b[2mBolddark\x1b[22;1mBoldSat\x1b[0m'
     util.spacyprint(f'expected:', expected, repr(expected))
     
     try:
-        assert bold_satwhite__faint__bold_satwhite == expected
+        assert bold_satwhite__dark__bold_satwhite == expected
     except AssertionError as e:
-        assert bold_satwhite__faint__bold_satwhite == '\x1b[1;97mBoldSat\x1b[2mBoldFaint\x1b[22;1;97mBoldSat\x1b[0m'
+        assert bold_satwhite__dark__bold_satwhite == '\x1b[1;97mBoldSat\x1b[2mBolddark\x1b[22;1;97mBoldSat\x1b[0m'

@@ -5,20 +5,34 @@ from setuptools import find_packages, setup
 import sys
 import re
 
+if sys.version_info < (3, 7):
+    print(f"Python 3.7 and above required. current version: ", sys.version_info)
+    exit(1)
 from more_termcolor import util
 
-packages = find_packages()
+packages = find_packages(exclude=["tests?", "*.tests*", "*.tests*.*", "tests*.*", ])
 setup_args = dict(name='more_termcolor',
-                  version='1.0.1',
-                  description='Literally more colors, with support for nested colors',
+                  version='1.0.3',
+                  description='Literally all colors, supporting substring colors, convenience methods and full termcolor compatability',
+                  license='MIT',
                   author='Gilad Barnea',
                   author_email='giladbrn@gmail.com',
                   url='https://github.com/giladbarnea/more_termcolor',
                   packages=packages,
-                  # package_dir={'paint': 'more_termcolor'},
-                  keywords=["termcolor", "color", "colors", "terminal", "ansi"],
+                  # package_dir={'colored': 'more_termcolor'},
+                  keywords=["termcolor", "color", "colors", "terminal", "ansii", "formatting"],
                   # py_modules=[],
-                  extras_require=dict(test=['pytest', 'ipdb']))
+                  extras_require=dict(test=['pytest', 'ipdb']),
+                  classifiers=[
+                      # 'Development Status :: 5 - Production/Stable',
+                      'Environment :: Console',
+                      'Intended Audience :: Developers',
+                      'License :: OSI Approved :: MIT License',
+                      'Operating System :: OS Independent',
+                      "Programming Language :: Python :: 3 :: Only",
+                      'Topic :: Terminals'
+                      ]
+                  ),
 
 dry_run = False  # -n, [-]+dry[-_]?run
 confirm = False  # [-]+ok

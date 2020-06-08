@@ -4,7 +4,7 @@ from more_termcolor import core
 
 RESET_RE = re.compile(r'(?<=reset ).*')
 SATURATED_RE = re.compile(r'(?<=sat ).*')
-BACKGROUND_RE = re.compile(r'(?<=bg ).*')
+BACKGROUND_RE = re.compile(r'(?<=on ).*')
 
 
 @overload
@@ -16,7 +16,7 @@ def to_color(val: Union[str, int], obj=None):
     """Examples:
     ::
         to_color(32) # 'green'
-        to_color(103) # 'sat bg yellow'
+        to_color(103) # 'on satyellow'
     """
     if isinstance(val, str):
         if not val.isdigit():
@@ -41,7 +41,7 @@ def to_code(val: Union[str, int]) -> int:
     """Examples:
         ::
             to_code('green') # 32
-            to_code('sat bg yellow') # 103
+            to_code('on satyellow') # 103
             to_code(32) # 32
         """
     if isinstance(val, int) or val.isdigit():
@@ -60,15 +60,17 @@ def to_code(val: Union[str, int]) -> int:
 def _try_get_bg_reset_code(color: str) -> Optional[int]:
     """Examples:
     ::
-     ('bg red') → 49
-     ('sat bg red') → 49
+     ('on red') → 49
+     ('on satred') → 49
      ('green') → None
      ('BAD') → None
      ('sat green') → None
-     ('bg BAD') → KeyError
+     ('on BAD') → KeyError
     """
-    if match := BACKGROUND_RE.search(color):
-        if (actual_color := match.group()) not in core.BG_COLOR_CODES:
+    match = BACKGROUND_RE.search(color)
+    if match:
+        actual_color = match.group()
+        if actual_color not in core.BG_COLOR_CODES:
             raise KeyError(f"`color` ('{color}') matches '{BACKGROUND_RE.pattern}' but `actual_color` ('{actual_color}') not in BG_COLOR_CODES")
         resetcode = core.RESET_COLOR_CODES['bg']
         return resetcode
@@ -82,12 +84,14 @@ def _try_get_sat_reset_code(color: str) -> Optional[int]:
      ('green') → None
      ('BAD') → None
      ('sat BAD') → KeyError
-     ('bg red') → KeyError
-     ('sat bg red') → KeyError
+     ('on red') → KeyError
+     ('on satred') → KeyError
     """
-    if match := SATURATED_RE.search(color):
+    match = SATURATED_RE.search(color)
+    if match:
         # e.g. 'sat [bg ]yellow'
-        if (actual_color := match.group()) not in core.SAT_FG_COLOR_CODES:
+        actual_color = match.group()
+        if actual_color not in core.SAT_FG_COLOR_CODES:
             raise KeyError(f"`color` ('{color}') matches '{SATURATED_RE.pattern}' but `actual_color` ('{actual_color}') not in SAT_FG_COLOR_CODES")
         # 39 resets both std fg and sat fg
         return core.RESET_COLOR_CODES['fg']
@@ -98,11 +102,11 @@ def to_reset_code(val):
     """Examples:
     ::
      ('bold') → 22
-     ('faint') → 22
+     ('dark') → 22
      ('green') → 39
      ('sat green') → 39
-     ('bg red') → 49
-     ('sat bg red') → 49
+     ('on red') → 49
+     ('on satred') → 49
      (22) → 22
      ('BAD') → KeyError
     """
@@ -110,7 +114,8 @@ def to_reset_code(val):
     try:
         resetcode = core.RESET_COLOR_CODES[color]
     except KeyError as e:
-        if match := RESET_RE.search(color):
+        match = RESET_RE.search(color)
+        if match:
             # happens when passed e.g. '22',
             # in which case `color` is 'reset bold';
             # call again with just 'bold'
