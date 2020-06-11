@@ -97,15 +97,12 @@ def satyellow(text, *colors):
 ###########
 
 def colored(text: str, *colors: Union[str, int]):
-    # spacyprint(f'text: {text}', f'colors: {colors}')
     outer_open_codes = [convert.to_code(c) for c in colors]
-    # TODO: remove map str
     start = f'\033[{";".join(outer_open_codes)}m'
-    # spacyprint(f'outer_open_codes:', outer_open_codes, f'colors:', colors)
     # TODO:
-    #  if nested is fmt:
-    #       reset nested
-    #       if outer is fmt and outer.reset == nested.reset:
+    #  if inner has fmt or inner has bg:
+    #       reset inner
+    #       if outer has fmt and outer.reset == inner.reset:
     #           also re-open outer
     #  else:
     #       if outer is fmt:
@@ -113,45 +110,34 @@ def colored(text: str, *colors: Union[str, int]):
     #       else:
     #           re-open outer
     try:
-        # match = COLOR_BOUNDARY_RE.search(text)
-        # nested_codes = [g for g in match.groups() if g]
-        
+        # TODO (performance): less iterations, also don't replace substrings if not needed
         # if more than one open/reset pairs exist in text,
         # ignore them (*_) assuming they'd been recursively
         # taken care of.
-        nested_open, *_, nested_reset = re.finditer(COLOR_BOUNDARY_RE, text)
-        nested_open_codes = [c for c in nested_open.groups() if c]
+        inner_open, *_, inner_reset = re.finditer(COLOR_BOUNDARY_RE, text)
+        inner_open_codes = [c for c in inner_open.groups() if c]
         outer_has_formatting = any(c in core.FORMATTING_CODES for c in outer_open_codes)
-        nested_has_formatting = any(c in core.FORMATTING_CODES for c in nested_open_codes)
-        nested_reset_codes = [rc for rc in nested_reset.groups() if rc]
-        # spacyprint(f'nested_open: {nested_open}',
-        #            f'nested_reset: {nested_reset}',
-        #            f'nested_open_codes: {nested_open_codes}',
-        #            f'outer_has_formatting: {outer_has_formatting}',
-        #            f'nested_has_formatting: {nested_has_formatting}',
-        #            f'nested_reset_codes: {nested_reset_codes}')
-        if nested_has_formatting:
-            proper_nested_reset_codes = [convert.to_reset_code(c) for c in nested_open_codes]
+        inner_has_formatting = any(c in core.FORMATTING_CODES for c in inner_open_codes)
+        
+        if inner_has_formatting:
+            # replace existing inner reset codes with the inner colors' matching reset codes
+            #
+            proper_inner_reset_codes = [convert.to_reset_code(c) for c in inner_open_codes]
             if outer_has_formatting:
+                #
                 outer_reset_codes = [convert.to_reset_code(c) for c in outer_open_codes]
-                if any(oc in proper_nested_reset_codes for oc in outer_reset_codes):
-                    proper_nested_reset_codes.extend(outer_open_codes)
-            proper_nested_reset = f'\033[{";".join(proper_nested_reset_codes)}m'
-            # spacyprint(f'replacing nested reset with proper nested reset. before: ', repr(text), text)
-            text = text.replace(nested_reset.group(), proper_nested_reset, 1)
-            # spacyprint(f'after: ', repr(text), text)
+                if any(oc in proper_inner_reset_codes for oc in outer_reset_codes):
+                    proper_inner_reset_codes.extend(outer_open_codes)
+            proper_inner_reset = f'\033[{";".join(proper_inner_reset_codes)}m'
+            text = text.replace(inner_reset.group(), proper_inner_reset, 1)
         
         else:
             if outer_has_formatting:
-                # spacyprint(f'replacing nested reset with fg reset. before: ', repr(text), text)
                 # reset fg
-                text = text.replace(nested_reset.group(), '\033[39m', 1)
-                # spacyprint(f'after: ', repr(text), text)
+                text = text.replace(inner_reset.group(), '\033[39m', 1)
             else:
-                # spacyprint(f'replacing nested reset with outer open. before: ', repr(text), text)
-                # replace nested reset with outer open
-                text = text.replace(nested_reset.group(), start, 1)
-                # spacyprint(f'after: ', repr(text), text)
+                # replace inner reset with outer open
+                text = text.replace(inner_reset.group(), start, 1)
     except ValueError as e:  # not enough values to unpack (COLOR_BOUNDARY_RE did not match)
         pass
     # reset = f'\033[{";".join(map(str, map(convert.to_reset_code, colors)))}m'

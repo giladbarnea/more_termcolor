@@ -86,7 +86,7 @@ from more_termcolor.color import colored, cprint
 # settings.debug = True
 
 
-def test__nested_incompat_colors():
+def test__red_green_red():
     """R    G       R
        31   32  →   31"""
     
@@ -99,7 +99,7 @@ def test__nested_incompat_colors():
     assert red_green_red == expected
 
 
-def test__nested_compat_colors__basic():
+def test__red_dark_red():
     """R    F       /F/B
        31   2   →   22"""
     darkred = colored('DarkRed', 'dark')
@@ -111,7 +111,7 @@ def test__nested_compat_colors__basic():
     assert red_dark_red == expected
 
 
-def test__nested_compat_colors__adv_0():
+def test__italic_bold_italic():
     """I    B       /F/B
        3    1   →   22"""
     bolditalic = colored('BoldAndItalic', 'bold')
@@ -122,7 +122,7 @@ def test__nested_compat_colors__adv_0():
     assert italic_bold_italic == expected
 
 
-def test__nested_compat_colors__adv_1():
+def test__italic_red_italic():
     """I    R       /FG
        3    31  →   39"""
     italic_red_italic = colored('Italic' + colored('RedItalic', 'red') + 'Italic', 'italic')
@@ -132,7 +132,7 @@ def test__nested_compat_colors__adv_1():
     assert italic_red_italic == expected
 
 
-def test__nested_compat_colors__adv_1_b():
+def test__italic_satgreen_italic():
     """I    SG      /FG
        3    92  →   39"""
     italic_satgreen_italic = colored('Italic' + colored('SatGreenItalic', 'sat green') + 'Italic', 'italic')
@@ -142,7 +142,7 @@ def test__nested_compat_colors__adv_1_b():
     assert italic_satgreen_italic == expected
 
 
-def test__nested_compat_colors__adv_2():
+def test__bold_italic_bold():
     """B    I       /I
        1    3   →   23"""
     bold_italic_bold = colored('Bold' + colored('ItalicAndBold', 'italic') + 'Bold', 'bold')
@@ -153,7 +153,7 @@ def test__nested_compat_colors__adv_2():
     assert bold_italic_bold == expected
 
 
-def test__nested_compat_colors__adv_3():
+def test__bold_dark_bold():
     """B    F       /F/B B
        1    2   →   22;1"""
     bold_dark_bold = colored('Bold' + colored('DarkAndBold', 'dark') + 'Bold', 'bold')
@@ -166,29 +166,37 @@ def test__nested_compat_colors__adv_3():
     assert bold_dark_bold in (expected0, expected1)
 
 
-def test__nested_compat_colors__adv_4():
+def test__dark_bold_dark():
+    dark_bold_dark = colored(' Dark ' + colored(' DarkAndBold ', 'bold') + ' Dark ', 'dark')
+    util.spacyprint(f'dark_bold_dark:', dark_bold_dark)
+    expected = '\x1b[2m Dark \x1b[1m DarkAndBold \x1b[22;2m Dark \x1b[0m'
+    util.spacyprint(f'expected:', expected)
+    # both options ok
+    assert dark_bold_dark == expected
+
+
+def test__satwhite_dark_satwhite():
     """S    F       /F
        97   2   →   22"""
-    sat_dark_sat = colored('Sat' + colored('DarkAndSat', 'dark') + 'Sat', 'sat white')
-    util.spacyprint(f'sat_dark_sat:', sat_dark_sat)
+    satwhite_dark_satwhite = colored('Sat' + colored('DarkAndSat', 'dark') + 'Sat', 'sat white')
+    util.spacyprint(f'satwhite_dark_satwhite:', satwhite_dark_satwhite)
     expected = '\x1b[97mSat\x1b[2mDarkAndSat\x1b[22mSat\x1b[0m'
     # smart reset dark, no re-open sat
     util.spacyprint('expected:', expected)
-    assert sat_dark_sat == expected
+    assert satwhite_dark_satwhite == expected
 
 
-def test__nested_compat_colors__adv_5():
+def test__satwhite_red_satwhite():
     """S    R       S
        97   31  →   97"""
-    sat_red_sat = colored('Sat' + colored('Red', 'red') + 'Sat', 'sat white')
-    util.spacyprint(f'sat_red_sat:', sat_red_sat)
+    satwhite_red_satwhite = colored('Sat' + colored('Red', 'red') + 'Sat', 'sat white')
+    util.spacyprint(f'satwhite_red_satwhite:', satwhite_red_satwhite)
     expected = '\x1b[97mSat\x1b[31mRed\x1b[97mSat\x1b[0m'
     util.spacyprint(f'expected:', expected)
-    assert sat_red_sat == expected
+    assert satwhite_red_satwhite == expected
 
 
-# @pytest.mark.skip
-def test__nested_colors__compat_and_incompat():
+def test__bold_satwhite__dark__bold_satwhite():
     """S+B  F       /F/B B
        1;97 2   →   22;1"""
     bolddark = colored('BoldDark', 'dark')
@@ -206,6 +214,21 @@ def test__nested_colors__compat_and_incompat():
         assert bold_satwhite__dark__bold_satwhite == expected
     except AssertionError as e:
         assert bold_satwhite__dark__bold_satwhite == '\x1b[1;97mBoldSat\x1b[2mBoldDark\x1b[22;1;97mBoldSat\x1b[0m'
+
+
+##############
+# background #
+##############
+def test__red_blackbg_red():
+    blackbg = colored('BlackBG', 'on black')
+    red_blackbg_red = colored('Red' + blackbg + 'Red', 'red')
+    util.spacyprint('red_blackbg_red:',
+                    red_blackbg_red,
+                    repr(red_blackbg_red))
+    expected = '\x1b[31mRed\x1b[40mBlackBG\x1b[49mRed\x1b[0m'
+    util.spacyprint(f'expected:', expected, repr(expected))
+    
+    assert red_blackbg_red == expected
 
 
 #########################################

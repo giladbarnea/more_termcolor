@@ -12,7 +12,7 @@ from more_termcolor import util
 
 packages = find_packages(exclude=["tests?", "*.tests*", "*.tests*.*", "tests*.*", ])
 setup_args = dict(name='more_termcolor',
-                  version='1.0.3',
+                  version='1.0.5',
                   description='Literally all colors, supporting multiple substring colors, convenience methods and full original termcolor compatability',
                   license='MIT',
                   author='Gilad Barnea',
@@ -20,9 +20,10 @@ setup_args = dict(name='more_termcolor',
                   url='https://github.com/giladbarnea/more_termcolor',
                   packages=packages,
                   # package_dir={'colored': 'more_termcolor'},
-                  keywords=["termcolor", "color", "colors", "terminal", "ansii", "formatting"],
+                  keywords=["termcolor", "color", "colors", "terminal", "ansi", "formatting"],
                   # py_modules=[],
                   extras_require=dict(test=['pytest', 'ipdb']),
+                  # https://pypi.org/classifiers/
                   classifiers=[
                       # 'Development Status :: 5 - Production/Stable',
                       'Environment :: Console',
