@@ -11,19 +11,23 @@
 ## 1 inner color
 - [x] fg [ bg ]
 - [x] fg [ formatting ]
-- [ ] bg [ fg ]
-- [ ] bg [ formatting ]
+- [x] bg [ fg ]
+- [x] bg [ formatting ]
+- [x] formatting [ fg ]
+- [x] formatting [ bg ]
 
 
 ## 2 inner colors
-- [ ] fg [ bg, formatting ]
-- [ ] bg [ fg, formatting ]
-- [ ] formatting [ bg, fg ]
+- [x] fg [ bg, formatting ]
+- [x] bg [ fg, formatting ]
+- [x] formatting [ bg, fg ]
 
 ## 2 outer colors
-- [ ] fg, bg [ formatting ]
-- [ ] formatting, bg [ fg ]
-- [ ] formatting, fg [ bg ]
+- [x] fg, bg [ formatting ]
+- [x] formatting, bg [ fg ]
+- [x] formatting, fg [ bg ]
+
+
 # Same reset code
 
 ## TRIVIAL
