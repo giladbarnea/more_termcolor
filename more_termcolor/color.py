@@ -96,9 +96,37 @@ def satyellow(text, *colors):
 # colored #
 ###########
 
-def colored(text: str, *colors: Union[str, int]):
-    """If any colors already exist within `text`, this function tries to keep them intact as much as possible.
-    For example, if `text` already has an underlined substring, and """
+def colored(text: str, *colors: Union[str, int]) -> str:
+    """
+    Multiple colors can be passed, and their color codes will be merged.
+    The resulting string will always end with a 'reset all' code (0).
+    There will never be a 'reset all' code in the middle of the resulting string.
+    
+    If any colors already exist within `text`, this function
+    tries to keep them intact as much as possible.
+
+    For example, if a user passes `colored(mytext, "bold")`,
+    and `mytext` is already underlined, the result will be both bold AND underlined.
+
+    If `mytext` only contains an underlined substring, surrounded by regular text,
+    the whole resulting text will be bold, but only the underlined substring will be underlined.
+
+    This behavior is similar to nesting html tags (i.e. "<b>bold <i>and italic</i></b>").
+    
+    Any duplicate colors are merged.
+    
+    I'm not sure about the maximum number of colors that can be passed,
+    because I stopped adding after `("foo", "red", "on black", "bold", "dark", "italic", "underline", "blink", "reverse", "strike", "overline")` worked.
+    
+    :param colors: each color can have a "sat [color]", "on [color]", or "on sat [color]" preceding it, so "on sat blue"
+     will color the text with a saturated blue background.
+     If no color is passed, returns `text` unmodified.
+    
+    :return: the formatted string.
+    """
+    
+    if not colors:
+        return text
     
     def _is_non_foreground(_code):
         return _code not in core.FOREGROUND_CODES and _code not in core.SATURATED_FOREGROUND_CODES
@@ -109,6 +137,9 @@ def colored(text: str, *colors: Union[str, int]):
     outer_has_non_foreground = False
     for color in colors:
         open_code = convert.to_code(color)
+        # TODO: complexity
+        if open_code in outer_open_codes:
+            continue
         outer_open_codes.append(open_code)
         reset_code = convert.to_reset_code(open_code)
         # TODO: this probably fails when open colors are bold,dark!
@@ -146,7 +177,6 @@ def colored(text: str, *colors: Union[str, int]):
             
             if outer_has_non_foreground:
                 inner_reset_codes.extend(outer_open_codes_to_reopen)
-                # if outer_and_inner_reset_codes_overlap:
             proper_inner_reset = f'\033[{";".join(inner_reset_codes)}m'
             text = text.replace(inner_reset.group(), proper_inner_reset, 1)
         

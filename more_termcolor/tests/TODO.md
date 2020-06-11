@@ -78,9 +78,9 @@ Bad usage
 =========
 
 ## TRIVIAL
-- [ ] <color>, dark, <same color>
-- [ ] colored('foo') (no colors)
-- [ ] more than 3 colors
+- [x] <color>, dark, <same color>
+- [x] colored('foo') (no colors)
+- [x] more than 3 colors
 
 ## 1 inner color
 - [ ] standard bg [ <same color> ]

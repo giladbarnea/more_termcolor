@@ -51,6 +51,13 @@ def test__to_code__edge_cases():
         convert.to_code('on sat blue')
 
 
+def test__to_code__docstring_examples():
+    assert convert.to_code('green') == '32'
+    assert convert.to_code('on red') == '41'
+    assert convert.to_code('on sat yellow') == '103'
+    assert convert.to_code(32) == '32' == convert.to_code('32')
+
+
 def test__to_color__sanity():
     for color, code in core.FORMATTING_COLOR_CODES.items():
         actual = convert.to_color(code)
@@ -99,11 +106,17 @@ def test__to_color__sanity():
         assert convert.to_color(code) == f'on sat {color}'
 
 
+def test__to_color__docstring_examples():
+    assert convert.to_color(32) == 'green' == convert.to_color('32')
+    assert convert.to_color(41) == 'on red' == convert.to_color('41')
+    assert convert.to_color(103) == 'on sat yellow' == convert.to_color('103')
+    assert convert.to_color('green') == 'green'
+
+
 def test__to_reset_code():
     assert convert.to_reset_code('bold') == '22'
     assert convert.to_reset_code('dark') == '22'
-    assert convert.to_reset_code(22) == '22'
-    assert convert.to_reset_code('22') == '22'
+    assert convert.to_reset_code(22) == '22' == convert.to_reset_code('22')
     assert convert.to_reset_code('green') == '39' == core.RESET_COLOR_CODES['fg']
     assert convert.to_reset_code('on red') == '49'
     assert convert.to_reset_code('sat red') == '39'

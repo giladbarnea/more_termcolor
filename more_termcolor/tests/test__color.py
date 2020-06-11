@@ -79,9 +79,9 @@ outer has fmt:
 
 import io
 
-import pytest
 from more_termcolor import util
 from more_termcolor.color import colored, cprint
+import re
 
 
 def _print(description, string):
@@ -334,34 +334,63 @@ def test__onblack_ongreen_onblack():
 
 # 2 outer colors
 ################
-def test__bold_satwhite__dark__bold_satwhite():
+def test__boldsatwhite__dark__boldsatwhite():
     """S+B  F       /F/B B
        1;97 2   →   22;1"""
-    bolddark = colored(' BoldDark ', 'dark')
-    bold_satwhite__dark__bold_satwhite = colored(' BoldSat ' + bolddark + ' BoldSat ', 'bold', 'sat white')
-    _actualprint(bold_satwhite__dark__bold_satwhite)
+    dark = colored(' Dark ', 'dark')
+    boldsatwhite__dark__boldsatwhite = colored(' BoldSat ' + dark + ' BoldSat ', 'bold', 'sat white')
+    _actualprint(boldsatwhite__dark__boldsatwhite)
     # merge dark reset with bold re-open (22;1)
     # recognize bold is lost by 22, so need to re-open it
     # recognize sat is not lost and is restored automatically by 22 (resetting dark)
     # TODO: why is sat restored when resetting dark?
     #  In IPython:
     # # print('\x1b[97m Saturated (#EEEEEC) \x1b[2m Saturated and Dark (#9F9F9D) \x1b[22m Saturated (#EEEEEC) \x1b[0m Normal (#AAAAAA) \x1b[2m Dark (#717171) \x1b[0m')
-    expected = '\x1b[1;97m BoldSat \x1b[2m BoldDark \x1b[22;1m BoldSat \x1b[0m'
+    expected = '\x1b[1;97m BoldSat \x1b[2m Dark \x1b[22;1m BoldSat \x1b[0m'
     _expectedprint(expected)
     
-    assert bold_satwhite__dark__bold_satwhite == expected
+    assert boldsatwhite__dark__boldsatwhite == expected
 
 
 def test__darkbold__satwhite__darkbold():
-    """S+B  F       /F/B B
-       1;97 2   →   22;1"""
     satwhite = colored(' SatWhite ', 'sat white')
     darkbold__satwhite__darkbold = colored(' DarkBold ' + satwhite + ' DarkBold ', 'bold', 'dark')
     _actualprint(darkbold__satwhite__darkbold)
     expected = '\x1b[1;2m DarkBold \x1b[97m SatWhite \x1b[39m DarkBold \x1b[0m'
     _expectedprint(expected)
-    
     assert darkbold__satwhite__darkbold == expected
+
+
+#############
+# Bad usage #
+#############
+
+# Trivial
+#########
+def test__no_color():
+    assert colored('foo') == 'foo'
+
+
+def test__same_color():
+    actual = colored('foo', 'red', 'dark', 'red')
+    _actualprint(actual)
+    expected = '\x1b[31;2mfoo\x1b[0m'
+    _expectedprint(expected)
+    assert actual == expected
+    
+    actual = colored('foo', 'dark', 'dark', 'red')
+    _actualprint(actual)
+    expected = '\x1b[2;31mfoo\x1b[0m'
+    _expectedprint(expected)
+    assert actual == expected
+
+
+def test__too_many_colors():
+    actual = colored('foo', "red", "on black", "bold", "dark", "italic", "underline", "blink", "reverse", "strike", "overline")
+    _actualprint(actual)
+    expected = '\x1b[31;40;1;2;3;4;5;7;9;53mfoo\x1b[0m'
+    _expectedprint(expected)
+    assert actual == expected
 
 
 #########################################

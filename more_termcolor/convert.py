@@ -13,6 +13,7 @@ def to_color(val: Union[str, int], obj: dict = None) -> Optional[str]:
     """Examples:
     ::
         to_color(32) # 'green'
+        to_color(41) # 'on red'
         to_color(103) # 'on sat yellow'
         to_color('green') # 'green'
     """
@@ -37,10 +38,11 @@ def to_color(val: Union[str, int], obj: dict = None) -> Optional[str]:
 
 def to_code(val: Union[str, int]) -> str:
     """Examples:
-        ::
-            to_code('green') # 32
-            to_code('on sat yellow') # 103
-            to_code(32) # 32
+    ::
+        to_code('green') # '32'
+        to_code('on red') # '41'
+        to_code('on sat yellow') # '103'
+        to_code(32) # '32'
         """
     if isinstance(val, int) or val.isdigit():
         # val is actually a color code
