@@ -72,16 +72,27 @@ RESET_COLOR_CODES = dict(all='0',
                          ol='55',
                          overline='55',
                          )
-FG_COLOR_CODES = dict(
-        black='30',
-        red='31',
-        green='32',
-        yellow='33',
-        blue='34',
-        magenta='35',
-        cyan='36',
-        white='37',
-        )
+FG_COLORS = (
+    'black',  # 30
+    'red',  # 31
+    'green',  # 32
+    'yellow',  # 33
+    'blue',  # 34
+    'magenta',  # 35
+    'cyan',  # 36
+    'white',  # 37
+    )
+FG_CODES = (
+    '30',
+    '31',
+    '32',
+    '33',
+    '34',
+    '35',
+    '36',
+    '37',
+    )
+FG_COLOR_CODES = dict(zip(FG_COLORS, FG_CODES))
 SAT_BG_COLOR_CODES = dict(black='100',
                           red='101',
                           green='102',

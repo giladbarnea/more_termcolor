@@ -83,22 +83,16 @@ from more_termcolor import util
 from more_termcolor.color import colored, cprint
 
 
-# settings.debug = True
+###########################
+## Different reset codes ##
+###########################
+
+# Trivial
+#########
 
 
-def test__red_green_red():
-    """R    G       R
-       31   32  →   31"""
-    
-    green = colored('Green', 'green')
-    red_green_red = colored('Red' + green + 'Red', 'red')
-    util.spacyprint(f'red_green_red:', red_green_red)
-    # doesn't reset green, just re-opens red (because incompatible)
-    expected = '\x1b[31mRed\x1b[32mGreen\x1b[31mRed\x1b[0m'
-    util.spacyprint('expected:', expected)
-    assert red_green_red == expected
-
-
+# 1 inner color
+###############
 def test__red_dark_red():
     """R    F       /F/B
        31   2   →   22"""
@@ -132,6 +126,19 @@ def test__italic_red_italic():
     assert italic_red_italic == expected
 
 
+def test__red_green_red():
+    """R    G       R
+       31   32  →   31"""
+    
+    green = colored('Green', 'green')
+    red_green_red = colored('Red' + green + 'Red', 'red')
+    util.spacyprint(f'red_green_red:', red_green_red)
+    # doesn't reset green, just re-opens red (because incompatible)
+    expected = '\x1b[31mRed\x1b[32mGreen\x1b[31mRed\x1b[0m'
+    util.spacyprint('expected:', expected)
+    assert red_green_red == expected
+
+
 def test__italic_satgreen_italic():
     """I    SG      /FG
        3    92  →   39"""
@@ -151,6 +158,56 @@ def test__bold_italic_bold():
     util.spacyprint('expected:', expected)
     # smart reset italic (23), no reopen bold
     assert bold_italic_bold == expected
+
+
+def test__satwhite_dark_satwhite():
+    """S    F       /F
+       97   2   →   22"""
+    satwhite_dark_satwhite = colored('Sat' + colored('DarkAndSat', 'dark') + 'Sat', 'sat white')
+    util.spacyprint(f'satwhite_dark_satwhite:', satwhite_dark_satwhite)
+    expected = '\x1b[97mSat\x1b[2mDarkAndSat\x1b[22mSat\x1b[0m'
+    # smart reset dark, no re-open sat
+    util.spacyprint('expected:', expected)
+    assert satwhite_dark_satwhite == expected
+
+
+def test__satwhite_red_satwhite():
+    """S    R       S
+       97   31  →   97"""
+    satwhite_red_satwhite = colored('Sat' + colored('Red', 'red') + 'Sat', 'sat white')
+    util.spacyprint(f'satwhite_red_satwhite:', satwhite_red_satwhite)
+    expected = '\x1b[97mSat\x1b[31mRed\x1b[97mSat\x1b[0m'
+    util.spacyprint(f'expected:', expected)
+    assert satwhite_red_satwhite == expected
+
+
+def test__red_blackbg_red():
+    onblack = colored('OnBlack', 'on black')
+    red_onblack_red = colored('Red' + onblack + 'Red', 'red')
+    util.spacyprint('red_onblack_red:',
+                    red_onblack_red,
+                    repr(red_onblack_red))
+    expected = '\x1b[31mRed\x1b[40mOnBlack\x1b[49mRed\x1b[0m'
+    util.spacyprint(f'expected:', expected, repr(expected))
+    
+    assert red_onblack_red == expected
+
+
+def test__satred_blackbg_satred():
+    blackbg = colored('OnBlack', 'on black')
+    satred = colored('SatRed' + blackbg + 'SatRed', 'on red')
+    util.spacyprint('satred:',
+                    satred,
+                    repr(satred))
+    expected = '\x1b[41mSatRed\x1b[40mOnBlack\x1b[49mSatRed\x1b[0m'
+    util.spacyprint(f'expected:', expected, repr(expected))
+    
+    assert satred == expected
+
+
+######################
+## Same reset codes ##
+######################
 
 
 def test__bold_dark_bold():
@@ -175,60 +232,24 @@ def test__dark_bold_dark():
     assert dark_bold_dark == expected
 
 
-def test__satwhite_dark_satwhite():
-    """S    F       /F
-       97   2   →   22"""
-    satwhite_dark_satwhite = colored('Sat' + colored('DarkAndSat', 'dark') + 'Sat', 'sat white')
-    util.spacyprint(f'satwhite_dark_satwhite:', satwhite_dark_satwhite)
-    expected = '\x1b[97mSat\x1b[2mDarkAndSat\x1b[22mSat\x1b[0m'
-    # smart reset dark, no re-open sat
-    util.spacyprint('expected:', expected)
-    assert satwhite_dark_satwhite == expected
-
-
-def test__satwhite_red_satwhite():
-    """S    R       S
-       97   31  →   97"""
-    satwhite_red_satwhite = colored('Sat' + colored('Red', 'red') + 'Sat', 'sat white')
-    util.spacyprint(f'satwhite_red_satwhite:', satwhite_red_satwhite)
-    expected = '\x1b[97mSat\x1b[31mRed\x1b[97mSat\x1b[0m'
-    util.spacyprint(f'expected:', expected)
-    assert satwhite_red_satwhite == expected
-
-
 def test__bold_satwhite__dark__bold_satwhite():
     """S+B  F       /F/B B
        1;97 2   →   22;1"""
-    bolddark = colored('BoldDark', 'dark')
-    bold_satwhite__dark__bold_satwhite = colored('BoldSat' + bolddark + 'BoldSat', 'bold', 'sat white')
+    bolddark = colored(' BoldDark ', 'dark')
+    bold_satwhite__dark__bold_satwhite = colored(' BoldSat ' + bolddark + ' BoldSat ', 'bold', 'sat white')
     util.spacyprint('bold_satwhite__dark__bold_satwhite:',
                     bold_satwhite__dark__bold_satwhite,
                     repr(bold_satwhite__dark__bold_satwhite))
     # merge dark reset with bold re-open (22;1)
     # recognize bold is lost by 22, so need to re-open it
     # recognize sat is not lost and is restored automatically by 22
-    expected = '\x1b[1;97mBoldSat\x1b[2mBoldDark\x1b[22;1mBoldSat\x1b[0m'
+    expected = '\x1b[1;97m BoldSat \x1b[2m BoldDark \x1b[22;1m BoldSat \x1b[0m'
     util.spacyprint(f'expected:', expected, repr(expected))
     
     try:
         assert bold_satwhite__dark__bold_satwhite == expected
     except AssertionError as e:
-        assert bold_satwhite__dark__bold_satwhite == '\x1b[1;97mBoldSat\x1b[2mBoldDark\x1b[22;1;97mBoldSat\x1b[0m'
-
-
-##############
-# background #
-##############
-def test__red_blackbg_red():
-    blackbg = colored('BlackBG', 'on black')
-    red_blackbg_red = colored('Red' + blackbg + 'Red', 'red')
-    util.spacyprint('red_blackbg_red:',
-                    red_blackbg_red,
-                    repr(red_blackbg_red))
-    expected = '\x1b[31mRed\x1b[40mBlackBG\x1b[49mRed\x1b[0m'
-    util.spacyprint(f'expected:', expected, repr(expected))
-    
-    assert red_blackbg_red == expected
+        assert bold_satwhite__dark__bold_satwhite == '\x1b[1;97m BoldSat \x1b[2m BoldDark \x1b[22;1;97m BoldSat \x1b[0m'
 
 
 #########################################

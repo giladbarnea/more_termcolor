@@ -1,3 +1,29 @@
+# Different reset codes
+
+## Trivial
+- [ ] standard fg, standard bg
+- [ ] standard fg, saturated bg
+- [ ] standard fg, formatting
+- [ ] saturated fg, standard bg
+- [ ] saturated fg, saturated bg
+- [ ] saturated fg, formatting
+
+## 1 inner color
+- [x] fg [ bg ]
+- [x] fg [ formatting ]
+- [ ] bg [ fg ]
+- [ ] bg [ formatting ]
+
+
+## 2 inner colors
+- [ ] fg [ bg, formatting ]
+- [ ] bg [ fg, formatting ]
+- [ ] formatting [ bg, fg ]
+
+## 2 outer colors
+- [ ] fg, bg [ formatting ]
+- [ ] formatting, bg [ fg ]
+- [ ] formatting, fg [ bg ]
 # Same reset code
 
 ## TRIVIAL
@@ -32,55 +58,6 @@
 - [ ] standard fg, other standard fg [ <random> ]
 - [ ] standard fg, saturated fg [ <random> ]
 - [ ] formatting , other formatting [ <random> ]
-
-# Different reset codes
-
-## 1 inner color
-- [x] standard fg [ standard bg ]
-- [ ] standard fg [ saturated bg ]
-- [ ] saturated fg [ standard bg ]
-- [ ] saturated fg [ saturated bg ]
-- [ ] standard bg [ standard fg ]
-- [ ] standard bg [ saturated fg ]
-- [ ] saturated bg [ standard fg ]
-- [ ] saturated bg [ saturated fg ]
-- [ ] standard fg [ formatting ]
-- [x] saturated fg [ formatting ]
-- [ ] standard bg [ formatting ]
-- [ ] saturated bg [ formatting ]
-- [ ] formatting [ standard fg ]
-- [ ] formatting [ saturated fg ]
-- [ ] formatting [ standard bg ]
-- [ ] formatting [ saturated bg ]
-
-## 2 inner colors
-- [ ] standard fg [ standard bg, formatting ]
-- [ ] standard fg [ saturated bg, formatting ]
-- [ ] saturated fg [ standard bg, formatting ]
-- [ ] saturated fg [ saturated bg, formatting ]
-- [ ] standard bg [ standard fg, formatting ]
-- [ ] standard bg [ saturated fg, formatting ]
-- [ ] saturated bg [ standard fg, formatting ]
-- [ ] saturated bg [ saturated fg, formatting ]
-- [ ] formatting [ standard bg, standard fg ]
-- [ ] formatting [ saturated bg, standard fg ]
-- [ ] formatting [ standard bg, saturated fg ]
-- [ ] formatting [ saturated bg, saturated fg ]
-
-## 2 outer colors
-- [ ] standard fg, standard bg [ formatting ]
-- [ ] standard fg, saturated bg [ formatting ]
-- [ ] saturated fg, standard bg [ formatting ]
-- [ ] saturated fg, saturated bg [ formatting ]
-- [ ] standard bg, standard fg [ formatting ]
-- [ ] standard bg, saturated fg [ formatting ]
-- [ ] saturated bg, standard fg [ formatting ]
-- [ ] saturated bg, saturated fg [ formatting ]
-- [ ] formatting, standard bg [ standard fg ]
-- [ ] formatting, saturated bg [ standard fg ]
-- [ ] formatting, standard bg [ saturated fg ]
-- [ ] formatting, saturated bg [ saturated fg ]
-
 # Mulitple recursion levels
 
 # Bad usage

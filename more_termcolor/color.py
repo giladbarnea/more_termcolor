@@ -115,11 +115,17 @@ def colored(text: str, *colors: Union[str, int]):
         # ignore them (*_) assuming they'd been recursively
         # taken care of.
         inner_open, *_, inner_reset = re.finditer(COLOR_BOUNDARY_RE, text)
-        inner_open_codes = [c for c in inner_open.groups() if c]
-        outer_has_formatting = any(c in core.FORMATTING_CODES for c in outer_open_codes)
-        inner_has_formatting = any(c in core.FORMATTING_CODES for c in inner_open_codes)
+        inner_open_codes = []
+        inner_has_non_foreground = False
+        for code in inner_open.groups():
+            if code:
+                inner_open_codes.append(code)
+                if not inner_has_non_foreground and code not in core.FG_CODES:
+                    inner_has_non_foreground = True
         
-        if inner_has_formatting:
+        outer_has_formatting = any(c in core.FORMATTING_CODES for c in outer_open_codes)
+        
+        if inner_has_non_foreground:
             # replace existing inner reset codes with the inner colors' matching reset codes
             #
             proper_inner_reset_codes = [convert.to_reset_code(c) for c in inner_open_codes]
