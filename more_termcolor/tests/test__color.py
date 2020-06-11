@@ -83,6 +83,18 @@ from more_termcolor import util
 from more_termcolor.color import colored, cprint
 
 
+def _print(description, string):
+    util.spacyprint(f'{description}:', string, repr(string))
+
+
+def _actualprint(string):
+    _print('actual', string)
+
+
+def _expectedprint(string):
+    _print('expected', string)
+
+
 ###########################
 ## Different reset codes ##
 ###########################
@@ -98,9 +110,9 @@ def test__red_dark_red():
        31   2   →   22"""
     darkred = colored('DarkRed', 'dark')
     red_dark_red = colored('Red' + darkred + 'Red', 'red')
-    util.spacyprint(f'red_dark_red:', red_dark_red)
+    _actualprint(red_dark_red)
     expected = '\x1b[31mRed\x1b[2mDarkRed\x1b[22mRed\x1b[0m'
-    util.spacyprint('expected:', expected)
+    _expectedprint(expected)
     # smart reset dark in the middle, and does not re-open red
     assert red_dark_red == expected
 
@@ -110,9 +122,9 @@ def test__italic_bold_italic():
        3    1   →   22"""
     bolditalic = colored('BoldAndItalic', 'bold')
     italic_bold_italic = colored('Italic' + bolditalic + 'Italic', 'italic')
-    util.spacyprint(f'italic_bold_italic:', italic_bold_italic)
+    _actualprint(italic_bold_italic)
     expected = '\x1b[3mItalic\x1b[1mBoldAndItalic\x1b[22mItalic\x1b[0m'
-    util.spacyprint(f'expected:', expected)
+    _expectedprint(expected)
     assert italic_bold_italic == expected
 
 
@@ -120,32 +132,19 @@ def test__italic_red_italic():
     """I    R       /FG
        3    31  →   39"""
     italic_red_italic = colored('Italic' + colored('RedItalic', 'red') + 'Italic', 'italic')
-    util.spacyprint(f'italic_red_italic:', italic_red_italic)
+    _actualprint(italic_red_italic)
     expected = '\x1b[3mItalic\x1b[31mRedItalic\x1b[39mItalic\x1b[0m'
-    util.spacyprint(f'expected:', expected)
+    _expectedprint(expected)
     assert italic_red_italic == expected
-
-
-def test__red_green_red():
-    """R    G       R
-       31   32  →   31"""
-    
-    green = colored('Green', 'green')
-    red_green_red = colored('Red' + green + 'Red', 'red')
-    util.spacyprint(f'red_green_red:', red_green_red)
-    # doesn't reset green, just re-opens red (because incompatible)
-    expected = '\x1b[31mRed\x1b[32mGreen\x1b[31mRed\x1b[0m'
-    util.spacyprint('expected:', expected)
-    assert red_green_red == expected
 
 
 def test__italic_satgreen_italic():
     """I    SG      /FG
        3    92  →   39"""
     italic_satgreen_italic = colored('Italic' + colored('SatGreenItalic', 'sat green') + 'Italic', 'italic')
-    util.spacyprint(f'italic_satgreen_italic:', italic_satgreen_italic)
+    _actualprint(italic_satgreen_italic)
     expected = '\x1b[3mItalic\x1b[92mSatGreenItalic\x1b[39mItalic\x1b[0m'
-    util.spacyprint(f'expected:', expected)
+    _expectedprint(expected)
     assert italic_satgreen_italic == expected
 
 
@@ -153,9 +152,9 @@ def test__bold_italic_bold():
     """B    I       /I
        1    3   →   23"""
     bold_italic_bold = colored('Bold' + colored('ItalicAndBold', 'italic') + 'Bold', 'bold')
-    util.spacyprint(f'bold_italic_bold:', bold_italic_bold)
+    _actualprint(bold_italic_bold)
     expected = '\x1b[1mBold\x1b[3mItalicAndBold\x1b[23mBold\x1b[0m'
-    util.spacyprint('expected:', expected)
+    _expectedprint(expected)
     # smart reset italic (23), no reopen bold
     assert bold_italic_bold == expected
 
@@ -164,10 +163,10 @@ def test__satwhite_dark_satwhite():
     """S    F       /F
        97   2   →   22"""
     satwhite_dark_satwhite = colored('Sat' + colored('DarkAndSat', 'dark') + 'Sat', 'sat white')
-    util.spacyprint(f'satwhite_dark_satwhite:', satwhite_dark_satwhite)
+    _actualprint(satwhite_dark_satwhite)
     expected = '\x1b[97mSat\x1b[2mDarkAndSat\x1b[22mSat\x1b[0m'
     # smart reset dark, no re-open sat
-    util.spacyprint('expected:', expected)
+    _expectedprint(expected)
     assert satwhite_dark_satwhite == expected
 
 
@@ -175,20 +174,18 @@ def test__satwhite_red_satwhite():
     """S    R       S
        97   31  →   97"""
     satwhite_red_satwhite = colored('Sat' + colored('Red', 'red') + 'Sat', 'sat white')
-    util.spacyprint(f'satwhite_red_satwhite:', satwhite_red_satwhite)
+    _actualprint(satwhite_red_satwhite)
     expected = '\x1b[97mSat\x1b[31mRed\x1b[97mSat\x1b[0m'
-    util.spacyprint(f'expected:', expected)
+    _actualprint(expected)
     assert satwhite_red_satwhite == expected
 
 
 def test__red_onblack_red():
     onblack = colored('OnBlack', 'on black')
     red_onblack_red = colored('Red' + onblack + 'Red', 'red')
-    util.spacyprint('actual:',
-                    red_onblack_red,
-                    repr(red_onblack_red))
+    _actualprint(red_onblack_red)
     expected = '\x1b[31mRed\x1b[40mOnBlack\x1b[49mRed\x1b[0m'
-    util.spacyprint(f'expected:', expected, repr(expected))
+    _expectedprint(expected)
     
     assert red_onblack_red == expected
 
@@ -196,44 +193,36 @@ def test__red_onblack_red():
 def test__satred_onblack_satred():
     onblack = colored('OnBlack', 'on black')
     satred_onblack_satred = colored('SatRed' + onblack + 'SatRed', 'sat red')
-    util.spacyprint('actual:',
-                    satred_onblack_satred,
-                    repr(satred_onblack_satred))
+    _actualprint(satred_onblack_satred)
     expected = "\x1b[91mSatRed\x1b[40mOnBlack\x1b[49mSatRed\x1b[0m"
-    util.spacyprint(f'expected:', expected, repr(expected))
+    _expectedprint(expected)
     assert satred_onblack_satred == expected
 
 
 def test__onblack_satred_onblack():
     satred = colored('SatRed', 'sat red')
     onblack_satred_onblack = colored('OnBlack' + satred + 'OnBlack', 'on black')
-    util.spacyprint('actual:',
-                    onblack_satred_onblack,
-                    repr(onblack_satred_onblack))
+    _actualprint(onblack_satred_onblack)
     expected = '\x1b[40mOnBlack\x1b[91mSatRed\x1b[39mOnBlack\x1b[0m'
-    util.spacyprint(f'expected:', expected, repr(expected))
+    _expectedprint(expected)
     assert onblack_satred_onblack == expected
 
 
 def test__onblack_underline_onblack():
     underline = colored('Underline', 'ul')
     onblack_underline_onblack = colored('OnBlack' + underline + 'OnBlack', 'on black')
-    util.spacyprint('actual:',
-                    onblack_underline_onblack,
-                    repr(onblack_underline_onblack))
+    _actualprint(onblack_underline_onblack)
     expected = '\x1b[40mOnBlack\x1b[4mUnderline\x1b[24mOnBlack\x1b[0m'
-    util.spacyprint(f'expected:', expected, repr(expected))
+    _expectedprint(expected)
     assert onblack_underline_onblack == expected
 
 
 def test__underline_onblack_underline():
     onblack = colored('OnBlack', 'on black')
     underline_onblack_underline = colored('Underline' + onblack + 'Underline', 'underline')
-    util.spacyprint('actual:',
-                    underline_onblack_underline,
-                    repr(underline_onblack_underline))
+    _actualprint(underline_onblack_underline)
     expected = '\x1b[4mUnderline\x1b[40mOnBlack\x1b[49mUnderline\x1b[0m'
-    util.spacyprint(f'expected:', expected, repr(expected))
+    _expectedprint(expected)
     assert underline_onblack_underline == expected
 
 
@@ -242,33 +231,27 @@ def test__underline_onblack_underline():
 def test__satred__onblack_bold__satred():
     onblackbold = colored(' OnBlackBold ', 'on black', 'bold')
     satred_onblackbold_satred = colored(' SatRed ' + onblackbold + ' SatRed ', 'sat red')
-    util.spacyprint('actual:',
-                    satred_onblackbold_satred,
-                    repr(satred_onblackbold_satred))
+    _actualprint(satred_onblackbold_satred)
     expected = "\x1b[91m SatRed \x1b[40;1m OnBlackBold \x1b[49;22m SatRed \x1b[0m"
-    util.spacyprint(f'expected:', expected, repr(expected))
+    _expectedprint(expected)
     assert satred_onblackbold_satred == expected
 
 
 def test__onblack__satred_bold__onblack():
     satredbold = colored(' SatRedBold ', 'sat red', 'bold')
     onblack_satredbold_onblack = colored(' OnBlack ' + satredbold + ' OnBlack ', 'on black')
-    util.spacyprint('actual:',
-                    onblack_satredbold_onblack,
-                    repr(onblack_satredbold_onblack))
+    _actualprint(onblack_satredbold_onblack)
     expected = '\x1b[40m OnBlack \x1b[91;1m SatRedBold \x1b[39;22m OnBlack \x1b[0m'
-    util.spacyprint(f'expected:', expected, repr(expected))
+    _expectedprint(expected)
     assert onblack_satredbold_onblack == expected
 
 
 def test__bold__green_on_black__bold():
     greenonblack = colored(' GreenOnBlack ', 'green', 'on black')
     bold_greenonblack_bold = colored(' Bold ' + greenonblack + ' Bold ', 'bold')
-    util.spacyprint('actual:',
-                    bold_greenonblack_bold,
-                    repr(bold_greenonblack_bold))
+    _actualprint(bold_greenonblack_bold)
     expected = '\x1b[1m Bold \x1b[32;40m GreenOnBlack \x1b[39;49m Bold \x1b[0m'
-    util.spacyprint(f'expected:', expected, repr(expected))
+    _expectedprint(expected)
     assert bold_greenonblack_bold == expected
 
 
@@ -277,33 +260,27 @@ def test__bold__green_on_black__bold():
 def test__redonblack__bold__redonblack():
     bold = colored(' Bold ', 'bold')
     redonblack__bold__redonblack = colored(' RedOnBlack ' + bold + ' RedOnBlack ', 'red', 'on black')
-    util.spacyprint('actual:',
-                    redonblack__bold__redonblack,
-                    repr(redonblack__bold__redonblack))
+    _actualprint(redonblack__bold__redonblack)
     expected = '\x1b[31;40m RedOnBlack \x1b[1m Bold \x1b[22m RedOnBlack \x1b[0m'
-    util.spacyprint(f'expected:', expected, repr(expected))
+    _expectedprint(expected)
     assert redonblack__bold__redonblack == expected
 
 
 def test__underlineonblack__red__underlineonblack():
     red = colored(' Red ', 'red')
     underlineonblack__red__underlineonblack = colored(' UnderlineOnBlack ' + red + ' UnderlineOnBlack ', 'ul', 'on black')
-    util.spacyprint('actual:',
-                    underlineonblack__red__underlineonblack,
-                    repr(underlineonblack__red__underlineonblack))
+    _actualprint(underlineonblack__red__underlineonblack)
     expected = '\x1b[4;40m UnderlineOnBlack \x1b[31m Red \x1b[39m UnderlineOnBlack \x1b[0m'
-    util.spacyprint(f'expected:', expected, repr(expected))
+    _expectedprint(expected)
     assert underlineonblack__red__underlineonblack == expected
 
 
 def test__underlinegreen__onblack__underlinegreen():
     onblack = colored(' OnBlack ', 'on black')
     underlinegreen__onblack__underlinegreen = colored(' UnderlineGreen ' + onblack + ' UnderlineGreen ', 'ul', 'green')
-    util.spacyprint('actual:',
-                    underlinegreen__onblack__underlinegreen,
-                    repr(underlinegreen__onblack__underlinegreen))
+    _actualprint(underlinegreen__onblack__underlinegreen)
     expected = '\x1b[4;32m UnderlineGreen \x1b[40m OnBlack \x1b[49m UnderlineGreen \x1b[0m'
-    util.spacyprint(f'expected:', expected, repr(expected))
+    _expectedprint(expected)
     assert underlinegreen__onblack__underlinegreen == expected
 
 
@@ -311,47 +288,66 @@ def test__underlinegreen__onblack__underlinegreen():
 ## Same reset codes ##
 ######################
 
-
+# 1 inner color
+###############
 def test__bold_dark_bold():
     """B    F       /F/B B
        1    2   →   22;1"""
     bold_dark_bold = colored('Bold' + colored('DarkAndBold', 'dark') + 'Bold', 'bold')
-    util.spacyprint(f'bold_dark_bold:', bold_dark_bold)
-    expected0 = '\x1b[1mBold\x1b[2mDarkAndBold\x1b[22;1mBold\x1b[0m'
-    expected1 = '\x1b[1mBold\x1b[2mDarkAndBold\x1b[0;1mBold\x1b[0m'
-    util.spacyprint(f'expected0:', expected0)
-    util.spacyprint(f'expected1:', expected1)
-    # both options ok
-    assert bold_dark_bold in (expected0, expected1)
+    _actualprint(bold_dark_bold)
+    expected = '\x1b[1mBold\x1b[2mDarkAndBold\x1b[22;1mBold\x1b[0m'
+    _expectedprint(expected)
+    assert bold_dark_bold == expected
 
 
 def test__dark_bold_dark():
     dark_bold_dark = colored(' Dark ' + colored(' DarkAndBold ', 'bold') + ' Dark ', 'dark')
-    util.spacyprint(f'dark_bold_dark:', dark_bold_dark)
+    _actualprint(dark_bold_dark)
     expected = '\x1b[2m Dark \x1b[1m DarkAndBold \x1b[22;2m Dark \x1b[0m'
-    util.spacyprint(f'expected:', expected)
-    # both options ok
+    _expectedprint(expected)
     assert dark_bold_dark == expected
 
 
+def test__red_green_red():
+    """R    G       R
+       31   32  →   31"""
+    
+    green = colored('Green', 'green')
+    red_green_red = colored('Red' + green + 'Red', 'red')
+    _actualprint(red_green_red)
+    # doesn't reset green, just re-opens red (because incompatible)
+    expected = '\x1b[31mRed\x1b[32mGreen\x1b[31mRed\x1b[0m'
+    _expectedprint(expected)
+    assert red_green_red == expected
+
+
+def test__onblack_ongreen_onblack():
+    ongreen = colored(' OnGreen ', 'on green')
+    onblack_ongreen_onblack = colored(' OnBlack ' + ongreen + ' OnBlack ', 'on black')
+    _actualprint(onblack_ongreen_onblack)
+    expected = '\x1b[40m OnBlack \x1b[42m OnGreen \x1b[49;40m OnBlack \x1b[0m'
+    _expectedprint(expected)
+    assert onblack_ongreen_onblack == expected
+
+
+# 2 outer colors
+################
 def test__bold_satwhite__dark__bold_satwhite():
     """S+B  F       /F/B B
        1;97 2   →   22;1"""
     bolddark = colored(' BoldDark ', 'dark')
     bold_satwhite__dark__bold_satwhite = colored(' BoldSat ' + bolddark + ' BoldSat ', 'bold', 'sat white')
-    util.spacyprint('bold_satwhite__dark__bold_satwhite:',
-                    bold_satwhite__dark__bold_satwhite,
-                    repr(bold_satwhite__dark__bold_satwhite))
+    _actualprint(bold_satwhite__dark__bold_satwhite)
     # merge dark reset with bold re-open (22;1)
     # recognize bold is lost by 22, so need to re-open it
     # recognize sat is not lost and is restored automatically by 22
     expected = '\x1b[1;97m BoldSat \x1b[2m BoldDark \x1b[22;1m BoldSat \x1b[0m'
-    util.spacyprint(f'expected:', expected, repr(expected))
+    _expectedprint(expected)
     
-    try:
-        assert bold_satwhite__dark__bold_satwhite == expected
-    except AssertionError as e:
-        assert bold_satwhite__dark__bold_satwhite == '\x1b[1;97m BoldSat \x1b[2m BoldDark \x1b[22;1;97m BoldSat \x1b[0m'
+    assert bold_satwhite__dark__bold_satwhite == expected
+    # try:
+    # except AssertionError as e:
+    #     assert bold_satwhite__dark__bold_satwhite == '\x1b[1;97m BoldSat \x1b[2m BoldDark \x1b[22;1;97m BoldSat \x1b[0m'
 
 
 #########################################

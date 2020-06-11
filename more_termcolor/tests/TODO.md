@@ -1,4 +1,5 @@
-# Different reset codes
+Different reset codes
+=====================
 
 ## Trivial
 - [ ] standard fg, standard bg
@@ -28,43 +29,53 @@
 - [x] formatting, fg [ bg ]
 
 
-# Same reset code
+Same reset code
+===============
 
 ## TRIVIAL
 - [ ] bold, dark
 - [ ] dark, bold
-- [ ] standard bg, other standard bg
+- [ ] standard bg, standard bg
 - [ ] standard bg, saturated bg
-- [ ] standard fg, other standard fg
+- [ ] standard fg, standard fg
 - [ ] standard fg, saturated fg
 
 ## 1 inner color
 - [x] bold [ dark ]
 - [x] dark [ bold ]
-- [ ] standard bg [ other standard bg ]
-- [ ] standard bg [ saturated bg ]
-- [x] standard fg [ other standard fg ]
-- [ ] standard fg [ saturated fg ]
-- [x] saturated fg [ standard fg ]
-- [ ] saturated fg [ other saturated fg ]
+- [ ] bg [ bg ]
+- [x] fg [ fg ]
 
 
 ## 2 inner colors
-- [ ] standard bg [ other standard bg, <random> ]
-- [ ] standard bg [ saturated bg, <random> ]
-- [x] standard fg [ other standard fg, <random> ]
-- [ ] standard fg [ saturated fg, <random> ]
-- [x] formatting [ other formatting, <random> ]
+- [ ] bg [ bg, fg ]
+- [ ] bg [ bg, formatting ]
+- [x] fg [ fg, bg ]
+- [ ] fg [ fg, formatting ]
+- [x] formatting [ formatting, fg ]
+- [ ] formatting [ formatting, bg ]
 
 ## 2 outer colors
-- [ ] standard bg, other standard bg [ <random> ]
-- [ ] standard bg, saturated bg [ <random> ]
-- [ ] standard fg, other standard fg [ <random> ]
-- [ ] standard fg, saturated fg [ <random> ]
-- [ ] formatting , other formatting [ <random> ]
+- [ ] bg, bg [ fg ]
+- [ ] bg, fg [ bg ]
+- [ ] bg, bg [ formatting ]
+- [ ] bg, formatting [ bg ]
+- [ ] fg, fg [ bg ]
+- [ ] fg, bg [ fg ]
+- [ ] fg, fg [ formatting ]
+- [ ] fg, formatting [ fg ]
+- [ ] formatting, formatting [ fg ]
+- [ ] formatting, fg [ formatting ]
+- [ ] formatting, formatting [ bg ]
+- [ ] formatting, bg [ formatting ]
+- [ ] formatting, formatting [ formatting ]
+- [ ] fg, fg [ fg ]
+- [ ] bg, bg [ bg ]
+
 # Mulitple recursion levels
 
-# Bad usage
+Bad usage
+=========
 
 ## TRIVIAL
 - [ ] <color>, dark, <same color>
