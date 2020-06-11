@@ -69,8 +69,8 @@ def to_code(val: Union[str, int]) -> str:
 #     if match:
 #         # e.g. 'on [sat ]yellow'
 #         actual_color = match.group()
-#         if actual_color not in core.STD_BG_COLOR_CODES:
-#             raise KeyError(f"`color` ('{color}') matches '{BACKGROUND_RE.pattern}' but `actual_color` ('{actual_color}') not in STD_BG_COLOR_CODES")
+#         if actual_color not in core.STANDARD_BACKGROUND_COLOR_CODES:
+#             raise KeyError(f"`color` ('{color}') matches '{BACKGROUND_RE.pattern}' but `actual_color` ('{actual_color}') not in STANDARD_BACKGROUND_COLOR_CODES")
 #         resetcode = core.RESET_COLOR_CODES['on']
 #         return resetcode
 #     return None
@@ -90,8 +90,8 @@ def to_code(val: Union[str, int]) -> str:
 #     if match:
 #         # e.g. 'sat yellow'
 #         actual_color = match.group()
-#         if actual_color not in core.SAT_FG_COLOR_CODES:
-#             raise KeyError(f"`color` ('{color}') matches '{SATURATED_RE.pattern}' but `actual_color` ('{actual_color}') not in SAT_FG_COLOR_CODES")
+#         if actual_color not in core.SATURATED_FOREGROUND_COLOR_CODES:
+#             raise KeyError(f"`color` ('{color}') matches '{SATURATED_RE.pattern}' but `actual_color` ('{actual_color}') not in SATURATED_FOREGROUND_COLOR_CODES")
 #         # 39 resets both std fg and sat fg
 #         return core.RESET_COLOR_CODES['fg']
 #     return None
@@ -132,14 +132,14 @@ def to_reset_code(val):
         if not bg and not sat:
             if actual_color in core.RESET_COLOR_CODES:
                 return core.RESET_COLOR_CODES[actual_color]
-            if actual_color in core.FG_COLOR_CODES:
+            if actual_color in core.FOREGROUND_COLOR_CODES:
                 return core.RESET_COLOR_CODES['fg']
             raise KeyError(f"to_reset_code({repr(val)}): actual_color ({actual_color}) isn't a reset key nor a foreground color, and there's no preceding 'on'/'sat'") from e
         if bg:
             # standard bg and saturated bg colors are both reset by 49
             return core.RESET_COLOR_CODES['on']
         return core.RESET_COLOR_CODES['fg']
-        # if color in core.FG_COLOR_CODES:
+        # if color in core.FOREGROUND_COLOR_CODES:
         #     resetcode = core.RESET_COLOR_CODES['fg']
         #     return resetcode
         # resetcode = _try_get_bg_reset_code(color)

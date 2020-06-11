@@ -35,7 +35,7 @@ def test__fg_color_codes__sanity(confirm):
     print(title(f'foreground colors: sanity'))
     if confirm and not util.confirm():
         return
-    for color, code in core.FG_COLOR_CODES.items():
+    for color, code in core.FOREGROUND_COLOR_CODES.items():
         _print(color, code)
 
 
@@ -43,7 +43,7 @@ def test__std_bg_color_codes__sanity(confirm):
     print(title('standard background colors: sanity'))
     if confirm and not util.confirm():
         return
-    for color, code in core.STD_BG_COLOR_CODES.items():
+    for color, code in core.STANDARD_BACKGROUND_COLOR_CODES.items():
         _print(color, code)
 
 
@@ -51,7 +51,7 @@ def test__saturated_bg_color_codes__sanity(confirm):
     print(title('saturated background colors: sanity'))
     if confirm and not util.confirm():
         return
-    for color, code in core.SAT_BG_COLOR_CODES.items():
+    for color, code in core.SATURATED_BACKGROUND_COLOR_CODES.items():
         _print(color, code)
 
 
@@ -59,7 +59,7 @@ def test__saturated_fg_color_codes__sanity(confirm):
     print(title('saturated foreground colors: sanity'))
     if confirm and not util.confirm():
         return
-    for color, code in core.SAT_FG_COLOR_CODES.items():
+    for color, code in core.SATURATED_FOREGROUND_COLOR_CODES.items():
         _print(color, code)
 
 
@@ -73,8 +73,8 @@ def test__std_foreground_on_std_background(confirm):
         pairs = list(zip(choices(common.foreground_colors, k=K), choices(common.background_colors, k=K)))
     
     for fg, bg in pairs:
-        fg_code = core.FG_COLOR_CODES[fg]
-        bg_code = core.BG_COLOR_CODES[bg]
+        fg_code = core.FOREGROUND_COLOR_CODES[fg]
+        bg_code = core.BACKGROUND_COLOR_CODES[bg]
         
         _print(f"{fg} on {bg}", f"{fg_code};{bg_code}")
 
@@ -88,8 +88,8 @@ def test__saturated_foreground_on_std_background(confirm):
         # prevent ('white', 'white')
         pairs = list(zip(choices(common.saturated_fg_colors, k=K), choices(common.background_colors, k=K)))
     for sat_fg, bg in pairs:
-        sat_fg_code = core.SAT_FG_COLOR_CODES[sat_fg]
-        bg_code = core.BG_COLOR_CODES[bg]
+        sat_fg_code = core.SATURATED_FOREGROUND_COLOR_CODES[sat_fg]
+        bg_code = core.BACKGROUND_COLOR_CODES[bg]
         
         _print(f"saturated {sat_fg} on {bg}", f"{sat_fg_code};{bg_code}")
 
@@ -103,8 +103,8 @@ def test__std_foreground_on_saturated_background(confirm):
         # prevent ('white', 'white')
         pairs = list(zip(choices(common.foreground_colors, k=K), choices(common.saturated_bg_colors, k=K)))
     for fg, sat_bg in pairs:
-        fg_code = core.FG_COLOR_CODES[fg]
-        sat_bg_code = core.SAT_BG_COLOR_CODES[sat_bg]
+        fg_code = core.FOREGROUND_COLOR_CODES[fg]
+        sat_bg_code = core.SATURATED_BACKGROUND_COLOR_CODES[sat_bg]
         
         _print(f"{fg} on saturated {sat_bg}", f"{fg_code};{sat_bg_code}")
 
@@ -118,7 +118,7 @@ def test__saturated_foreground_on_saturated_background(confirm):
         # prevent ('white', 'white')
         pairs = list(zip(choices(common.saturated_fg_colors, k=K), choices(common.saturated_bg_colors, k=K)))
     for sat_fg, sat_bg in pairs:
-        sat_fg_code = core.SAT_FG_COLOR_CODES[sat_fg]
-        sat_bg_code = core.SAT_BG_COLOR_CODES[sat_bg]
+        sat_fg_code = core.SATURATED_FOREGROUND_COLOR_CODES[sat_fg]
+        sat_bg_code = core.SATURATED_BACKGROUND_COLOR_CODES[sat_bg]
         
         _print(f"saturated {sat_fg} on saturated {sat_bg}", f"{sat_fg_code};{sat_bg_code}")

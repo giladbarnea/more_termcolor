@@ -105,7 +105,7 @@ def colored(text: str, *colors: Union[str, int]):
         outer_open_codes.append(open_code)
         reset_code = convert.to_reset_code(open_code)
         outer_reset_codes.append(reset_code)
-        if not outer_has_non_foreground and open_code not in core.FG_CODES:
+        if not outer_has_non_foreground and open_code not in core.FOREGROUND_CODES and open_code not in core.SATURATED_FOREGROUND_CODES:
             outer_has_non_foreground = True
     start = f'\033[{";".join(outer_open_codes)}m'
     try:
@@ -126,7 +126,7 @@ def colored(text: str, *colors: Union[str, int]):
             proper_inner_reset_codes.append(reset_code)
             if not outer_and_inner_reset_codes_overlap and reset_code in outer_reset_codes:
                 outer_and_inner_reset_codes_overlap = True
-            if not inner_has_non_foreground and open_code not in core.FG_CODES:
+            if not inner_has_non_foreground and open_code not in core.FOREGROUND_CODES and open_code not in core.SATURATED_FOREGROUND_CODES:
                 inner_has_non_foreground = True
         
         if inner_has_non_foreground:

@@ -82,7 +82,7 @@ COLORS = (
     'cyan',
     'white',
     )
-FG_CODES = (
+FOREGROUND_CODES = (
     '30',  # black
     '31',  # red
     '32',  # green
@@ -93,8 +93,8 @@ FG_CODES = (
     '37',  # white
     # 38;5 for 8bit, 38;2 for rgb
     )
-FG_COLOR_CODES = dict(zip(COLORS, FG_CODES))
-SAT_BG_CODES = (
+FOREGROUND_COLOR_CODES = dict(zip(COLORS, FOREGROUND_CODES))
+SATURATED_BACKGROUND_CODES = (
     '100',  # black
     '101',  # red
     '102',  # green
@@ -104,8 +104,8 @@ SAT_BG_CODES = (
     '106',  # cyan
     '107',  # white
     )
-SAT_BG_COLOR_CODES = dict(zip(COLORS, SAT_BG_CODES))
-STD_BG_CODES = (
+SATURATED_BACKGROUND_COLOR_CODES = dict(zip(COLORS, SATURATED_BACKGROUND_CODES))
+STANDARD_BACKGROUND_CODES = (
     '40',  # black
     '41',  # red
     '42',  # green
@@ -116,12 +116,12 @@ STD_BG_CODES = (
     '47',  # white
     # 48;5 for 8bit, 48;2 for rgb
     )
-STD_BG_COLOR_CODES = dict(zip(COLORS, STD_BG_CODES))
-BG_COLOR_CODES = dict(**STD_BG_COLOR_CODES,
-                      sat=SAT_BG_COLOR_CODES
+STANDARD_BACKGROUND_COLOR_CODES = dict(zip(COLORS, STANDARD_BACKGROUND_CODES))
+BACKGROUND_COLOR_CODES = dict(**STANDARD_BACKGROUND_COLOR_CODES,
+                              sat=SATURATED_BACKGROUND_COLOR_CODES
 
-                      )
-SAT_FG_CODES = (
+                              )
+SATURATED_FOREGROUND_CODES = (
     '90',  # black
     '91',  # red
     '92',  # green
@@ -131,12 +131,12 @@ SAT_FG_CODES = (
     '96',  # cyan
     '97',  # white
     )
-SAT_FG_COLOR_CODES = dict(zip(COLORS, SAT_FG_CODES))
+SATURATED_FOREGROUND_COLOR_CODES = dict(zip(COLORS, SATURATED_FOREGROUND_CODES))
 
 COLOR_CODES = dict(
         **FORMATTING_COLOR_CODES,  # 1:10, 20, 21, 51:53
         reset=RESET_COLOR_CODES,  # 0, 22:29, 39, 49, 54, 55
-        **FG_COLOR_CODES,  # 30-37
-        on=BG_COLOR_CODES,  # 40:47, 100:107
-        sat=SAT_FG_COLOR_CODES,  # 90:97
+        **FOREGROUND_COLOR_CODES,  # 30-37
+        on=BACKGROUND_COLOR_CODES,  # 40:47, 100:107
+        sat=SATURATED_FOREGROUND_COLOR_CODES,  # 90:97
         )

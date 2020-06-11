@@ -29,7 +29,7 @@ def assert_doesnt_raise(exc):
         raise
 
 
-background_colors = list(core.STD_BG_COLOR_CODES.keys())
-foreground_colors = list(core.FG_COLOR_CODES.keys())
-saturated_fg_colors = list(core.SAT_FG_COLOR_CODES.keys())
-saturated_bg_colors = list(core.SAT_BG_COLOR_CODES.keys())
+background_colors = list(core.STANDARD_BACKGROUND_COLOR_CODES.keys())
+foreground_colors = list(core.FOREGROUND_COLOR_CODES.keys())
+saturated_fg_colors = list(core.SATURATED_FOREGROUND_COLOR_CODES.keys())
+saturated_bg_colors = list(core.SATURATED_BACKGROUND_COLOR_CODES.keys())
