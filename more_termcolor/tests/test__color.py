@@ -173,10 +173,11 @@ def test__satwhite_dark_satwhite():
 def test__satwhite_red_satwhite():
     """S    R       S
        97   31  →   97"""
-    satwhite_red_satwhite = colored('Sat' + colored('Red', 'red') + 'Sat', 'sat white')
+    red = colored('Red', 'red')
+    satwhite_red_satwhite = colored('Sat' + red + 'Sat', 'sat white')
     _actualprint(satwhite_red_satwhite)
     expected = '\x1b[97mSat\x1b[31mRed\x1b[97mSat\x1b[0m'
-    _actualprint(expected)
+    _expectedprint(expected)
     assert satwhite_red_satwhite == expected
 
 

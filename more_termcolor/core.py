@@ -65,71 +65,78 @@ RESET_COLOR_CODES = dict(all='0',
                          conceal='28',
                          concealed='28',  # termcolor compat
                          strike='29',
-                         fg='39',  # resets std and sat
+                         fg='39',  # resets standard and saturated
                          on='49',
                          frame='54',
                          circle='54',
                          ol='55',
                          overline='55',
                          )
-FG_COLORS = (
-    'black',  # 30
-    'red',  # 31
-    'green',  # 32
-    'yellow',  # 33
-    'blue',  # 34
-    'magenta',  # 35
-    'cyan',  # 36
-    'white',  # 37
+COLORS = (
+    'black',
+    'red',
+    'green',
+    'yellow',
+    'blue',
+    'magenta',
+    'cyan',
+    'white',
     )
 FG_CODES = (
-    '30',
-    '31',
-    '32',
-    '33',
-    '34',
-    '35',
-    '36',
-    '37',
+    '30',  # black
+    '31',  # red
+    '32',  # green
+    '33',  # yellow
+    '34',  # blue
+    '35',  # magenta
+    '36',  # cyan
+    '37',  # white
+    # 38;5 for 8bit, 38;2 for rgb
     )
-FG_COLOR_CODES = dict(zip(FG_COLORS, FG_CODES))
-SAT_BG_COLOR_CODES = dict(black='100',
-                          red='101',
-                          green='102',
-                          yellow='103',
-                          blue='104',
-                          magenta='105',
-                          cyan='106',
-                          white='107')
-STD_BG_COLOR_CODES = dict(black='40',
-                          red='41',
-                          green='42',
-                          yellow='43',
-                          blue='44',
-                          magenta='45',
-                          cyan='46',
-                          white='47')
+FG_COLOR_CODES = dict(zip(COLORS, FG_CODES))
+SAT_BG_CODES = (
+    '100',  # black
+    '101',  # red
+    '102',  # green
+    '103',  # yellow
+    '104',  # blue
+    '105',  # magenta
+    '106',  # cyan
+    '107',  # white
+    )
+SAT_BG_COLOR_CODES = dict(zip(COLORS, SAT_BG_CODES))
+STD_BG_CODES = (
+    '40',  # black
+    '41',  # red
+    '42',  # green
+    '43',  # yellow
+    '44',  # blue
+    '45',  # magenta
+    '46',  # cyan
+    '47',  # white
+    # 48;5 for 8bit, 48;2 for rgb
+    )
+STD_BG_COLOR_CODES = dict(zip(COLORS, STD_BG_CODES))
 BG_COLOR_CODES = dict(**STD_BG_COLOR_CODES,
                       sat=SAT_BG_COLOR_CODES
-                      # 48;5 for 8bit, 48;2 for rgb
-                      )
 
-SAT_FG_COLOR_CODES = dict(black='90',  # aka 'lightgrey'; dimmer than dark 2
-                          red='91',
-                          green='92',
-                          yellow='93',
-                          blue='94',
-                          magenta='95',
-                          cyan='96',
-                          white='97'  # aka 'white'
-                          )
-# SAT_FG_COLOR_CODES = dict(**SAT_FG_COLOR_CODES,
-#                        on=SAT_BG_COLOR_CODES)
+                      )
+SAT_FG_CODES = (
+    '90',  # black
+    '91',  # red
+    '92',  # green
+    '93',  # yellow
+    '94',  # blue
+    '95',  # magenta
+    '96',  # cyan
+    '97',  # white
+    )
+SAT_FG_COLOR_CODES = dict(zip(COLORS, SAT_FG_CODES))
+
 COLOR_CODES = dict(
         **FORMATTING_COLOR_CODES,  # 1:10, 20, 21, 51:53
         reset=RESET_COLOR_CODES,  # 0, 22:29, 39, 49, 54, 55
         **FG_COLOR_CODES,  # 30-37
-        # 38;5 for 8bit, 38;2 for rgb
         on=BG_COLOR_CODES,  # 40:47, 100:107
         sat=SAT_FG_COLOR_CODES,  # 90:97
         )

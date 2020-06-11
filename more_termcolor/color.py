@@ -97,56 +97,59 @@ def satyellow(text, *colors):
 ###########
 
 def colored(text: str, *colors: Union[str, int]):
-    outer_open_codes = [convert.to_code(c) for c in colors]
+    outer_open_codes = []
+    outer_reset_codes = []
+    outer_has_non_foreground = False
+    for open_code in colors:
+        open_code = convert.to_code(open_code)
+        outer_open_codes.append(open_code)
+        reset_code = convert.to_reset_code(open_code)
+        outer_reset_codes.append(reset_code)
+        if not outer_has_non_foreground and open_code not in core.FG_CODES:
+            outer_has_non_foreground = True
     start = f'\033[{";".join(outer_open_codes)}m'
-    # TODO:
-    #  if inner has fmt or inner has bg:
-    #       reset inner
-    #       if outer has fmt and outer.reset == inner.reset:
-    #           also re-open outer
-    #  else:
-    #       if outer is fmt:
-    #           reset fg
-    #       else:
-    #           re-open outer
     try:
-        # TODO (performance): less iterations, also don't replace substrings if not needed
+        # TODO (performance): don't replace substrings if not needed
         # if more than one open/reset pairs exist in text,
         # ignore them (*_) assuming they'd been recursively
         # taken care of.
         inner_open, *_, inner_reset = re.finditer(COLOR_BOUNDARY_RE, text)
         inner_open_codes = []
         inner_has_non_foreground = False
-        for code in inner_open.groups():
-            if code:
-                inner_open_codes.append(code)
-                if not inner_has_non_foreground and code not in core.FG_CODES:
-                    inner_has_non_foreground = True
-        
-        outer_has_formatting = any(c in core.FORMATTING_CODES for c in outer_open_codes)
+        proper_inner_reset_codes = []
+        outer_and_inner_reset_codes_overlap = False
+        for open_code in inner_open.groups():
+            if not open_code:
+                continue
+            inner_open_codes.append(open_code)
+            reset_code = convert.to_reset_code(open_code)
+            proper_inner_reset_codes.append(reset_code)
+            if not outer_and_inner_reset_codes_overlap and reset_code in outer_reset_codes:
+                outer_and_inner_reset_codes_overlap = True
+            if not inner_has_non_foreground and open_code not in core.FG_CODES:
+                inner_has_non_foreground = True
         
         if inner_has_non_foreground:
-            # replace existing inner reset codes with the inner colors' matching reset codes
-            #
-            proper_inner_reset_codes = [convert.to_reset_code(c) for c in inner_open_codes]
-            if outer_has_formatting:
-                #
-                outer_reset_codes = [convert.to_reset_code(c) for c in outer_open_codes]
-                if any(oc in proper_inner_reset_codes for oc in outer_reset_codes):
+            # replace existing inner reset codes with
+            # the inner colors' matching reset codes
+            
+            if outer_has_non_foreground:
+                # proper_inner_reset_codes.extend(outer_open_codes)
+                if outer_and_inner_reset_codes_overlap:
                     proper_inner_reset_codes.extend(outer_open_codes)
             proper_inner_reset = f'\033[{";".join(proper_inner_reset_codes)}m'
             text = text.replace(inner_reset.group(), proper_inner_reset, 1)
         
         else:
-            if outer_has_formatting:
+            if outer_has_non_foreground:
                 # reset fg
                 text = text.replace(inner_reset.group(), '\033[39m', 1)
             else:
                 # replace inner reset with outer open
                 text = text.replace(inner_reset.group(), start, 1)
-    except ValueError as e:  # not enough values to unpack (COLOR_BOUNDARY_RE did not match)
+    except ValueError as e:
+        # not enough values to unpack (COLOR_BOUNDARY_RE did not match)
         pass
-    # reset = f'\033[{";".join(map(str, map(convert.to_reset_code, colors)))}m'
     reset = f'\033[0m'
     ret = f'{start}{text}{reset}'
     # spacyprint(f'returning: {repr(ret)}', ret)
