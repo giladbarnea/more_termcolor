@@ -97,15 +97,24 @@ def satyellow(text, *colors):
 ###########
 
 def colored(text: str, *colors: Union[str, int]):
+    """If any colors already exist within `text`, this function tries to keep them intact as much as possible.
+    For example, if `text` already has an underlined substring, and """
+    
+    def _is_non_foreground(_code):
+        return _code not in core.FOREGROUND_CODES and _code not in core.SATURATED_FOREGROUND_CODES
+    
     outer_open_codes = []
     outer_reset_codes = []
+    outer_reset_2_open = dict()
     outer_has_non_foreground = False
-    for open_code in colors:
-        open_code = convert.to_code(open_code)
+    for color in colors:
+        open_code = convert.to_code(color)
         outer_open_codes.append(open_code)
         reset_code = convert.to_reset_code(open_code)
+        # TODO: this probably fails when open colors are bold,dark!
+        outer_reset_2_open[reset_code] = open_code
         outer_reset_codes.append(reset_code)
-        if not outer_has_non_foreground and open_code not in core.FOREGROUND_CODES and open_code not in core.SATURATED_FOREGROUND_CODES:
+        if not outer_has_non_foreground and _is_non_foreground(open_code):
             outer_has_non_foreground = True
     start = f'\033[{";".join(outer_open_codes)}m'
     try:
@@ -116,17 +125,19 @@ def colored(text: str, *colors: Union[str, int]):
         inner_open, *_, inner_reset = re.finditer(COLOR_BOUNDARY_RE, text)
         inner_open_codes = []
         inner_has_non_foreground = False
-        proper_inner_reset_codes = []
-        outer_and_inner_reset_codes_overlap = False
-        for open_code in inner_open.groups():
-            if not open_code:
+        inner_reset_codes = []
+        outer_open_codes_to_reopen = []
+        for inner_open_code in inner_open.groups():
+            if not inner_open_code:
                 continue
-            inner_open_codes.append(open_code)
-            reset_code = convert.to_reset_code(open_code)
-            proper_inner_reset_codes.append(reset_code)
-            if not outer_and_inner_reset_codes_overlap and reset_code in outer_reset_codes:
-                outer_and_inner_reset_codes_overlap = True
-            if not inner_has_non_foreground and open_code not in core.FOREGROUND_CODES and open_code not in core.SATURATED_FOREGROUND_CODES:
+            inner_open_codes.append(inner_open_code)
+            inner_reset_code = convert.to_reset_code(inner_open_code)
+            inner_reset_codes.append(inner_reset_code)
+            for outer_reset_code in outer_reset_codes:
+                if inner_reset_code == outer_reset_code:
+                    outer_open_code = outer_reset_2_open[outer_reset_code]
+                    outer_open_codes_to_reopen.append(outer_open_code)
+            if not inner_has_non_foreground and _is_non_foreground(inner_open_code):
                 inner_has_non_foreground = True
         
         if inner_has_non_foreground:
@@ -134,10 +145,9 @@ def colored(text: str, *colors: Union[str, int]):
             # the inner colors' matching reset codes
             
             if outer_has_non_foreground:
-                # proper_inner_reset_codes.extend(outer_open_codes)
-                if outer_and_inner_reset_codes_overlap:
-                    proper_inner_reset_codes.extend(outer_open_codes)
-            proper_inner_reset = f'\033[{";".join(proper_inner_reset_codes)}m'
+                inner_reset_codes.extend(outer_open_codes_to_reopen)
+                # if outer_and_inner_reset_codes_overlap:
+            proper_inner_reset = f'\033[{";".join(inner_reset_codes)}m'
             text = text.replace(inner_reset.group(), proper_inner_reset, 1)
         
         else:
@@ -152,7 +162,6 @@ def colored(text: str, *colors: Union[str, int]):
         pass
     reset = f'\033[0m'
     ret = f'{start}{text}{reset}'
-    # spacyprint(f'returning: {repr(ret)}', ret)
     return ret
 
 

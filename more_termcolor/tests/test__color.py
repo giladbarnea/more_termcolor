@@ -79,6 +79,7 @@ outer has fmt:
 
 import io
 
+import pytest
 from more_termcolor import util
 from more_termcolor.color import colored, cprint
 
@@ -341,14 +342,26 @@ def test__bold_satwhite__dark__bold_satwhite():
     _actualprint(bold_satwhite__dark__bold_satwhite)
     # merge dark reset with bold re-open (22;1)
     # recognize bold is lost by 22, so need to re-open it
-    # recognize sat is not lost and is restored automatically by 22
+    # recognize sat is not lost and is restored automatically by 22 (resetting dark)
+    # TODO: why is sat restored when resetting dark?
+    #  In IPython:
+    # # print('\x1b[97m Saturated (#EEEEEC) \x1b[2m Saturated and Dark (#9F9F9D) \x1b[22m Saturated (#EEEEEC) \x1b[0m Normal (#AAAAAA) \x1b[2m Dark (#717171) \x1b[0m')
     expected = '\x1b[1;97m BoldSat \x1b[2m BoldDark \x1b[22;1m BoldSat \x1b[0m'
     _expectedprint(expected)
     
     assert bold_satwhite__dark__bold_satwhite == expected
-    # try:
-    # except AssertionError as e:
-    #     assert bold_satwhite__dark__bold_satwhite == '\x1b[1;97m BoldSat \x1b[2m BoldDark \x1b[22;1;97m BoldSat \x1b[0m'
+
+
+def test__darkbold__satwhite__darkbold():
+    """S+B  F       /F/B B
+       1;97 2   →   22;1"""
+    satwhite = colored(' SatWhite ', 'sat white')
+    darkbold__satwhite__darkbold = colored(' DarkBold ' + satwhite + ' DarkBold ', 'bold', 'dark')
+    _actualprint(darkbold__satwhite__darkbold)
+    expected = '\x1b[1;2m DarkBold \x1b[97m SatWhite \x1b[39m DarkBold \x1b[0m'
+    _expectedprint(expected)
+    
+    assert darkbold__satwhite__darkbold == expected
 
 
 #########################################
