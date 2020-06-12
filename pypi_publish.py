@@ -20,7 +20,10 @@ def is_dry_run():
 
 def main():
     if subprocess.check_output(shlex.split('git status -s')):
-        
+        print('some uncommitted changes:')
+        subprocess.run(shlex.split('git status'))
+        if not util.confirm('publish regardless?'):
+            sys.exit()
     with open('./setup.py') as f:
         data = f.read()
     VERSION_RE = re.compile(r"\s*version='(?P<ver>\d+(?:\.\d+)+)',")
