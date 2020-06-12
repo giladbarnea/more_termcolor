@@ -238,4 +238,5 @@ __all__ = [
     'satgreen',
     'satyellow',
     'colored',
+    'cprint',
     ]

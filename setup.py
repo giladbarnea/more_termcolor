@@ -5,34 +5,37 @@ from setuptools import find_packages, setup
 import sys
 import re
 
-if sys.version_info < (3, 7):
-    print(f"Python 3.7 and above required. current version: ", sys.version_info)
-    exit(1)
 from more_termcolor import util
 
-packages = find_packages(exclude=["tests?", "*.tests*", "*.tests*.*", "tests*.*", ])
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+packages = find_packages(exclude=["tests?", "*.tests*", "*.tests*.*", "tests*.*", 'pypi_publish.py'])
 setup_args = dict(name='more_termcolor',
-                  version='1.0.5',
-                  description='Literally all colors, supporting multiple substring colors, convenience methods and full original termcolor compatability',
+                  # https://packaging.python.org/tutorials/packaging-projects/
+                  version='1.0.7',
+                  description='All colors, with support for nested colors, convenience methods and full original termcolor compatability.',
+                  long_description=long_description,
+                  long_description_content_type="text/markdown",
                   license='MIT',
                   author='Gilad Barnea',
                   author_email='giladbrn@gmail.com',
                   url='https://github.com/giladbarnea/more_termcolor',
                   packages=packages,
-                  # package_dir={'colored': 'more_termcolor'},
                   keywords=["termcolor", "color", "colors", "terminal", "ansi", "formatting"],
-                  # py_modules=[],
-                  extras_require=dict(test=['pytest', 'ipdb']),
-                  # https://pypi.org/classifiers/
+                  # pip install -e .[dev]
+                  extras_require={'dev': ['pytest', 'ipdb', 'IPython', 'semver']},
                   classifiers=[
-                      # 'Development Status :: 5 - Production/Stable',
+                      # https://pypi.org/classifiers/
+                      'Development Status :: 4 - Beta',
                       'Environment :: Console',
                       'Intended Audience :: Developers',
-                      'License :: MIT License',
+                      "License :: OSI Approved :: MIT License",
                       'Operating System :: OS Independent',
                       "Programming Language :: Python :: 3 :: Only",
-                      'Topic :: Terminals'
-                      ]
+                      'Topic :: Terminals',
+    
+                      ],
+                  python_requires='>=3.7',
                   )
 
 dry_run = False  # -n, [-]+dry[-_]?run
@@ -46,8 +49,7 @@ for arg in sys.argv[1:]:
         confirm = True
         sys.argv.remove(arg)
         continue
-print(f'sys.argv[1:]: ', sys.argv[1:])
-print(f'dry_run: ', dry_run, '\nconfirm: ', confirm)
+print(f'sys.argv[1:]: {sys.argv[1:]}', f'dry_run: {dry_run}', f'confirm: {confirm}', sep='\n')
 if confirm:
     from pprint import pprint
     
@@ -57,5 +59,7 @@ if confirm:
         print('aborting')
         sys.exit()
 
-if not dry_run:
-    setup(**setup_args)
+if dry_run:
+    print('dry run: not calling setup(**setup_args). exiting')
+    sys.exit()
+setup(**setup_args)
