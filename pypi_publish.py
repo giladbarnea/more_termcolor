@@ -55,11 +55,13 @@ def run(cmd):
         print('dry_run, not actually running anything')
         return
     try:
-        subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        return True
+        subprocess.run(cmd, stderr=subprocess.PIPE)
     except Exception as e:
         print(f'FAILED cmd: {cmd}', repr(e))
         return False
+    else:
+        print('success')
+        return True
 
 
 def bump_version(data, version, bumped):
