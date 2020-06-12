@@ -38,14 +38,16 @@ setup_args = dict(name='more_termcolor',
                   python_requires='>=3.7',
                   )
 
-dry_run = False  # -n, [-]+dry[-_]?run
-confirm = False  # [-]+ok
+dry_run = False
+confirm = False
+DRY_RUN_RE = re.compile('^[-]+dry[-_]?run$')
+CONFIRM_RE = re.compile('^[-]+ok$')
 for arg in sys.argv[1:]:
-    if arg == '-n' or re.fullmatch('^[-]+dry[-_]?run$', arg):
+    if arg == '-n' or DRY_RUN_RE.fullmatch(arg):
         dry_run = True
         sys.argv.remove(arg)
         continue
-    if re.fullmatch('^[-]+ok$', arg):
+    if CONFIRM_RE.fullmatch(arg):
         confirm = True
         sys.argv.remove(arg)
         continue
