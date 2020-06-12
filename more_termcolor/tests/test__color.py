@@ -81,7 +81,6 @@ import io
 
 from more_termcolor import util
 from more_termcolor.color import colored, cprint
-import re
 
 
 def _print(description, string):
