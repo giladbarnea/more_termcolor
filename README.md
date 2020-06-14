@@ -12,9 +12,9 @@ from more_termcolor import cprint
 cprint('some text', 'red', 'on bright black', 'bold', 'italic')
 
 # This is also possible:
-from more_termcolor import bold, satred
+from more_termcolor.colors import bold, brightred
 bold_text = bold('text')
-fancy = satred(f'this whole string, including this {bold_text} is bright red')
+fancy = brightred(f'this whole string, including this {bold_text} is bright red')
 ```
 
 ## Roadmap

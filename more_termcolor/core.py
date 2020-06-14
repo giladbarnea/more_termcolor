@@ -12,7 +12,7 @@
 
 FORMATTING_COLORS = (
     'bold',  # 1,
-    'dark',  # 2 (aka 'grey'; brighter than satblack 90)
+    'dark',  # 2 (brighter than brightblack 90)
     'italic',  # 3,
     'ul',  # 4,
     'underline',  # termcolor compat
@@ -65,7 +65,7 @@ RESET_COLOR_CODES = dict(all='0',
                          conceal='28',
                          concealed='28',  # termcolor compat
                          strike='29',
-                         fg='39',  # resets standard and saturated
+                         fg='39',  # resets standard and bright
                          on='49',
                          frame='54',
                          circle='54',
@@ -94,7 +94,7 @@ FOREGROUND_CODES = (
     # 38;5 for 8bit, 38;2 for rgb
     )
 FOREGROUND_COLOR_CODES = dict(zip(COLORS, FOREGROUND_CODES))
-SATURATED_BACKGROUND_CODES = (
+BRIGHT_BACKGROUND_CODES = (
     '100',  # black
     '101',  # red
     '102',  # green
@@ -104,7 +104,7 @@ SATURATED_BACKGROUND_CODES = (
     '106',  # cyan
     '107',  # white
     )
-SATURATED_BACKGROUND_COLOR_CODES = dict(zip(COLORS, SATURATED_BACKGROUND_CODES))
+BRIGHT_BACKGROUND_COLOR_CODES = dict(zip(COLORS, BRIGHT_BACKGROUND_CODES))
 STANDARD_BACKGROUND_CODES = (
     '40',  # black
     '41',  # red
@@ -118,11 +118,9 @@ STANDARD_BACKGROUND_CODES = (
     )
 STANDARD_BACKGROUND_COLOR_CODES = dict(zip(COLORS, STANDARD_BACKGROUND_CODES))
 BACKGROUND_COLOR_CODES = dict(**STANDARD_BACKGROUND_COLOR_CODES,
-                              sat=SATURATED_BACKGROUND_COLOR_CODES,
-                              bright=SATURATED_BACKGROUND_COLOR_CODES,
-
+                              bright=BRIGHT_BACKGROUND_COLOR_CODES,
                               )
-SATURATED_FOREGROUND_CODES = (
+BRIGHT_FOREGROUND_CODES = (
     '90',  # black
     '91',  # red
     '92',  # green
@@ -132,13 +130,12 @@ SATURATED_FOREGROUND_CODES = (
     '96',  # cyan
     '97',  # white
     )
-SATURATED_FOREGROUND_COLOR_CODES = dict(zip(COLORS, SATURATED_FOREGROUND_CODES))
+BRIGHT_FOREGROUND_COLOR_CODES = dict(zip(COLORS, BRIGHT_FOREGROUND_CODES))
 
 COLOR_CODES = dict(
         **FORMATTING_COLOR_CODES,  # 1:10, 20, 21, 51:53
         reset=RESET_COLOR_CODES,  # 0, 22:29, 39, 49, 54, 55
         **FOREGROUND_COLOR_CODES,  # 30-37
         on=BACKGROUND_COLOR_CODES,  # 40:47, 100:107
-        sat=SATURATED_FOREGROUND_COLOR_CODES,  # 90:97
-        bright=SATURATED_FOREGROUND_COLOR_CODES,  # 90:97
+        bright=BRIGHT_FOREGROUND_COLOR_CODES,  # 90:97
         )

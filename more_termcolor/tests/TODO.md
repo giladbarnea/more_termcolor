@@ -3,11 +3,11 @@ Different reset codes
 
 ## Trivial
 - [ ] standard fg, standard bg
-- [ ] standard fg, saturated bg
+- [ ] standard fg, bright bg
 - [ ] standard fg, formatting
-- [ ] saturated fg, standard bg
-- [ ] saturated fg, saturated bg
-- [ ] saturated fg, formatting
+- [ ] bright fg, standard bg
+- [ ] bright fg, bright bg
+- [ ] bright fg, formatting
 
 ## 1 inner color
 - [x] fg [ bg ]
@@ -36,9 +36,9 @@ Same reset code
 - [ ] bold, dark
 - [ ] dark, bold
 - [ ] standard bg, standard bg
-- [ ] standard bg, saturated bg
+- [ ] standard bg, bright bg
 - [ ] standard fg, standard fg
-- [ ] standard fg, saturated fg
+- [ ] standard fg, bright fg
 
 ## 1 inner color
 - [x] bold [ dark ]
@@ -85,25 +85,25 @@ Bad usage
 ## 1 inner color
 - [ ] standard bg [ <same color> ]
 - [ ] standard fg [ <same color> ]
-- [ ] saturated fg [ <same color> ]
-- [ ] saturated bg [ <same color> ]
+- [ ] bright fg [ <same color> ]
+- [ ] bright bg [ <same color> ]
 - [ ] formatting [ <same color> ]
 
 ## 2 inner colors
 - [ ] standard bg [ <random>, <same color> ]
 - [ ] standard fg [ <random>, <same color> ]
-- [ ] saturated fg [ <random>, <same color> ]
-- [ ] saturated bg [ <random>, <same color> ]
+- [ ] bright fg [ <random>, <same color> ]
+- [ ] bright bg [ <random>, <same color> ]
 - [ ] formatting [ <random>, <same color> ]
 
 ## 2 outer colors
 - [ ] standard bg, <random> [ <same color> ]
 - [ ] standard fg, <random> [ <same color> ]
-- [ ] saturated fg, <random> [ <same color> ]
-- [ ] saturated bg, <random> [ <same color> ]
+- [ ] bright fg, <random> [ <same color> ]
+- [ ] bright bg, <random> [ <same color> ]
 - [ ] formatting, <random> [ <same color> ]
 - [ ] standard bg, <same color> [ <random> ]
 - [ ] standard fg, <same color> [ <random> ]
-- [ ] saturated fg, <same color> [ <random> ]
-- [ ] saturated bg, <same color> [ <random> ]
+- [ ] bright fg, <same color> [ <random> ]
+- [ ] bright bg, <same color> [ <random> ]
 - [ ] formatting, <same color> [ <random> ]

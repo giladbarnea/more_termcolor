@@ -8,94 +8,6 @@ COLOR_BOUNDARY_RE = re.compile(fr'\033\[{COLOR_CODES_RE}m')
 ON_COLOR_RE = re.compile(r'on[_ ](\w{3,9})')
 
 
-#####################
-# Formatting (some) #
-#####################
-
-def bold(text, *colors):
-    return colored(text, 'bold', *colors)
-
-
-def dark(text, *colors):
-    return colored(text, 'dark', *colors)
-
-
-def italic(text, *colors):
-    return colored(text, 'italic', *colors)
-
-
-def ul(text, *colors):
-    return colored(text, 'ul', *colors)
-
-
-def reverse(text, *colors):
-    return colored(text, 'reverse', *colors)
-
-
-######################
-# Foreground (30-37) #
-######################
-
-
-def black(text, *colors):
-    return colored(text, 'black', *colors)
-
-
-def red(text, *colors):
-    return colored(text, 'red', *colors)
-
-
-def green(text, *colors):
-    return colored(text, 'green', *colors)
-
-
-def yellow(text, *colors):
-    return colored(text, 'yellow', *colors)
-
-
-def blue(text, *colors):
-    return colored(text, 'blue', *colors)
-
-
-def magenta(text, *colors):
-    return colored(text, 'magenta', *colors)
-
-
-def cyan(text, *colors):
-    return colored(text, 'cyan', *colors)
-
-
-def white(text, *colors):
-    return colored(text, 'white', *colors)
-
-
-###############################
-# Saturated foreground (some) #
-###############################
-def satblack(text, *colors):
-    return colored(text, 'sat black', *colors)
-
-
-def satwhite(text, *colors):
-    return colored(text, 'sat white', *colors)
-
-
-def satred(text, *colors):
-    return colored(text, 'sat red', *colors)
-
-
-def satgreen(text, *colors):
-    return colored(text, 'sat green', *colors)
-
-
-def satyellow(text, *colors):
-    return colored(text, 'sat yellow', *colors)
-
-
-###########
-# colored #
-###########
-
 def colored(text: str, *colors: Union[str, int]) -> str:
     """
     Multiple colors can be passed, and their color codes will be merged.
@@ -129,7 +41,7 @@ def colored(text: str, *colors: Union[str, int]) -> str:
         return text
     
     def _is_non_foreground(_code):
-        return _code not in core.FOREGROUND_CODES and _code not in core.SATURATED_FOREGROUND_CODES
+        return _code not in core.FOREGROUND_CODES and _code not in core.BRIGHT_FOREGROUND_CODES
     
     outer_open_codes = []
     outer_reset_codes = []
@@ -219,24 +131,6 @@ def cprint(text, color=None, on_color=None, attrs=(), *colors, **kwargs):
 
 
 __all__ = [
-    'bold',
-    'dark',
-    'italic',
-    'ul',
-    'reverse',
-    'black',
-    'red',
-    'green',
-    'yellow',
-    'blue',
-    'magenta',
-    'cyan',
-    'white',
-    'satblack',
-    'satwhite',
-    'satred',
-    'satgreen',
-    'satyellow',
     'colored',
-    'cprint',
+    'cprint'
     ]

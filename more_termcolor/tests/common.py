@@ -31,5 +31,5 @@ def assert_doesnt_raise(exc):
 
 background_colors = list(core.STANDARD_BACKGROUND_COLOR_CODES.keys())
 foreground_colors = list(core.FOREGROUND_COLOR_CODES.keys())
-saturated_fg_colors = list(core.SATURATED_FOREGROUND_COLOR_CODES.keys())
-saturated_bg_colors = list(core.SATURATED_BACKGROUND_COLOR_CODES.keys())
+bright_fg_colors = list(core.BRIGHT_FOREGROUND_COLOR_CODES.keys())
+bright_bg_colors = list(core.BRIGHT_BACKGROUND_COLOR_CODES.keys())

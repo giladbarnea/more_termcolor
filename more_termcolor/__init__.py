@@ -1,2 +1,3 @@
 from .core import COLOR_CODES
-from .color import *
+from .main import *
+from .colors import *

@@ -32,7 +32,7 @@ adv_1_b
 I    SG      /FG
 3    92  →   39
 outer is fmt:
-    nested is sat:
+    nested is bright:
         reset fg
 
 adv_2
@@ -55,14 +55,14 @@ outer is fmt:
 adv_4
 S    F       /F
 97   2   →   22
-outer is sat:
+outer is bright:
     nested is fmt:
         reset nested
 
 adv_5
 S    R       S
 97   31  →   97
-outer is sat:
+outer is bright:
     nested is std:
         re-open outer
 
@@ -80,7 +80,7 @@ outer has fmt:
 import io
 
 from more_termcolor import util
-from more_termcolor.color import colored, cprint
+from more_termcolor import colored, cprint
 
 
 def _print(description, string):
@@ -138,14 +138,14 @@ def test__italic_red_italic():
     assert italic_red_italic == expected
 
 
-def test__italic_satgreen_italic():
+def test__italic_brightgreen_italic():
     """I    SG      /FG
        3    92  →   39"""
-    italic_satgreen_italic = colored('Italic' + colored('SatGreenItalic', 'sat green') + 'Italic', 'italic')
-    _actualprint(italic_satgreen_italic)
-    expected = '\x1b[3mItalic\x1b[92mSatGreenItalic\x1b[39mItalic\x1b[0m'
+    italic_brightgreen_italic = colored('Italic' + colored('BrightGreenItalic', 'bright green') + 'Italic', 'italic')
+    _actualprint(italic_brightgreen_italic)
+    expected = '\x1b[3mItalic\x1b[92mBrightGreenItalic\x1b[39mItalic\x1b[0m'
     _expectedprint(expected)
-    assert italic_satgreen_italic == expected
+    assert italic_brightgreen_italic == expected
 
 
 def test__bold_italic_bold():
@@ -159,26 +159,26 @@ def test__bold_italic_bold():
     assert bold_italic_bold == expected
 
 
-def test__satwhite_dark_satwhite():
+def test__brightwhite_dark_brightwhite():
     """S    F       /F
        97   2   →   22"""
-    satwhite_dark_satwhite = colored('Sat' + colored('DarkAndSat', 'dark') + 'Sat', 'sat white')
-    _actualprint(satwhite_dark_satwhite)
-    expected = '\x1b[97mSat\x1b[2mDarkAndSat\x1b[22mSat\x1b[0m'
-    # smart reset dark, no re-open sat
+    brightwhite_dark_brightwhite = colored('Bright' + colored('DarkAndBright', 'dark') + 'Bright', 'bright white')
+    _actualprint(brightwhite_dark_brightwhite)
+    expected = '\x1b[97mBright\x1b[2mDarkAndBright\x1b[22mBright\x1b[0m'
+    # smart reset dark, no re-open bright
     _expectedprint(expected)
-    assert satwhite_dark_satwhite == expected
+    assert brightwhite_dark_brightwhite == expected
 
 
-def test__satwhite_red_satwhite():
+def test__brightwhite_red_brightwhite():
     """S    R       S
        97   31  →   97"""
     red = colored('Red', 'red')
-    satwhite_red_satwhite = colored('Sat' + red + 'Sat', 'sat white')
-    _actualprint(satwhite_red_satwhite)
-    expected = '\x1b[97mSat\x1b[31mRed\x1b[97mSat\x1b[0m'
+    brightwhite_red_brightwhite = colored('Bright' + red + 'Bright', 'bright white')
+    _actualprint(brightwhite_red_brightwhite)
+    expected = '\x1b[97mBright\x1b[31mRed\x1b[97mBright\x1b[0m'
     _expectedprint(expected)
-    assert satwhite_red_satwhite == expected
+    assert brightwhite_red_brightwhite == expected
 
 
 def test__red_onblack_red():
@@ -191,22 +191,22 @@ def test__red_onblack_red():
     assert red_onblack_red == expected
 
 
-def test__satred_onblack_satred():
+def test__brightred_onblack_brightred():
     onblack = colored('OnBlack', 'on black')
-    satred_onblack_satred = colored('SatRed' + onblack + 'SatRed', 'sat red')
-    _actualprint(satred_onblack_satred)
-    expected = "\x1b[91mSatRed\x1b[40mOnBlack\x1b[49mSatRed\x1b[0m"
+    brightred_onblack_brightred = colored('BrightRed' + onblack + 'BrightRed', 'bright red')
+    _actualprint(brightred_onblack_brightred)
+    expected = "\x1b[91mBrightRed\x1b[40mOnBlack\x1b[49mBrightRed\x1b[0m"
     _expectedprint(expected)
-    assert satred_onblack_satred == expected
+    assert brightred_onblack_brightred == expected
 
 
-def test__onblack_satred_onblack():
-    satred = colored('SatRed', 'sat red')
-    onblack_satred_onblack = colored('OnBlack' + satred + 'OnBlack', 'on black')
-    _actualprint(onblack_satred_onblack)
-    expected = '\x1b[40mOnBlack\x1b[91mSatRed\x1b[39mOnBlack\x1b[0m'
+def test__onblack_brightred_onblack():
+    brightred = colored('BrightRed', 'bright red')
+    onblack_brightred_onblack = colored('OnBlack' + brightred + 'OnBlack', 'on black')
+    _actualprint(onblack_brightred_onblack)
+    expected = '\x1b[40mOnBlack\x1b[91mBrightRed\x1b[39mOnBlack\x1b[0m'
     _expectedprint(expected)
-    assert onblack_satred_onblack == expected
+    assert onblack_brightred_onblack == expected
 
 
 def test__onblack_underline_onblack():
@@ -229,22 +229,22 @@ def test__underline_onblack_underline():
 
 # 2 inner colors
 ################
-def test__satred__onblack_bold__satred():
+def test__brightred__onblack_bold__brightred():
     onblackbold = colored(' OnBlackBold ', 'on black', 'bold')
-    satred_onblackbold_satred = colored(' SatRed ' + onblackbold + ' SatRed ', 'sat red')
-    _actualprint(satred_onblackbold_satred)
-    expected = "\x1b[91m SatRed \x1b[40;1m OnBlackBold \x1b[49;22m SatRed \x1b[0m"
+    brightred_onblackbold_brightred = colored(' BrightRed ' + onblackbold + ' BrightRed ', 'bright red')
+    _actualprint(brightred_onblackbold_brightred)
+    expected = "\x1b[91m BrightRed \x1b[40;1m OnBlackBold \x1b[49;22m BrightRed \x1b[0m"
     _expectedprint(expected)
-    assert satred_onblackbold_satred == expected
+    assert brightred_onblackbold_brightred == expected
 
 
-def test__onblack__satred_bold__onblack():
-    satredbold = colored(' SatRedBold ', 'sat red', 'bold')
-    onblack_satredbold_onblack = colored(' OnBlack ' + satredbold + ' OnBlack ', 'on black')
-    _actualprint(onblack_satredbold_onblack)
-    expected = '\x1b[40m OnBlack \x1b[91;1m SatRedBold \x1b[39;22m OnBlack \x1b[0m'
+def test__onblack__brightred_bold__onblack():
+    brightredbold = colored(' BrightRedBold ', 'bright red', 'bold')
+    onblack_brightredbold_onblack = colored(' OnBlack ' + brightredbold + ' OnBlack ', 'on black')
+    _actualprint(onblack_brightredbold_onblack)
+    expected = '\x1b[40m OnBlack \x1b[91;1m BrightRedBold \x1b[39;22m OnBlack \x1b[0m'
     _expectedprint(expected)
-    assert onblack_satredbold_onblack == expected
+    assert onblack_brightredbold_onblack == expected
 
 
 def test__bold__green_on_black__bold():
@@ -333,31 +333,31 @@ def test__onblack_ongreen_onblack():
 
 # 2 outer colors
 ################
-def test__boldsatwhite__dark__boldsatwhite():
+def test__boldbrightwhite__dark__boldbrightwhite():
     """S+B  F       /F/B B
        1;97 2   →   22;1"""
     dark = colored(' Dark ', 'dark')
-    boldsatwhite__dark__boldsatwhite = colored(' BoldSat ' + dark + ' BoldSat ', 'bold', 'sat white')
-    _actualprint(boldsatwhite__dark__boldsatwhite)
+    boldbrightwhite__dark__boldbrightwhite = colored(' BoldBright ' + dark + ' BoldBright ', 'bold', 'bright white')
+    _actualprint(boldbrightwhite__dark__boldbrightwhite)
     # merge dark reset with bold re-open (22;1)
     # recognize bold is lost by 22, so need to re-open it
-    # recognize sat is not lost and is restored automatically by 22 (resetting dark)
-    # TODO: why is sat restored when resetting dark?
-    #  In IPython:
-    # # print('\x1b[97m Saturated (#EEEEEC) \x1b[2m Saturated and Dark (#9F9F9D) \x1b[22m Saturated (#EEEEEC) \x1b[0m Normal (#AAAAAA) \x1b[2m Dark (#717171) \x1b[0m')
-    expected = '\x1b[1;97m BoldSat \x1b[2m Dark \x1b[22;1m BoldSat \x1b[0m'
+    # recognize bright is not lost and is restored automatically by 22 (resetting dark)
+    # TODO: why is bright restored when resetting dark?
+    # In IPython:
+    # # print('\x1b[97m Bright (#EEEEEC) \x1b[2m Bright and Dark (#9F9F9D) \x1b[22m Bright (#EEEEEC) \x1b[0m Normal (#AAAAAA) \x1b[2m Dark (#717171) \x1b[0m')
+    expected = '\x1b[1;97m BoldBright \x1b[2m Dark \x1b[22;1m BoldBright \x1b[0m'
     _expectedprint(expected)
     
-    assert boldsatwhite__dark__boldsatwhite == expected
+    assert boldbrightwhite__dark__boldbrightwhite == expected
 
 
-def test__darkbold__satwhite__darkbold():
-    satwhite = colored(' SatWhite ', 'sat white')
-    darkbold__satwhite__darkbold = colored(' DarkBold ' + satwhite + ' DarkBold ', 'bold', 'dark')
-    _actualprint(darkbold__satwhite__darkbold)
-    expected = '\x1b[1;2m DarkBold \x1b[97m SatWhite \x1b[39m DarkBold \x1b[0m'
+def test__darkbold__brightwhite__darkbold():
+    brightwhite = colored(' BrightWhite ', 'bright white')
+    darkbold__brightwhite__darkbold = colored(' DarkBold ' + brightwhite + ' DarkBold ', 'bold', 'dark')
+    _actualprint(darkbold__brightwhite__darkbold)
+    expected = '\x1b[1;2m DarkBold \x1b[97m BrightWhite \x1b[39m DarkBold \x1b[0m'
     _expectedprint(expected)
-    assert darkbold__satwhite__darkbold == expected
+    assert darkbold__brightwhite__darkbold == expected
 
 
 #############
