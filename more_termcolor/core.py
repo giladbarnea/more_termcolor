@@ -74,6 +74,7 @@ RESET_COLOR_CODES = dict(all='0',
                          )
 COLORS = (
     'black',
+    'grey',  # termcolor compat
     'red',
     'green',
     'yellow',
@@ -84,6 +85,7 @@ COLORS = (
     )
 FOREGROUND_CODES = (
     '30',  # black
+    '30',  # grey # termcolor compat
     '31',  # red
     '32',  # green
     '33',  # yellow
@@ -96,6 +98,7 @@ FOREGROUND_CODES = (
 FOREGROUND_COLOR_CODES = dict(zip(COLORS, FOREGROUND_CODES))
 BRIGHT_BACKGROUND_CODES = (
     '100',  # black
+    '100',  # grey # termcolor compat
     '101',  # red
     '102',  # green
     '103',  # yellow
@@ -107,6 +110,7 @@ BRIGHT_BACKGROUND_CODES = (
 BRIGHT_BACKGROUND_COLOR_CODES = dict(zip(COLORS, BRIGHT_BACKGROUND_CODES))
 STANDARD_BACKGROUND_CODES = (
     '40',  # black
+    '40',  # grey # termcolor compat
     '41',  # red
     '42',  # green
     '43',  # yellow
@@ -122,6 +126,7 @@ BACKGROUND_COLOR_CODES = dict(**STANDARD_BACKGROUND_COLOR_CODES,
                               )
 BRIGHT_FOREGROUND_CODES = (
     '90',  # black
+    '90',  # grey # termcolor compat
     '91',  # red
     '92',  # green
     '93',  # yellow

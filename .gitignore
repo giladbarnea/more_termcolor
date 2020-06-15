@@ -131,3 +131,5 @@ dmypy.json
 pypitoken
 .idea/more_termcolor.iml
 
+
+original_termcolor

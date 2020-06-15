@@ -6,7 +6,8 @@ from more_termcolor import core
 RESET_RE = re.compile(r'(?<=reset ).*')
 BRIGHT_RE = re.compile(r'(?<=bright ).*')
 BACKGROUND_RE = re.compile(r'(?<=on ).*')
-COLOR_STRING_RE = re.compile(r'(?:reset )?(?P<on>on )?(?P<bright>bright )?(?P<actual_color>\w{3,9})')
+# COLOR_STRING_RE = re.compile(r'(?:reset )?(?P<on>on )?(?P<bright>bright )?(?P<actual_color>\w{3,9})')
+COLOR_STRING_RE = re.compile(fr'(?:reset )?(?P<on>on )?(?P<bright>bright )?(?P<actual_color>{"|".join(core.COLORS)+"|"+"|".join(core.FORMATTING_COLORS)})')
 
 
 def to_color(val: Union[str, int], obj: dict = None) -> Optional[str]:
@@ -97,18 +98,24 @@ def to_reset_code(val):
         return core.RESET_COLOR_CODES[color]
     except KeyError as e:
         # discard 'reset' if exists (non-captured)
-        d = COLOR_STRING_RE.match(color).groupdict()
+        match = COLOR_STRING_RE.match(color)
+        if not match:
+            raise KeyError(f"to_reset_code({repr(val)}): color {repr(color)} isn't recognized") from e
+        d = match.groupdict()
         actual_color = d['actual_color']
         bg = d['on'] is not None
         bright = d['bright'] is not None
         
         if not bg and not bright:
+            # simply "red"
             if actual_color in core.RESET_COLOR_CODES:
                 return core.RESET_COLOR_CODES[actual_color]
             if actual_color in core.FOREGROUND_COLOR_CODES:
                 return core.RESET_COLOR_CODES['fg']
             raise KeyError(f"to_reset_code({repr(val)}): actual_color ({actual_color}) isn't a reset key nor a foreground color, and there's no preceding 'on'/'bright'") from e
         if bg:
+            if actual_color not in core.BACKGROUND_COLOR_CODES:
+                raise KeyError(f"to_reset_code({repr(val)}): actual_color ({actual_color}) isn't a reset key nor a foreground color, and there's no preceding 'on'/'bright'") from e
             # standard bg and bright bg colors are both reset by 49
             return core.RESET_COLOR_CODES['on']
         return core.RESET_COLOR_CODES['fg']

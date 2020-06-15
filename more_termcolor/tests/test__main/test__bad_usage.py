@@ -76,8 +76,9 @@ outer has fmt:
             re-open outer
 
 """
-from more_termcolor import colored, cprint
-from more_termcolor.tests.common import _actualprint, _expectedprint
+
+from more_termcolor import colored
+from more_termcolor.tests.common import print_and_compare_methods
 
 
 #############
@@ -86,27 +87,31 @@ from more_termcolor.tests.common import _actualprint, _expectedprint
 
 # Trivial
 #########
-def test__no_color():
-    assert colored('foo') == 'foo'
 
 
-def test__same_color():
-    actual = colored('foo', 'red', 'dark', 'red')
-    _actualprint(actual)
-    expected = '\x1b[31;2mfoo\x1b[0m'
-    _expectedprint(expected)
-    assert actual == expected
+@print_and_compare_methods
+class Test:
     
-    actual = colored('foo', 'dark', 'dark', 'red')
-    _actualprint(actual)
-    expected = '\x1b[2;31mfoo\x1b[0m'
-    _expectedprint(expected)
-    assert actual == expected
-
-
-def test__too_many_colors():
-    actual = colored('foo', "red", "on black", "bold", "dark", "italic", "underline", "blink", "reverse", "strike", "overline")
-    _actualprint(actual)
-    expected = '\x1b[31;40;1;2;3;4;5;7;9;53mfoo\x1b[0m'
-    _expectedprint(expected)
-    assert actual == expected
+    @staticmethod
+    def test__no_color():
+        actual = colored('foo')
+        expected = 'foo'
+        return actual, expected
+    
+    @staticmethod
+    def test__same_color():
+        actual = colored('foo', 'red', 'dark', 'red')
+        expected = '\x1b[31;2mfoo\x1b[0m'
+        return actual, expected
+    
+    @staticmethod
+    def test__too_many_colors():
+        actual = colored('foo', "red", "on black", "bold", "dark", "italic", "underline", "blink", "reverse", "strike", "overline")
+        expected = '\x1b[31;40;1;2;3;4;5;7;9;53mfoo\x1b[0m'
+        return actual, expected
+    
+    @staticmethod
+    def test__no_text():
+        actual = colored('', 'red')
+        expected = ''
+        return actual, expected

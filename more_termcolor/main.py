@@ -124,16 +124,23 @@ def cprint(text, color=None, on_color=None, attrs=(), *colors, **kwargs):
     but also allows for passing any extra colors, or skipping the awkward signature altogether, e.g.:
     ::
         # old style
-        cprint('Hello, World!', 'red', 'on_cyan', attrs=['reverse', 'blink'])
+        cprint('Hello, World!', 'red', 'on_cyan', attrs=['reverse'])
         
         # is equivalent to:
-        cprint('Hello, World!', 'red', 'on cyan', 'reverse', 'blink')
+        cprint('Hello, World!', 'red', 'on cyan', 'reverse')
+    
     
     It accepts kw-arguments of print function.
     """
     if on_color:
-        actual_color = ON_COLOR_RE.match(on_color).groups()[0]
-        on_color = f'on {actual_color}'
+        if on_color.startswith('on_'):
+            on_color = f'on {on_color[3:]}'
+        # match = ON_COLOR_RE.match(on_color)
+        # if match:
+        #     actual_color = match.groups()[0]
+        #     on_color = f'on {actual_color}'
+        else:
+            colors += (on_color,)
     if isinstance(attrs, (str, int)):
         print((colored(text, color, on_color, attrs, *colors)), **kwargs)
     else:

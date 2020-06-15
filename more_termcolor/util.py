@@ -7,4 +7,4 @@ def confirm(prompt='continue?') -> bool:
 
 
 def spacyprint(*values):
-    print('\n', *values, sep='\n', end='\n')
+    print('', *values, sep='\n', end='\n')
