@@ -119,3 +119,7 @@ def to_reset_code(val):
             # standard bg and bright bg colors are both reset by 49
             return core.RESET_COLOR_CODES['on']
         return core.RESET_COLOR_CODES['fg']
+
+
+def to_boundary(*vals: Union[str, int]) -> str:
+    return f'\x1b[{";".join(map(to_code, vals))}m'

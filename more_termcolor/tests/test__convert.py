@@ -155,3 +155,15 @@ def test__to_reset_code():
     
     with common.assert_raises(KeyError, 'bright'):
         convert.to_reset_code('bright')
+
+
+@common.print_and_compare
+def test__to_boundary():
+    for code in (1, '1', 'bold'):
+        actual = convert.to_boundary(code)
+        expected = '\x1b[1m'
+        yield actual, expected
+    
+    actual = convert.to_boundary(1, '2', 'on bright black')
+    expected = '\x1b[1;2;100m'
+    yield actual, expected

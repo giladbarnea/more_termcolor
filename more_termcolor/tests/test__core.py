@@ -7,7 +7,7 @@ from more_termcolor.main import COLOR_CODES_RE
 from more_termcolor.colors import bold
 from random import choices
 from more_termcolor.tests import common
-from more_termcolor.util import spacyprint
+from more_termcolor.tests.common import spacyprint
 import re
 
 K = 20

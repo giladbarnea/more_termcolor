@@ -63,12 +63,13 @@ def colored(text: str, *colors: Union[str, int]) -> str:
         outer_reset_codes.append(reset_code)
         if not outer_has_non_foreground and _is_non_foreground(open_code):
             outer_has_non_foreground = True
-    start = f'\033[{";".join(outer_open_codes)}m'
+    
     text = str(text)
     try:
         # TODO (performance): don't replace substrings if not needed
         middle_already_formatted = True
         inner_open, *inner_middle_matches, inner_reset = re.finditer(COLOR_BOUNDARY_RE, text)
+        
         for inner_middle in inner_middle_matches:
             codes = inner_middle.groups()
             if any(code == '0' for code in codes):
@@ -96,6 +97,11 @@ def colored(text: str, *colors: Union[str, int]) -> str:
             if not inner_has_non_foreground and _is_non_foreground(inner_open_code):
                 inner_has_non_foreground = True
         
+        if inner_open.start() == 0:
+            # text begins with a color boundary; merge outer open with inner open
+            start = f'\033[{";".join(outer_open_codes + inner_open_codes)}m'
+        else:
+            start = f'\033[{";".join(outer_open_codes)}m'
         if inner_has_non_foreground:
             # replace existing inner reset codes with
             # the inner colors' matching reset codes
@@ -114,9 +120,13 @@ def colored(text: str, *colors: Union[str, int]) -> str:
                 text = text.replace(inner_reset.group(), start, 1)
     except ValueError as e:
         # not enough values to unpack (COLOR_BOUNDARY_RE did not match)
-        pass
+        print()
     reset = f'\033[0m'
-    ret = f'{start}{text}{reset}'
+    try:
+        ret = f'{start}{text}{reset}'
+    except UnboundLocalError as e:
+        start = f'\033[{";".join(outer_open_codes)}m'
+        ret = f'{start}{text}{reset}'
     return ret
 
 

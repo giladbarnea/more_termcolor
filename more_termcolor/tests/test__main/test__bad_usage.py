@@ -111,21 +111,3 @@ class Test:
         actual = colored('', 'red')
         expected = ''
         return actual, expected
-    
-    def test__merge_open_codes_if_no_text(self):
-        red = colored('Red', 'red')
-        actual = colored(f'{red} Bold', 'bold')
-        expected = '\x1b[1;31mRed\x1b[39m Bold\x1b[0m'
-        return actual, expected
-    
-    def test__merge_reset_codes_if_no_text(self):
-        red = colored('Red', 'red')
-        actual = colored(f'Bold {red}', 'bold')
-        expected = '\x1b[1Bold \x1b[31mRed\x1b[0m'
-        return actual, expected
-    
-    def test__merge_all_codes_if_no_text(self):
-        red = colored('Red', 'red')
-        actual = colored(red, 'bold')
-        expected = '\x1b[1;31mRed\x1b[0m'
-        return actual, expected

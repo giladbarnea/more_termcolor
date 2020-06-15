@@ -1,16 +1,34 @@
 import functools
 import inspect
-
-from more_termcolor import core, util, cprint, colored
-from more_termcolor.colors import ul
-from contextlib import contextmanager
-from typing import overload, Union, Any, Callable, Tuple
 import re
+from contextlib import contextmanager
 from pathlib import Path
+from typing import overload, Union, Any
+
+from more_termcolor import core
+
+
+def memoize(fun):
+    @functools.wraps(fun)
+    def wrapper(*args, **kwargs):
+        key = (args, frozenset(sorted(kwargs.items())))
+        try:
+            return cache[key]
+        except KeyError:
+            ret = fun(*args, **kwargs)
+            cache[key] = ret
+            return ret
+    
+    cache = {}
+    return wrapper
 
 
 def has_duplicates(collection) -> bool:
     return len(set(collection)) < len(collection)
+
+
+def spacyprint(*values):
+    print('', *values, sep='\n', end='\x1b[0m\n')
 
 
 @overload
@@ -65,7 +83,7 @@ bright_bg_colors = list(core.BRIGHT_BACKGROUND_COLOR_CODES.keys())
 
 
 def _print(description, string):
-    util.spacyprint(f'{ul(description)}:', string, repr(string))
+    spacyprint(f'\x1b[4m{description}\x1b[0m:', string, repr(string))
 
 
 def actualprint(string):
@@ -76,12 +94,22 @@ def expectedprint(string):
     _print('expected', string)
 
 
+@memoize
+def getsourcefilename(obj):
+    return Path(inspect.getsourcefile(obj)).name
+
+
+@memoize
+def getsourcelineno(obj):
+    return inspect.getsourcelines(obj)[1]
+
+
 def print_and_compare(fn_or_cls):
     """
     Examples:
         ::
          
-         # function decorator:
+         # decorate a function that returns a tuple:
          
          @print_and_compare
          def test__foo():
@@ -90,7 +118,20 @@ def print_and_compare(fn_or_cls):
              return actual, expected
              
          
-         # class decorator:
+         # decorate a function that yields tuples:
+         
+         @print_and_compare
+         def test__foo():
+             actual = 1 + 1
+             expected = 2
+             yield actual, expected
+             
+             actual *= 2
+             expected *= 2
+             yield actual, expected
+             
+         
+         # decorate a class:
          
          @print_and_compare
          class Foo:
@@ -100,16 +141,23 @@ def print_and_compare(fn_or_cls):
                  return actual, expected
     """
     
+    def _print_and_compare(_actual, _expected):
+        actualprint(_actual)
+        expectedprint(_expected)
+        assert _actual == _expected
+        print('\x1b[32mOK\x1b[0m')
+    
     @functools.wraps(fn_or_cls)
     def wrap():
-        actual, expected = fn_or_cls()
-        
-        where = colored(f'{Path(inspect.getsourcefile(fn_or_cls)).name}:{inspect.getsourcelines(fn_or_cls)[1]}', 'dark')
-        cprint(f'\n\n{fn_or_cls.__name__}    {where}', 'bold', 'bright white', 'on black')
-        actualprint(actual)
-        expectedprint(expected)
-        assert actual == expected
-        cprint('OK', 'green')
+        where = f'{getsourcefilename(fn_or_cls)}:{getsourcelineno(fn_or_cls)}'
+        # title = colored(f'\n\n{fn_or_cls.__name__}    {where}', 'bold', 'bright white', 'on black')
+        print(f'\n\n\x1b[1;97;40m{fn_or_cls.__name__}    \x1b[2m{where}\n\x1b[0m')
+        try:
+            actual, expected = fn_or_cls()
+            _print_and_compare(actual, expected)
+        except ValueError as e:  # returned a generator → 'not enough values to unpack (expected 2, got 1)'
+            for actual, expected in fn_or_cls():
+                _print_and_compare(actual, expected)
     
     if isinstance(fn_or_cls, type):
         class Monkey(fn_or_cls):

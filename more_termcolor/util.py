@@ -4,7 +4,3 @@ def confirm(prompt='continue?') -> bool:
         import sys
         sys.exit()
     return answer == 'y' or answer == 'yes'
-
-
-def spacyprint(*values):
-    print('', *values, sep='\n', end='\n')
