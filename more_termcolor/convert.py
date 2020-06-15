@@ -6,7 +6,6 @@ from more_termcolor import core
 RESET_RE = re.compile(r'(?<=reset ).*')
 BRIGHT_RE = re.compile(r'(?<=bright ).*')
 BACKGROUND_RE = re.compile(r'(?<=on ).*')
-# COLOR_STRING_RE = re.compile(r'(?:reset )?(?P<on>on )?(?P<bright>bright )?(?P<actual_color>\w{3,9})')
 COLOR_STRING_RE = re.compile(fr'(?:reset )?(?P<on>on )?(?P<bright>bright )?(?P<actual_color>{"|".join(core.COLORS) + "|" + "|".join(core.FORMATTING_COLORS)})')
 
 

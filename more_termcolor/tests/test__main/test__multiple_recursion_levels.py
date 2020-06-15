@@ -6,6 +6,7 @@ from more_termcolor.tests.common import print_and_compare
 
 @print_and_compare
 class Test:
+    @pytest.mark.skip
     def test__merge_open_codes_if_no_text(self):
         red = colored('Red', 'red')
         actual = colored(f'{red} Bold', 'bold')

@@ -3,9 +3,10 @@ from typing import Union
 
 from more_termcolor import convert, core
 
+# TODO: this doesn't match 4+ colors
 COLOR_CODES_RE = r'(\d{,3})(?:;)?(\d{,3})?(?:;)?(\d{,3})?'
-COLOR_BOUNDARY_RE = re.compile(fr'\033\[{COLOR_CODES_RE}m')
-ON_COLOR_RE = re.compile(r'on[_ ](\w{3,9})')
+COLOR_BOUNDARY_RE = re.compile(fr'\x1b\[{COLOR_CODES_RE}m')
+ON_COLOR_RE = re.compile(fr'on[_ ]({"|".join(core.COLORS)})')
 
 
 def _is_non_foreground(_code):
@@ -99,33 +100,33 @@ def colored(text: str, *colors: Union[str, int]) -> str:
         
         if inner_open.start() == 0:
             # text begins with a color boundary; merge outer open with inner open
-            start = f'\033[{";".join(outer_open_codes + inner_open_codes)}m'
+            start = convert.to_boundary(*outer_open_codes, *inner_open_codes)
         else:
-            start = f'\033[{";".join(outer_open_codes)}m'
+            start = convert.to_boundary(*outer_open_codes)
         if inner_has_non_foreground:
             # replace existing inner reset codes with
             # the inner colors' matching reset codes
             
             if outer_has_non_foreground:
                 inner_reset_codes.extend(reopen_these_outer_open_codes)
-            proper_inner_reset = f'\033[{";".join(inner_reset_codes)}m'
+            proper_inner_reset = convert.to_boundary(*inner_reset_codes)
             text = text.replace(inner_reset.group(), proper_inner_reset, 1)
         
         else:
             if outer_has_non_foreground:
-                reset_fg_code = convert.to_reset_code('fg')
-                text = text.replace(inner_reset.group(), f'\033[{reset_fg_code}m', 1)
+                text = text.replace(inner_reset.group(), convert.to_boundary('reset fg'), 1)
             else:
                 # replace inner reset with outer open
                 text = text.replace(inner_reset.group(), start, 1)
     except ValueError as e:
         # not enough values to unpack (COLOR_BOUNDARY_RE did not match)
-        print()
+        pass
     reset = f'\033[0m'
     try:
         ret = f'{start}{text}{reset}'
     except UnboundLocalError as e:
-        start = f'\033[{";".join(outer_open_codes)}m'
+        
+        start = convert.to_boundary(*outer_open_codes)
         ret = f'{start}{text}{reset}'
     return ret
 
