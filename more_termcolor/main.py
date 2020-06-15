@@ -3,9 +3,15 @@ from typing import Union
 
 from more_termcolor import convert, core
 
-# TODO: this doesn't match 4+ colors
-COLOR_CODES_RE = r'(\d{,3})(?:;)?(\d{,3})?(?:;)?(\d{,3})?'
+COLOR_CODES_RE = r'(\d{,3})(?:;)?' * 6
+"""
+first, *_ = re.finditer(COLOR_BOUNDARY_RE, '\x1b[31;1mFOO\x1b[0m')
+first.group() → '\x1b[31;1m'
+first.groups() → ('31', '1', '', '', '', '')
+"""
+
 COLOR_BOUNDARY_RE = re.compile(fr'\x1b\[{COLOR_CODES_RE}m')
+# COLOR_BOUNDARY_RE2 = re.compile(fr'\x1b\[{COLOR_CODES_RE}m([^\x1b]+)*')
 ON_COLOR_RE = re.compile(fr'on[_ ]({"|".join(core.COLORS)})')
 
 
@@ -98,11 +104,21 @@ def colored(text: str, *colors: Union[str, int]) -> str:
             if not inner_has_non_foreground and _is_non_foreground(inner_open_code):
                 inner_has_non_foreground = True
         
+        # keep before altering of text value
+        should_merge_resets = inner_reset.end() == len(text)
         if inner_open.start() == 0:
             # text begins with a color boundary; merge outer open with inner open
             start = convert.to_boundary(*outer_open_codes, *inner_open_codes)
+            text = text.replace(inner_open.group(), '', 1)
         else:
             start = convert.to_boundary(*outer_open_codes)
+        
+        if should_merge_resets:
+            # text ends with a color boundary; merge outer reset with inner reset
+            return start + text
+        # text does not end with a color boundary;
+        # this means there's text after last color boundary that
+        # needs to be reset separately from outer reset
         if inner_has_non_foreground:
             # replace existing inner reset codes with
             # the inner colors' matching reset codes
@@ -121,7 +137,7 @@ def colored(text: str, *colors: Union[str, int]) -> str:
     except ValueError as e:
         # not enough values to unpack (COLOR_BOUNDARY_RE did not match)
         pass
-    reset = f'\033[0m'
+    reset = convert.to_boundary(0)
     try:
         ret = f'{start}{text}{reset}'
     except UnboundLocalError as e:
