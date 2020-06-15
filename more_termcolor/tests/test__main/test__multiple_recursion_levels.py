@@ -1,7 +1,8 @@
 import pytest
-
+import pickle
 from more_termcolor import colored
 from more_termcolor.tests.common import print_and_compare
+from pathlib import Path
 
 
 @print_and_compare
@@ -28,4 +29,14 @@ class Test:
         red = colored('Red', 'red')
         actual = colored(red, 'bold')
         expected = '\x1b[1;31mRed\x1b[0m'
+        return actual, expected
+    
+    def test__exchandler(self):
+        with open(Path(__file__).parent / 'exchandler_colors.pickle', mode='rb') as f:
+            colors = pickle.load(f)
+        with open(Path(__file__).parent / 'exchandler_text.pickle', mode='rb') as f:
+            text = pickle.load(f)
+        with open(Path(__file__).parent / 'exchandler_expected.pickle', mode='rb') as f:
+            expected = pickle.load(f)
+        actual = colored(text, *colors)
         return actual, expected
