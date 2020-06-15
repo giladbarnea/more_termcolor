@@ -2,6 +2,7 @@ import functools
 import inspect
 
 from more_termcolor import core, util, cprint, colored
+from more_termcolor.colors import ul
 from contextlib import contextmanager
 from typing import overload, Union, Any, Callable, Tuple
 import re
@@ -64,7 +65,7 @@ bright_bg_colors = list(core.BRIGHT_BACKGROUND_COLOR_CODES.keys())
 
 
 def _print(description, string):
-    util.spacyprint(f'{description}:', string, repr(string))
+    util.spacyprint(f'{ul(description)}:', string, repr(string))
 
 
 def actualprint(string):
@@ -75,28 +76,43 @@ def expectedprint(string):
     _print('expected', string)
 
 
-def print_and_compare(fn: Callable[[], Tuple[str, str]]):
+def print_and_compare(fn_or_cls):
     """
-    @print_and_compare
-    def test__bar():
-        actual = 1 + 1
-        expected = 2
-        return actual, expected
+    Examples:
+        ::
+         
+         # function decorator:
+         
+         @print_and_compare
+         def test__foo():
+             actual = 1 + 1
+             expected = 2
+             return actual, expected
+             
+         
+         # class decorator:
+         
+         @print_and_compare
+         class Foo:
+             def test__foo(self):
+                 actual = 1 + 1
+                 expected = 2
+                 return actual, expected
     """
     
-    @functools.wraps(fn)
+    @functools.wraps(fn_or_cls)
     def wrap():
-        actual, expected = fn()
+        actual, expected = fn_or_cls()
         
-        where = colored(f'{Path(inspect.getsourcefile(fn)).name}:{inspect.getsourcelines(fn)[1]}', 'dark')
-        cprint(f'\n\n{fn.__name__}    {where}', 'bold', 'bright white', 'on black')
+        where = colored(f'{Path(inspect.getsourcefile(fn_or_cls)).name}:{inspect.getsourcelines(fn_or_cls)[1]}', 'dark')
+        cprint(f'\n\n{fn_or_cls.__name__}    {where}', 'bold', 'bright white', 'on black')
         actualprint(actual)
         expectedprint(expected)
         assert actual == expected
         cprint('OK', 'green')
     
-    if isinstance(fn, type):
-        class Monkey(fn):
+    if isinstance(fn_or_cls, type):
+        class Monkey(fn_or_cls):
             
             def __getattribute__(self, name: str) -> Any:
                 attr = super().__getattribute__(name)

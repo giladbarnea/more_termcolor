@@ -8,6 +8,10 @@ COLOR_BOUNDARY_RE = re.compile(fr'\033\[{COLOR_CODES_RE}m')
 ON_COLOR_RE = re.compile(r'on[_ ](\w{3,9})')
 
 
+def _is_non_foreground(_code):
+    return _code not in core.FOREGROUND_CODES and _code not in core.BRIGHT_FOREGROUND_CODES
+
+
 def colored(text: str, *colors: Union[str, int]) -> str:
     """
     Multiple colors can be passed, and their color codes will be merged.
@@ -39,9 +43,8 @@ def colored(text: str, *colors: Union[str, int]) -> str:
     
     if not colors:
         return text
-    
-    def _is_non_foreground(_code):
-        return _code not in core.FOREGROUND_CODES and _code not in core.BRIGHT_FOREGROUND_CODES
+    if not text:
+        return ''
     
     outer_open_codes = []
     outer_reset_codes = []
@@ -75,12 +78,12 @@ def colored(text: str, *colors: Union[str, int]) -> str:
         inner_open_codes = []
         inner_has_non_foreground = False
         inner_reset_codes = []
-        outer_open_codes_to_reopen = []
+        reopen_these_outer_open_codes = []
         for inner_open_code in inner_open.groups():
             # build:
             # (1) inner_open_codes
             # (2) inner_reset_codes
-            # (3) outer_open_codes_to_reopen
+            # (3) reopen_these_outer_open_codes
             if not inner_open_code:
                 continue
             inner_open_codes.append(inner_open_code)
@@ -89,7 +92,7 @@ def colored(text: str, *colors: Union[str, int]) -> str:
             for outer_reset_code in outer_reset_codes:
                 if inner_reset_code == outer_reset_code:
                     outer_open_code = outer_reset_2_open[outer_reset_code]
-                    outer_open_codes_to_reopen.append(outer_open_code)
+                    reopen_these_outer_open_codes.append(outer_open_code)
             if not inner_has_non_foreground and _is_non_foreground(inner_open_code):
                 inner_has_non_foreground = True
         
@@ -98,14 +101,14 @@ def colored(text: str, *colors: Union[str, int]) -> str:
             # the inner colors' matching reset codes
             
             if outer_has_non_foreground:
-                inner_reset_codes.extend(outer_open_codes_to_reopen)
+                inner_reset_codes.extend(reopen_these_outer_open_codes)
             proper_inner_reset = f'\033[{";".join(inner_reset_codes)}m'
             text = text.replace(inner_reset.group(), proper_inner_reset, 1)
         
         else:
             if outer_has_non_foreground:
-                # reset fg
-                text = text.replace(inner_reset.group(), '\033[39m', 1)
+                reset_fg_code = convert.to_reset_code('fg')
+                text = text.replace(inner_reset.group(), f'\033[{reset_fg_code}m', 1)
             else:
                 # replace inner reset with outer open
                 text = text.replace(inner_reset.group(), start, 1)
