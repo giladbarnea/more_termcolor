@@ -1,4 +1,4 @@
-from more_termcolor import core
+from more_termcolor import core, util
 from contextlib import contextmanager
 import re
 
@@ -33,3 +33,15 @@ background_colors = list(core.STANDARD_BACKGROUND_COLOR_CODES.keys())
 foreground_colors = list(core.FOREGROUND_COLOR_CODES.keys())
 bright_fg_colors = list(core.BRIGHT_FOREGROUND_COLOR_CODES.keys())
 bright_bg_colors = list(core.BRIGHT_BACKGROUND_COLOR_CODES.keys())
+
+
+def _print(description, string):
+    util.spacyprint(f'{description}:', string, repr(string))
+
+
+def _actualprint(string):
+    _print('actual', string)
+
+
+def _expectedprint(string):
+    _print('expected', string)

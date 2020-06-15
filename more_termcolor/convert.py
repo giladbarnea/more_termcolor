@@ -44,6 +44,15 @@ def to_code(val: Union[str, int]) -> str:
         to_code('on bright yellow') # '103'
         to_code(32) # '32'
         """
+    
+    def _soft_keyerror(_obj, _key, _e: KeyError):
+        from pprint import pformat
+        _errmsg = '\n'.join([f"Got a KeyError when trying to convert the color name {repr(val)} to color code.",
+                             f'key: "{_key}" is not found in obj:',
+                             pformat(_obj, depth=1),
+                             f"Additional exception args: {', '.join(_e.args)}" if _e.args else ''])
+        print(f'\x1b[91;40m{_errmsg}\x1b[39;22m')
+    
     if isinstance(val, int) or val.isdigit():
         # val is actually a color code
         return str(val)
@@ -51,52 +60,24 @@ def to_code(val: Union[str, int]) -> str:
     if ' ' in val:
         keys = val.split()
         for key in keys:
-            obj = obj[key]
+            try:
+                obj = obj[key]
+            except KeyError as e:
+                if val in core.COLORS or val in core.FORMATTING_COLORS:
+                    _soft_keyerror(obj, key, e)
+                    return val
+                else:
+                    raise
         return obj
     else:
-        return obj[val]
-
-
-# def _try_get_bg_reset_code(color: str) -> Optional[int]:
-#     """Examples:
-#     ::
-#      ('on red') → 49
-#      ('on brightred') → 49
-#      ('green') → None
-#      ('BAD') → None
-#      ('bright green') → None
-#      ('on BAD') → KeyError
-#     """
-#     match = BACKGROUND_RE.search(color)
-#     if match:
-#         # e.g. 'on [bright ]yellow'
-#         actual_color = match.group()
-#         if actual_color not in core.STANDARD_BACKGROUND_COLOR_CODES:
-#             raise KeyError(f"`color` ('{color}') matches '{BACKGROUND_RE.pattern}' but `actual_color` ('{actual_color}') not in STANDARD_BACKGROUND_COLOR_CODES")
-#         resetcode = core.RESET_COLOR_CODES['on']
-#         return resetcode
-#     return None
-
-
-# def _try_get_bright_reset_code(color: str) -> Optional[int]:
-#     """Examples:
-#     ::
-#      ('bright green') → 39
-#      ('green') → None
-#      ('BAD') → None
-#      ('bright BAD') → KeyError
-#      ('on red') → KeyError
-#      ('on brightred') → KeyError
-#     """
-#     match = BRIGHT_RE.search(color)
-#     if match:
-#         # e.g. 'bright yellow'
-#         actual_color = match.group()
-#         if actual_color not in core.BRIGHT_FOREGROUND_COLOR_CODES:
-#             raise KeyError(f"`color` ('{color}') matches '{BRIGHT_RE.pattern}' but `actual_color` ('{actual_color}') not in BRIGHT_FOREGROUND_COLOR_CODES")
-#         # 39 resets both std fg and bright fg
-#         return core.RESET_COLOR_CODES['fg']
-#     return None
+        try:
+            return obj[val]
+        except KeyError as e:
+            if val in core.COLORS or val in core.FORMATTING_COLORS:
+                _soft_keyerror(obj, val, e)
+                return val
+            else:
+                raise
 
 
 def to_reset_code(val):
@@ -120,16 +101,6 @@ def to_reset_code(val):
         actual_color = d['actual_color']
         bg = d['on'] is not None
         bright = d['bright'] is not None
-        # if actual_color in core.RESET_COLOR_CODES:
-        #     return core.RESET_COLOR_CODES[color]
-        
-        # if match:
-        #     # happens when val is e.g. '22',
-        #     # in which case to_color(val) → 'reset bold';
-        #     # call again with just 'bold'
-        #     actual_color = match.group()
-        #     return to_reset_code(actual_color)
-        # d = COLOR_STRING_RE.match(color).groupdict()
         
         if not bg and not bright:
             if actual_color in core.RESET_COLOR_CODES:
@@ -141,18 +112,3 @@ def to_reset_code(val):
             # standard bg and bright bg colors are both reset by 49
             return core.RESET_COLOR_CODES['on']
         return core.RESET_COLOR_CODES['fg']
-        # if color in core.FOREGROUND_COLOR_CODES:
-        #     resetcode = core.RESET_COLOR_CODES['fg']
-        #     return resetcode
-        # resetcode = _try_get_bg_reset_code(color)
-        # if resetcode:
-        #     return resetcode
-        # resetcode = _try_get_bright_reset_code(color)
-        # if resetcode:
-        #     return resetcode
-        # raise
-
-
-def reset(val: Union[str, int]):
-    resetcode = to_reset_code(val)
-    return f'\033[{resetcode}m'

@@ -131,38 +131,3 @@ def test__to_reset_code():
         convert.to_reset_code('bright')
     with common.assert_raises(KeyError, 'on'):
         convert.to_reset_code('on')
-
-
-# def test___try_get_bright_reset_code():
-#     assert convert._try_get_bright_reset_code('green') is None
-#
-#     # provides safety only for 'bright ...' (unlike to_reset_code())
-#     assert convert._try_get_bright_reset_code('BAD') is None
-#
-#     assert convert._try_get_bright_reset_code('bright green') == 39
-#     with common.assert_raises(KeyError, convert.BRIGHT_RE.pattern, "`actual_color` ('on red')", "BRIGHT_FOREGROUND_COLOR_CODES"):
-#         convert._try_get_bright_reset_code('on bright red')
-#     with common.assert_raises(KeyError, convert.BRIGHT_RE.pattern, "`actual_color` ('red')", "BRIGHT_FOREGROUND_COLOR_CODES"):
-#         convert._try_get_bright_reset_code('on red')
-
-
-# def test___try_get_bg_reset_code():
-#     assert convert._try_get_bg_reset_code('green') is None
-#
-#     # provides safety only for 'on ...' (unlike to_reset_code())
-#     assert convert._try_get_bg_reset_code('BAD') is None
-#     with common.assert_raises(KeyError, convert.BACKGROUND_RE.pattern, r"`actual_color` ('BAD') not in STANDARD_BACKGROUND_COLOR_CODES"):
-#         convert._try_get_bg_reset_code('on BAD')
-#
-#     assert convert._try_get_bg_reset_code('bright green') is None
-#     assert convert._try_get_bg_reset_code('on bright red') == 101
-#     assert convert._try_get_bg_reset_code('on red') == 49
-
-
-def test__reset():
-    no_reset = ('default', 'fraktur')
-    for color, code in core.FORMATTING_COLOR_CODES.items():
-        if color in no_reset:
-            continue
-        with common.assert_doesnt_raise(KeyError):
-            convert.reset(color)

@@ -1,3 +1,6 @@
+#!/usr/bin/env python3.8
+from typing import Optional, List
+
 from more_termcolor import util
 import re
 import semver
@@ -38,30 +41,39 @@ def main():
     if Path('./dist').is_dir() or Path('./build').is_dir():
         cmd = 'rm -rf dist build'
         if util.confirm(f"run '{cmd}'?"):
-            run(shlex.split(cmd))
+            if run(shlex.split(cmd)) is None:
+                sys.exit(1)
     else:
         print("dist and/or build dirs don't exist")
+    if not Path('./env').is_dir():
+        print('./env is not a directory')
+        sys.exit(1)
+    if 'twine' not in run(shlex.split('pip freeze')):
+        print('./twine is not installed')
+        sys.exit(1)
     cmds = ['./env/bin/python setup.py sdist bdist_wheel',
             './env/bin/python -m twine upload dist/*']
     for cmd in cmds:
         if util.confirm(f"run '{cmd}'?"):
-            ok = run(shlex.split(cmd))
-            if not ok:
+            if run(shlex.split(cmd)) is None:
                 sys.exit(1)
 
 
-def run(cmd):
+def run(cmd) -> Optional[List[str]]:
     if dry_run:
         print('dry_run, not actually running anything')
         return
     try:
-        subprocess.run(cmd, stderr=subprocess.PIPE)
+        comp_proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except Exception as e:
         print(f'FAILED cmd: {cmd}', repr(e))
-        return False
+        return None
     else:
         print('success')
-        return True
+        try:
+            return comp_proc.stdout.decode().splitlines()
+        except AttributeError as e:
+            return []
 
 
 def bump_version(data, version, bumped):

@@ -47,7 +47,8 @@ def colored(text: str, *colors: Union[str, int]) -> str:
     outer_reset_codes = []
     outer_reset_2_open = dict()
     outer_has_non_foreground = False
-    for color in colors:
+    for color in filter(lambda c: c is not None, colors):
+        # if on_color is None by default in cprint()
         open_code = convert.to_code(color)
         # TODO: complexity
         if open_code in outer_open_codes:
@@ -60,17 +61,26 @@ def colored(text: str, *colors: Union[str, int]) -> str:
         if not outer_has_non_foreground and _is_non_foreground(open_code):
             outer_has_non_foreground = True
     start = f'\033[{";".join(outer_open_codes)}m'
+    text = str(text)
     try:
         # TODO (performance): don't replace substrings if not needed
-        # if more than one open/reset pairs exist in text,
-        # ignore them (*_) assuming they'd been recursively
-        # taken care of.
-        inner_open, *_, inner_reset = re.finditer(COLOR_BOUNDARY_RE, text)
+        middle_already_formatted = True
+        inner_open, *inner_middle_matches, inner_reset = re.finditer(COLOR_BOUNDARY_RE, text)
+        for inner_middle in inner_middle_matches:
+            codes = inner_middle.groups()
+            if any(code == '0' for code in codes):
+                middle_already_formatted = False
+                break
+        
         inner_open_codes = []
         inner_has_non_foreground = False
         inner_reset_codes = []
         outer_open_codes_to_reopen = []
         for inner_open_code in inner_open.groups():
+            # build:
+            # (1) inner_open_codes
+            # (2) inner_reset_codes
+            # (3) outer_open_codes_to_reopen
             if not inner_open_code:
                 continue
             inner_open_codes.append(inner_open_code)
