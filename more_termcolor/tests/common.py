@@ -1,9 +1,11 @@
 import functools
+import inspect
 
-from more_termcolor import core, util, cprint
+from more_termcolor import core, util, cprint, colored
 from contextlib import contextmanager
-from typing import overload, Union, Any
+from typing import overload, Union, Any, Callable, Tuple
 import re
+from pathlib import Path
 
 
 def has_duplicates(collection) -> bool:
@@ -73,39 +75,35 @@ def expectedprint(string):
     _print('expected', string)
 
 
-def print_and_compare(fn):
+def print_and_compare(fn: Callable[[], Tuple[str, str]]):
+    """
+    @print_and_compare
+    def test__bar():
+        actual = 1 + 1
+        expected = 2
+        return actual, expected
+    """
+    
     @functools.wraps(fn)
     def wrap():
         actual, expected = fn()
-        cprint(f'\n\n{fn.__name__}', 'bold', 'bright white')
+        
+        where = colored(f'{Path(inspect.getsourcefile(fn)).name}:{inspect.getsourcelines(fn)[1]}', 'dark')
+        cprint(f'\n\n{fn.__name__}    {where}', 'bold', 'bright white', 'on black')
         actualprint(actual)
         expectedprint(expected)
         assert actual == expected
+        cprint('OK', 'green')
     
-    return wrap
-
-
-def print_and_compare_methods(cls: type):
-    """
-    Spares boilerplate by printing what's expected and what's actual,
-    asserting equality and printing test name.
-    ::
-    @print_and_compare_methods
-    class Foo:
-        @staticmethod
-        def test__bar():
-            actual = 1 + 1
-            expected = 2
-            return actual, expected
-    """
-    
-    class Monkey(cls):
+    if isinstance(fn, type):
+        class Monkey(fn):
+            
+            def __getattribute__(self, name: str) -> Any:
+                attr = super().__getattribute__(name)
+                if name.startswith('test__'):
+                    decorated = print_and_compare(attr)
+                    return decorated
+                return attr
         
-        def __getattribute__(self, name: str) -> Any:
-            attr = super().__getattribute__(name)
-            if name.startswith('test__'):
-                decorated = print_and_compare(attr)
-                return decorated
-            return attr
-    
-    return Monkey
+        return Monkey
+    return wrap

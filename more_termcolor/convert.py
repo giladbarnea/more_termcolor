@@ -7,7 +7,7 @@ RESET_RE = re.compile(r'(?<=reset ).*')
 BRIGHT_RE = re.compile(r'(?<=bright ).*')
 BACKGROUND_RE = re.compile(r'(?<=on ).*')
 # COLOR_STRING_RE = re.compile(r'(?:reset )?(?P<on>on )?(?P<bright>bright )?(?P<actual_color>\w{3,9})')
-COLOR_STRING_RE = re.compile(fr'(?:reset )?(?P<on>on )?(?P<bright>bright )?(?P<actual_color>{"|".join(core.COLORS)+"|"+"|".join(core.FORMATTING_COLORS)})')
+COLOR_STRING_RE = re.compile(fr'(?:reset )?(?P<on>on )?(?P<bright>bright )?(?P<actual_color>{"|".join(core.COLORS) + "|" + "|".join(core.FORMATTING_COLORS)})')
 
 
 def to_color(val: Union[str, int], obj: dict = None) -> Optional[str]:
@@ -115,7 +115,7 @@ def to_reset_code(val):
             raise KeyError(f"to_reset_code({repr(val)}): actual_color ({actual_color}) isn't a reset key nor a foreground color, and there's no preceding 'on'/'bright'") from e
         if bg:
             if actual_color not in core.BACKGROUND_COLOR_CODES:
-                raise KeyError(f"to_reset_code({repr(val)}): actual_color ({actual_color}) isn't a reset key nor a foreground color, and there's no preceding 'on'/'bright'") from e
+                raise KeyError(f"to_reset_code({repr(val)}): actual_color ({actual_color}) isn't a background color") from e
             # standard bg and bright bg colors are both reset by 49
             return core.RESET_COLOR_CODES['on']
         return core.RESET_COLOR_CODES['fg']

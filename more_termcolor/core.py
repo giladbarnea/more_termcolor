@@ -22,7 +22,7 @@ FORMATTING_COLORS = (
     'conceal',  # 8,
     'concealed',  # termcolor compat
     'strike',  # 9,
-    'default',  # 10,
+    # 'default',  # 10,
     'fraktur',  # 20 ?
     'doubleul',  # 21,
     'frame',  # 51, ?
@@ -42,7 +42,7 @@ FORMATTING_CODES = (
     '8',
     '8',  # termcolor compat
     '9',
-    '10',
+    # '10',
     # 16-231 → fg 38:5:<c>, bg 48:5:<c>
     '20',
     '21',

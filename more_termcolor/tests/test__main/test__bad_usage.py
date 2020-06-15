@@ -78,7 +78,7 @@ outer has fmt:
 """
 
 from more_termcolor import colored
-from more_termcolor.tests.common import print_and_compare_methods
+from more_termcolor.tests.common import print_and_compare
 
 
 #############
@@ -89,29 +89,24 @@ from more_termcolor.tests.common import print_and_compare_methods
 #########
 
 
-@print_and_compare_methods
+@print_and_compare
 class Test:
-    
-    @staticmethod
-    def test__no_color():
+    def test__no_color(self):
         actual = colored('foo')
         expected = 'foo'
         return actual, expected
     
-    @staticmethod
-    def test__same_color():
+    def test__same_color(self):
         actual = colored('foo', 'red', 'dark', 'red')
         expected = '\x1b[31;2mfoo\x1b[0m'
         return actual, expected
     
-    @staticmethod
-    def test__too_many_colors():
+    def test__too_many_colors(self):
         actual = colored('foo', "red", "on black", "bold", "dark", "italic", "underline", "blink", "reverse", "strike", "overline")
         expected = '\x1b[31;40;1;2;3;4;5;7;9;53mfoo\x1b[0m'
         return actual, expected
     
-    @staticmethod
-    def test__no_text():
+    def test__no_text(self):
         actual = colored('', 'red')
         expected = ''
         return actual, expected

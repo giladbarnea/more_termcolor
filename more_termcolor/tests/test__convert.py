@@ -133,6 +133,13 @@ def test__to_color__docstring_examples():
     assert convert.to_color('green') == 'green'
 
 
+@common.print_and_compare
+def test__to_code__fonts():
+    actual = convert.to_code('10')
+    expected = '10'
+    return actual, expected
+
+
 def test__to_reset_code():
     assert convert.to_reset_code('bold') == '22'
     assert convert.to_reset_code('dark') == '22'
@@ -140,15 +147,11 @@ def test__to_reset_code():
     assert convert.to_reset_code('green') == '39' == core.RESET_COLOR_CODES['fg']
     assert convert.to_reset_code('on red') == '49'
     assert convert.to_reset_code('bright red') == '39'
-    with common.assert_raises(KeyError, "to_reset_code('BAD'): color 'BAD' isn't recognized"):
-        convert.to_reset_code('BAD')
-    
-    with common.assert_raises(KeyError, "to_reset_code('on BAD'): color 'on BAD' isn't recognized"):
-        convert.to_reset_code('on BAD')
-    
-    with common.assert_raises(KeyError, "to_reset_code('on bright BAD'): color 'on bright BAD' isn't recognized"):
-        convert.to_reset_code('on bright BAD')
     assert convert.to_reset_code('on bright yellow') == '49'
+    assert convert.to_reset_code('on') == '49'
+    for bad in ('BAD', 'on BAD', 'on bright BAD'):
+        with common.assert_raises(KeyError, f"to_reset_code('{bad}'): color '{bad}' isn't recognized"):
+            convert.to_reset_code(bad)
+    
     with common.assert_raises(KeyError, 'bright'):
         convert.to_reset_code('bright')
-    assert convert.to_reset_code('on') == '49'
