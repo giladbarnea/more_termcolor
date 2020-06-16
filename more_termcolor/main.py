@@ -143,7 +143,7 @@ class Inside(ColorScope):
                 return instance
 
 
-def colored_(text: str, *colors: Union[str, int]) -> str:
+def colored(text: str, *colors: Union[str, int]) -> str:
     """
     Multiple colors can be passed, and their color codes will be merged.
     The resulting string will always end with a 'reset all' code (0).
@@ -232,7 +232,7 @@ def colored_(text: str, *colors: Union[str, int]) -> str:
     return ret
 
 
-def colored(text: str, *colors: Union[str, int]) -> str:
+def coloredOLD(text: str, *colors: Union[str, int]) -> str:
     """
     Multiple colors can be passed, and their color codes will be merged.
     The resulting string will always end with a 'reset all' code (0).
