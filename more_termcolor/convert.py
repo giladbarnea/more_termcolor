@@ -65,6 +65,7 @@ def to_code(name_or_code: Union[str, int]) -> str:
                 obj = obj[key]
             except KeyError as e:
                 if name_or_code in core.COLORS or name_or_code in core.FORMATTING_COLORS:
+                    raise KeyError
                     _soft_keyerror(obj, key, e)
                     return name_or_code
                 else:
