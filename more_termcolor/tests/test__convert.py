@@ -43,11 +43,11 @@ def test__to_code__from_code():
 
 
 def test__to_code__edge_cases():
-    with common.assert_raises(KeyError):
+    with common.assert_raises(KeyError, 'grin'):
         convert.to_code('grin')
-    with common.assert_raises(KeyError):
+    with common.assert_raises(KeyError, 'brightblue'):
         convert.to_code('brightblue')
-    with common.assert_raises(KeyError):
+    with common.assert_raises(KeyError, 'brightblue'):
         convert.to_code('on brightblue')
 
 

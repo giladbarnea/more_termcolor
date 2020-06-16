@@ -45,15 +45,6 @@ def to_code(name_or_code: Union[str, int]) -> str:
         to_code(32) # '32'
         """
     
-    # TODO: probably remove; decide whether this module is for inner use and if so, raise hard errors
-    def _soft_keyerror(_obj, _key, _e: KeyError):
-        from pprint import pformat
-        _errmsg = '\n'.join([f"Got a KeyError when trying to convert the color name {repr(name_or_code)} to color code.",
-                             f'key: "{_key}" is not found in obj:',
-                             pformat(_obj, depth=1),
-                             f"Additional exception args: {', '.join(_e.args)}" if _e.args else ''])
-        print(f'\x1b[91;40m{_errmsg}\x1b[39;22m')
-    
     if isinstance(name_or_code, int) or name_or_code.isdigit():
         # name_or_code is actually a color code
         return str(name_or_code)
@@ -61,25 +52,10 @@ def to_code(name_or_code: Union[str, int]) -> str:
     if ' ' in name_or_code:
         keys = name_or_code.split()
         for key in keys:
-            try:
-                obj = obj[key]
-            except KeyError as e:
-                if name_or_code in core.COLORS or name_or_code in core.FORMATTING_COLORS:
-                    raise KeyError
-                    _soft_keyerror(obj, key, e)
-                    return name_or_code
-                else:
-                    raise
+            obj = obj[key]
         return obj
     else:
-        try:
-            return obj[name_or_code]
-        except KeyError as e:
-            if name_or_code in core.COLORS or name_or_code in core.FORMATTING_COLORS:
-                _soft_keyerror(obj, name_or_code, e)
-                return name_or_code
-            else:
-                raise
+        return obj[name_or_code]
 
 
 def to_reset_code(name_or_code: Union[str, int]) -> str:
