@@ -13,6 +13,7 @@
 FORMATTING_COLORS = (
     'bold',  # 1,
     'dark',  # 2 (brighter than brightblack 90)
+    'ita',  # 3,
     'italic',  # 3,
     'ul',  # 4,
     'underline',  # termcolor compat
@@ -33,6 +34,7 @@ FORMATTING_COLORS = (
 FORMATTING_CODES = (
     '1',
     '2',
+    '3',
     '3',
     '4',
     '4',  # termcolor compat
@@ -56,6 +58,7 @@ RESET_COLOR_CODES = dict(all='0',
                          bold='22',
                          dark='22',
                          italic='23',
+                         ita='23',
                          ul='24',
                          underline='24',  # termcolor compat
                          doubleul='24',

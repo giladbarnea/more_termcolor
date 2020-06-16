@@ -1,25 +1,18 @@
 # more_termcolor
-#### Pass any number of colors, color-codes, or attributes
-
-
-
-```python
-from more_termcolor import cprint
-cprint('some text', 'red', 'on bright black', 'bold', 'italic')
-```
+##### Pass unlimited number of colors, color-codes, or attributes
 
 ![](./0.png)
 
-#### All [standard](https://en.wikipedia.org/wiki/ANSI_escape_code#3/4_bit), [background](https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters), [bright](https://en.wikipedia.org/wiki/ANSI_escape_code#3/4_bit), or [attribute](https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters) codes are available (or any combination of them)
+##### All [standard](https://en.wikipedia.org/wiki/ANSI_escape_code#3/4_bit), [background](https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters), [bright](https://en.wikipedia.org/wiki/ANSI_escape_code#3/4_bit), or [attribute](https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters) codes are available (or any combination of them)
 
 
-#### Intelligently handles existing colors in the `text` as to allow adding or combining colors automatically, while ensuring the smallest string size possible
+##### Intelligently handles existing colors in the `text` as to allow adding or combining colors automatically, while ensuring the smallest string size possible
+![](./2.png)
+
+##### Convenience methods that expose shortcuts to common values (`bold('foo')`, `yellow('bar')` etc)
 
 
-#### Convenience methods that expose shortcuts to common values (`bold('foo')`, `yellow('bar')` etc)
-
-
-#### 100% compatible with the classic `termcolor` lib: anything that works with `termcolor` works the same with `more_termcolor` 
+##### 100% compatible with the classic `termcolor` lib: anything that works with `termcolor` works the same with `more_termcolor` 
 
 ## Example
 

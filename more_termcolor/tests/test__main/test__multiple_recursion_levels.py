@@ -1,6 +1,6 @@
 import pytest
 import pickle
-from more_termcolor import colored
+from more_termcolor import colored, bold, dark, ita, brightgreen, ul
 from more_termcolor.tests.common import print_and_compare
 from pathlib import Path
 
@@ -39,4 +39,12 @@ class Test:
         with open(Path(__file__).parent / 'exchandler_expected.pickle', mode='rb') as f:
             expected = pickle.load(f)
         actual = colored(text, *colors)
+        return actual, expected
+    
+    def test__readme_example(self):
+        add_up = bold('add-up')
+        if_possible = dark('(if possible)')
+        dont = ita(ul("don't"))
+        actual = brightgreen(f"Overlapping colors {add_up} {if_possible} and {dont} cancel each other out")
+        expected = "\x1b[92mOverlapping colors \x1b[1madd-up\x1b[22m \x1b[2m(if possible)\x1b[22m and \x1b[3;4mdon't\x1b[23;24m cancel each other out\x1b[0m"
         return actual, expected

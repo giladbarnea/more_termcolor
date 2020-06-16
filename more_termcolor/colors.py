@@ -17,8 +17,14 @@ def italic(text, *colors):
     return colored(text, 'italic', *colors)
 
 
-def ul(text, *colors):
+ita = italic
+
+
+def underline(text, *colors):
     return colored(text, 'ul', *colors)
+
+
+ul = underline
 
 
 def reverse(text, *colors):
@@ -30,6 +36,9 @@ def reverse(text, *colors):
 ######################
 def black(text, *colors):
     return colored(text, 'black', *colors)
+
+
+grey = black
 
 
 def red(text, *colors):
@@ -67,6 +76,9 @@ def brightblack(text, *colors):
     return colored(text, 'bright black', *colors)
 
 
+brightgrey = brightblack
+
+
 def brightred(text, *colors):
     return colored(text, 'bright red', *colors)
 
@@ -102,6 +114,9 @@ def on_black(text, *colors):
     return colored(text, 'on black', *colors)
 
 
+on_grey = on_black
+
+
 def on_red(text, *colors):
     return colored(text, 'on red', *colors)
 
@@ -134,9 +149,12 @@ __all__ = [
     'bold',
     'dark',
     'italic',
+    'ita',
+    'underline',
     'ul',
     'reverse',
     'black',
+    'grey',
     'red',
     'green',
     'yellow',
@@ -145,6 +163,7 @@ __all__ = [
     'cyan',
     'white',
     'brightblack',
+    'brightgrey',
     'brightwhite',
     'brightred',
     'brightgreen',
@@ -153,6 +172,7 @@ __all__ = [
     'brightcyan',
     'brightmagenta',
     'on_black',
+    'on_grey',
     'on_white',
     'on_red',
     'on_green',
