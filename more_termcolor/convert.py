@@ -100,4 +100,12 @@ def to_reset_code(name_or_code: Union[str, int]) -> str:
 
 
 def to_boundary(*names_or_codes: Union[str, int]) -> str:
-    return f'\x1b[{";".join(set(map(to_code, names_or_codes)))}m'
+    code_set = set()  # allows checking for duplicates in O(1) while keeping order
+    codes = []
+    for code in map(to_code, names_or_codes):
+        if code in code_set:
+            continue
+        code_set.add(code)
+        codes.append(code)
+    
+    return f'\x1b[{";".join(codes)}m'

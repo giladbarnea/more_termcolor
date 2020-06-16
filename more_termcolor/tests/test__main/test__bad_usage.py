@@ -79,7 +79,8 @@ outer has fmt:
 import pytest
 
 from more_termcolor import colored
-from more_termcolor.tests.common import print_and_compare
+from more_termcolor.tests.common import print_and_compare, codes_perm
+import re
 
 
 #############
@@ -93,21 +94,21 @@ from more_termcolor.tests.common import print_and_compare
 @print_and_compare
 class Test:
     def test__no_color(self):
-        actual = colored('foo')
-        expected = 'foo'
+        actual = colored('foo') + ' NORMAL'
+        expected = 'foo NORMAL'
         return actual, expected
     
     def test__same_color(self):
-        actual = colored('foo', 'red', 'dark', 'red')
-        expected = '\x1b[31;2mfoo\x1b[0m'
+        actual = colored('foo', 'red', 'dark', 'red') + ' NORMAL'
+        expected = '\x1b[31;2mfoo\x1b[39;22m NORMAL'
         return actual, expected
     
     def test__too_many_colors(self):
-        actual = colored('foo', "red", "on black", "bold", "dark", "italic", "underline", "blink", "reverse", "strike", "overline")
-        expected = '\x1b[31;40;1;2;3;4;5;7;9;53mfoo\x1b[0m'
+        actual = colored('foo', "red", "on black", "bold", "dark", "italic", "underline", "blink", "reverse", "strike", "overline") + ' NORMAL'
+        expected = f'\x1b[31;40;1;2;3;4;5;7;9;53mfoo\x1b[39;49;22;23;24;25;27;29;55m NORMAL'
         return actual, expected
     
     def test__no_text(self):
-        actual = colored('', 'red')
-        expected = ''
+        actual = colored('', 'red') + ' NORMAL'
+        expected = ' NORMAL'
         return actual, expected

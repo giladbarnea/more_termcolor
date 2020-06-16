@@ -93,16 +93,16 @@ bright_bg_colors = list(core.BRIGHT_BACKGROUND_COLOR_CODES.keys())
 
 def _print(description, string):
     if isinstance(string, str) and '\x1b' in string:
-        spacyprint(f'\x1b[4m{description}\x1b[0m:', string, repr(string))
+        spacyprint(f'\x1b[0m\x1b[4m{description}\x1b[0m:', string, repr(string))
     else:
         if isinstance(string, re.Pattern):
             
-            return spacyprint(f'\x1b[4m{description}\x1b[0m:', string.pattern)
-        spacyprint(f'\x1b[4m{description}\x1b[0m:', string)
+            return spacyprint(f'\x1b[0m\x1b[4m{description}\x1b[0m:', string.pattern)
+        spacyprint(f'\x1b[0m\x1b[4m{description}\x1b[0m:', string)
 
 
 def actualprint(string):
-    _print('\x1b[21;37mactual\x1b[24;39m', string)
+    _print('\x1b[0m\x1b[21;37mactual\x1b[0m', string)
 
 
 def expectedprint(string):

@@ -1,5 +1,5 @@
 import re
-from typing import Union, List, Tuple, Set
+from typing import Union, List, Tuple
 
 from more_termcolor import convert, core
 
@@ -58,11 +58,12 @@ class Color:
 
 
 class ColorScope:
-    colors: Set[Color]
-    has_non_foreground: bool  # set in self.addcolor()
+    colors: List[Color]
+    has_non_foreground: bool  # value is set in self.addcolor()
     
     def __init__(self, *names_or_codes: Union[str, int]):
-        self.colors = set()
+        self.colors = []
+        self._colors_set = set()  # allows checking for duplicates in O(1) while keeping order
         self.has_non_foreground = None
         for name_or_code in names_or_codes:
             self.addcolor(name_or_code)
@@ -78,8 +79,12 @@ class ColorScope:
     def addcolor(self, name_or_code: Union[str, int]) -> Color:
         if name_or_code is None:
             return None
+        
         color = Color(name_or_code)
-        self.colors.add(color)
+        if color in self._colors_set:
+            return None
+        self._colors_set.add(color)
+        self.colors.append(color)
         # check whether color.is_non_foreground only if needed
         if self.has_non_foreground is None and color.is_non_foreground:
             self.has_non_foreground = True
@@ -143,7 +148,7 @@ class Inside(ColorScope):
                 return instance
 
 
-def colored(text: str, *colors: Union[str, int]) -> str:
+def colored_(text: str, *colors: Union[str, int]) -> str:
     """
     Multiple colors can be passed, and their color codes will be merged.
     The resulting string will always end with a 'reset all' code (0).
@@ -180,11 +185,9 @@ def colored(text: str, *colors: Union[str, int]) -> str:
     outside = ColorScope(*colors)
     inside = Inside.from_text(text)
     
-    if not inside:
+    if inside.has_non_foreground or outside.has_non_foreground:
         return f'{outside.open()}{text}{outside.reset()}'
     print(f'inside: {bool(inside)}',
-          f'\ninside.has_non_foreground: ', inside.has_non_foreground,
-          '\noutside.has_non_foreground: ', outside.has_non_foreground,
           '\ninside.has_non_foreground ^ outside.has_non_foreground:', inside.has_non_foreground ^ outside.has_non_foreground,
           end='\n\n'
           )
@@ -232,7 +235,7 @@ def colored(text: str, *colors: Union[str, int]) -> str:
     return ret
 
 
-def coloredOLD(text: str, *colors: Union[str, int]) -> str:
+def colored(text: str, *colors: Union[str, int]) -> str:
     """
     Multiple colors can be passed, and their color codes will be merged.
     The resulting string will always end with a 'reset all' code (0).
@@ -308,6 +311,7 @@ def coloredOLD(text: str, *colors: Union[str, int]) -> str:
         inner_has_non_foreground = False
         inner_reset_codes = []
         reopen_these_outer_open_codes = []
+        inner_and_outer_share_reset_code = False
         for inner_open_code in inner_open.groups():
             # build:
             # (1) inner_open_codes
@@ -320,6 +324,7 @@ def coloredOLD(text: str, *colors: Union[str, int]) -> str:
             inner_reset_codes.append(inner_reset_code)
             for outer_reset_code in outer_reset_codes:
                 if inner_reset_code == outer_reset_code:
+                    inner_and_outer_share_reset_code = True
                     outer_open_code = outer_reset_2_open[outer_reset_code]
                     reopen_these_outer_open_codes.append(outer_open_code)
             if not inner_has_non_foreground and _is_non_foreground(inner_open_code):
@@ -340,20 +345,30 @@ def coloredOLD(text: str, *colors: Union[str, int]) -> str:
         # text does not end with a color boundary;
         # this means there's text after last color boundary that
         # needs to be reset separately from outer reset
+        print(f'inner_has_non_foreground: ', inner_has_non_foreground,
+              '\nouter_has_non_foreground: ', outer_has_non_foreground,
+              f'\ninner_and_outer_share_reset_code:', inner_and_outer_share_reset_code,
+              f'\ninner_reset.group(): {repr(inner_reset.group())}',
+              )
         if inner_has_non_foreground:
             # replace existing inner reset codes with
             # the inner colors' matching reset codes
             
             if outer_has_non_foreground:
+                print(f'reopening outer: {reopen_these_outer_open_codes}\n')
                 inner_reset_codes.extend(reopen_these_outer_open_codes)
+            else:
+                print(f'just replacing inner reset with proper reset ({re.escape(convert.to_boundary(*inner_reset_codes))})\n')
             proper_inner_reset = convert.to_boundary(*inner_reset_codes)
             text = text.replace(inner_reset.group(), proper_inner_reset, 1)
         
         else:
             if outer_has_non_foreground:
+                print(f'replacing inner reset with general reset foreground (39)\n')
                 text = text.replace(inner_reset.group(), convert.to_boundary('reset fg'), 1)
             else:
                 # replace inner reset with outer open
+                print(f'replacing inner reset with outer open ({re.escape(start)})\n')
                 text = text.replace(inner_reset.group(), start, 1)
     except ValueError as e:
         # not enough values to unpack (COLOR_BOUNDARY_RE did not match)
