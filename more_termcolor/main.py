@@ -330,18 +330,8 @@ def colored(text: str, *colors: Union[str, int]) -> str:
             if not inner_has_non_foreground and _is_non_foreground(inner_open_code):
                 inner_has_non_foreground = True
         
-        # keep before altering of text value
-        should_merge_resets = inner_reset.end() == len(text)
-        if inner_open.start() == 0:
-            # text begins with a color boundary; merge outer open with inner open
-            start = convert.to_boundary(*outer_open_codes, *inner_open_codes)
-            text = text.replace(inner_open.group(), '', 1)
-        else:
-            start = convert.to_boundary(*outer_open_codes)
+        start = convert.to_boundary(*outer_open_codes)
         
-        if should_merge_resets:
-            # text ends with a color boundary; merge outer reset with inner reset
-            return start + text
         # text does not end with a color boundary;
         # this means there's text after last color boundary that
         # needs to be reset separately from outer reset
@@ -351,15 +341,20 @@ def colored(text: str, *colors: Union[str, int]) -> str:
               f'\ninner_reset.group(): {repr(inner_reset.group())}',
               )
         if inner_has_non_foreground:
-            # replace existing inner reset codes with
-            # the inner colors' matching reset codes
             
             if outer_has_non_foreground:
+                # replace existing inner reset codes with
+                # the the outer open codes that have the same reset codes as
+                # any of the inner open codes
                 print(f'reopening outer: {reopen_these_outer_open_codes}\n')
+                # boundary = convert.to_boundary(*reopen_these_outer_open_codes)
+                # text = text.replace(inner_reset.group(), boundary, 1)
                 inner_reset_codes.extend(reopen_these_outer_open_codes)
             else:
                 print(f'just replacing inner reset with proper reset ({re.escape(convert.to_boundary(*inner_reset_codes))})\n')
             proper_inner_reset = convert.to_boundary(*inner_reset_codes)
+            if inner_reset.group() != proper_inner_reset and not outer_has_non_foreground:
+                print()
             text = text.replace(inner_reset.group(), proper_inner_reset, 1)
         
         else:

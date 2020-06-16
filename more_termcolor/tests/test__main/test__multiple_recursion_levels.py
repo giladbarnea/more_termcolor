@@ -25,8 +25,7 @@ class Test:
     def test__merge_reset_codes_if_no_text__real_world(self):
         foobar = colored(f'Foo:Bar', 'dark')
         actual = colored(f'Baz {foobar}', 'bold', 'bright magenta', 'on black') + ' NORMAL'
-        expected_str = rf'{codes_perm(1, 95, 40)}Baz\x1b\[2mFoo:Bar{codes_perm(22, 49, 39)} NORMAL'
-        expected = re.compile(expected_str)
+        expected = f'\x1b[1;95;40mBaz\x1b[2mFoo:Bar\x1b[22;49;39m NORMAL'
         return actual, expected
     
     def test__merge_all_codes_if_no_text(self):
