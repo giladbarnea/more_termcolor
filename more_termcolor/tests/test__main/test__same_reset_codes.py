@@ -15,9 +15,10 @@ import re
 def test__bold_dark_bold():
     """B    F       /F/B B
        1    2   →   22;1"""
-    bold_dark_bold = colored(' Bold ' + colored(' Dark ', 'dark') + ' Bold ', 'bold') + ' NORMAL'
-    expected_str = rf'\x1b\[1m Bold \x1b\[2m Dark {codes_perm(22, 1)} Bold \x1b\[22m NORMAL'
-    expected = re.compile(expected_str)
+    dark = colored(' Dark ', 'dark')
+    bold_dark_bold = colored(' Bold ' + dark + ' Bold ', 'bold') + ' NORMAL'
+    expected = '\x1b[1m Bold \x1b[2m Dark \x1b[22;1m Bold \x1b[22m NORMAL'
+    # expected = re.compile(expected_str)
     return bold_dark_bold, expected
 
 
