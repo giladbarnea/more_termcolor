@@ -1,7 +1,7 @@
 import io
-
+import re
 from more_termcolor import colored, cprint
-from more_termcolor.tests.common import print_and_compare
+from more_termcolor.tests.common import print_and_compare, codes_perm
 
 
 ###########################
@@ -18,9 +18,9 @@ from more_termcolor.tests.common import print_and_compare
 def test__red_dark_red():
     """R    F       /F/B
        31   2   →   22"""
-    darkred = colored(' DarkRed ', 'dark')
-    red_dark_red = colored(' Red ' + darkred + ' Red ', 'red')
-    expected = '\x1b[31m Red \x1b[2m DarkRed \x1b[22m Red \x1b[0m'
+    dark = colored(' Dark ', 'dark')
+    red_dark_red = colored(' Red ' + dark + ' Red ', 'red') + ' NORMAL'
+    expected = '\x1b[31m Red \x1b[2m Dark \x1b[22m Red \x1b[39m NORMAL'
     
     # smart reset dark in the middle, and does not re-open red
     return red_dark_red, expected
@@ -30,9 +30,9 @@ def test__red_dark_red():
 def test__italic_bold_italic():
     """I    B       /F/B
        3    1   →   22"""
-    bolditalic = colored('BoldAndItalic', 'bold')
-    italic_bold_italic = colored('Italic' + bolditalic + 'Italic', 'italic')
-    expected = '\x1b[3mItalic\x1b[1mBoldAndItalic\x1b[22mItalic\x1b[0m'
+    bold = colored(' Bold ', 'bold')
+    italic_bold_italic = colored(' Italic ' + bold + ' Italic ', 'italic') + ' NORMAL'
+    expected = '\x1b[3m Italic \x1b[1m Bold \x1b[22m Italic \x1b[23m NORMAL'
     
     return italic_bold_italic, expected
 
@@ -41,8 +41,8 @@ def test__italic_bold_italic():
 def test__italic_red_italic():
     """I    R       /FG
        3    31  →   39"""
-    italic_red_italic = colored('Italic' + colored('RedItalic', 'red') + 'Italic', 'italic')
-    expected = '\x1b[3mItalic\x1b[31mRedItalic\x1b[39mItalic\x1b[0m'
+    italic_red_italic = colored(' Italic ' + colored(' Red ', 'red') + ' Italic ', 'italic') + ' NORMAL'
+    expected = '\x1b[3m Italic \x1b[31m Red \x1b[39m Italic \x1b[23m NORMAL'
     
     return italic_red_italic, expected
 
@@ -51,8 +51,8 @@ def test__italic_red_italic():
 def test__italic_brightgreen_italic():
     """I    SG      /FG
        3    92  →   39"""
-    italic_brightgreen_italic = colored('Italic' + colored('BrightGreenItalic', 'bright green') + 'Italic', 'italic')
-    expected = '\x1b[3mItalic\x1b[92mBrightGreenItalic\x1b[39mItalic\x1b[0m'
+    italic_brightgreen_italic = colored(' Italic ' + colored(' BrightGreen ', 'bright green') + ' Italic ', 'italic') + ' NORMAL'
+    expected = '\x1b[3m Italic \x1b[92m BrightGreen \x1b[39m Italic \x1b[23m NORMAL'
     
     return italic_brightgreen_italic, expected
 
@@ -61,8 +61,8 @@ def test__italic_brightgreen_italic():
 def test__bold_italic_bold():
     """B    I       /I
        1    3   →   23"""
-    bold_italic_bold = colored('Bold' + colored('ItalicAndBold', 'italic') + 'Bold', 'bold')
-    expected = '\x1b[1mBold\x1b[3mItalicAndBold\x1b[23mBold\x1b[0m'
+    bold_italic_bold = colored(' Bold ' + colored(' Italic ', 'italic') + ' Bold ', 'bold') + ' NORMAL'
+    expected = '\x1b[1m Bold \x1b[3m Italic \x1b[23m Bold \x1b[22m NORMAL'
     
     # smart reset italic (23), no reopen bold
     return bold_italic_bold, expected
@@ -72,8 +72,8 @@ def test__bold_italic_bold():
 def test__brightwhite_dark_brightwhite():
     """S    F       /F
        97   2   →   22"""
-    brightwhite_dark_brightwhite = colored('Bright' + colored('DarkAndBright', 'dark') + 'Bright', 'bright white')
-    expected = '\x1b[97mBright\x1b[2mDarkAndBright\x1b[22mBright\x1b[0m'
+    brightwhite_dark_brightwhite = colored(' Bright ' + colored(' Dark ', 'dark') + ' Bright ', 'bright white') + ' NORMAL'
+    expected = '\x1b[97m Bright \x1b[2m Dark \x1b[22m Bright \x1b[39m NORMAL'
     # smart reset dark, no re-open bright
     
     return brightwhite_dark_brightwhite, expected
@@ -83,54 +83,54 @@ def test__brightwhite_dark_brightwhite():
 def test__brightwhite_red_brightwhite():
     """S    R       S
        97   31  →   97"""
-    red = colored('Red', 'red')
-    brightwhite_red_brightwhite = colored('Bright' + red + 'Bright', 'bright white')
-    expected = '\x1b[97mBright\x1b[31mRed\x1b[97mBright\x1b[0m'
+    red = colored(' Red ', 'red')
+    brightwhite_red_brightwhite = colored(' Bright ' + red + ' Bright ', 'bright white') + ' NORMAL'
+    expected = '\x1b[97m Bright \x1b[31m Red \x1b[97m Bright \x1b[39m NORMAL'
     
     return brightwhite_red_brightwhite, expected
 
 
 @print_and_compare
 def test__red_onblack_red():
-    onblack = colored('OnBlack', 'on black')
-    red_onblack_red = colored('Red' + onblack + 'Red', 'red')
-    expected = '\x1b[31mRed\x1b[40mOnBlack\x1b[49mRed\x1b[0m'
+    onblack = colored(' OnBlack ', 'on black')
+    red_onblack_red = colored(' Red ' + onblack + ' Red ', 'red') + ' NORMAL'
+    expected = '\x1b[31m Red \x1b[40m OnBlack \x1b[49m Red \x1b[39m NORMAL'
     
     return red_onblack_red, expected
 
 
 @print_and_compare
 def test__brightred_onblack_brightred():
-    onblack = colored('OnBlack', 'on black')
-    brightred_onblack_brightred = colored('BrightRed' + onblack + 'BrightRed', 'bright red')
-    expected = "\x1b[91mBrightRed\x1b[40mOnBlack\x1b[49mBrightRed\x1b[0m"
+    onblack = colored(' OnBlack ', 'on black')
+    brightred_onblack_brightred = colored(' BrightRed ' + onblack + ' BrightRed ', 'bright red') + ' NORMAL'
+    expected = "\x1b[91m BrightRed \x1b[40m OnBlack \x1b[49m BrightRed \x1b[39m NORMAL"
     
     return brightred_onblack_brightred, expected
 
 
 @print_and_compare
 def test__onblack_brightred_onblack():
-    brightred = colored('BrightRed', 'bright red')
-    onblack_brightred_onblack = colored('OnBlack' + brightred + 'OnBlack', 'on black')
-    expected = '\x1b[40mOnBlack\x1b[91mBrightRed\x1b[39mOnBlack\x1b[0m'
+    brightred = colored(' BrightRed ', 'bright red')
+    onblack_brightred_onblack = colored(' OnBlack ' + brightred + ' OnBlack ', 'on black') + ' NORMAL'
+    expected = '\x1b[40m OnBlack \x1b[91m BrightRed \x1b[39m OnBlack \x1b[49m NORMAL'
     
     return onblack_brightred_onblack, expected
 
 
 @print_and_compare
 def test__onblack_underline_onblack():
-    underline = colored('Underline', 'ul')
-    onblack_underline_onblack = colored('OnBlack' + underline + 'OnBlack', 'on black')
-    expected = '\x1b[40mOnBlack\x1b[4mUnderline\x1b[24mOnBlack\x1b[0m'
+    underline = colored(' Underline ', 'ul')
+    onblack_underline_onblack = colored(' OnBlack ' + underline + ' OnBlack ', 'on black') + ' NORMAL'
+    expected = '\x1b[40m OnBlack \x1b[4m Underline \x1b[24m OnBlack \x1b[49m NORMAL'
     
     return onblack_underline_onblack, expected
 
 
 @print_and_compare
 def test__underline_onblack_underline():
-    onblack = colored('OnBlack', 'on black')
-    underline_onblack_underline = colored('Underline' + onblack + 'Underline', 'underline')
-    expected = '\x1b[4mUnderline\x1b[40mOnBlack\x1b[49mUnderline\x1b[0m'
+    onblack = colored(' OnBlack ', 'on black')
+    underline_onblack_underline = colored(' Underline ' + onblack + ' Underline ', 'underline') + ' NORMAL'
+    expected = '\x1b[4m Underline \x1b[40m OnBlack \x1b[49m Underline \x1b[24m NORMAL'
     
     return underline_onblack_underline, expected
 
@@ -140,8 +140,10 @@ def test__underline_onblack_underline():
 @print_and_compare
 def test__brightred__onblack_bold__brightred():
     onblackbold = colored(' OnBlackBold ', 'on black', 'bold')
-    brightred_onblackbold_brightred = colored(' BrightRed ' + onblackbold + ' BrightRed ', 'bright red')
-    expected = "\x1b[91m BrightRed \x1b[40;1m OnBlackBold \x1b[49;22m BrightRed \x1b[0m"
+    brightred_onblackbold_brightred = colored(' BrightRed ' + onblackbold + ' BrightRed ', 'bright red') + ' NORMAL'
+    
+    expected_str = rf"\x1b\[91m BrightRed {codes_perm(40, 1)} OnBlackBold {codes_perm(49, 22)} BrightRed \x1b\[39m NORMAL"
+    expected = re.compile(expected_str)
     
     return brightred_onblackbold_brightred, expected
 
@@ -149,8 +151,9 @@ def test__brightred__onblack_bold__brightred():
 @print_and_compare
 def test__onblack__brightred_bold__onblack():
     brightredbold = colored(' BrightRedBold ', 'bright red', 'bold')
-    onblack_brightredbold_onblack = colored(' OnBlack ' + brightredbold + ' OnBlack ', 'on black')
-    expected = '\x1b[40m OnBlack \x1b[91;1m BrightRedBold \x1b[39;22m OnBlack \x1b[0m'
+    onblack_brightredbold_onblack = colored(' OnBlack ' + brightredbold + ' OnBlack ', 'on black') + ' NORMAL'
+    expected_str = rf'\x1b\[40m OnBlack {codes_perm(91, 1)} BrightRedBold {codes_perm(39, 22)} OnBlack \x1b\[49m NORMAL'
+    expected = re.compile(expected_str)
     
     return onblack_brightredbold_onblack, expected
 
@@ -158,9 +161,9 @@ def test__onblack__brightred_bold__onblack():
 @print_and_compare
 def test__bold__green_on_black__bold():
     greenonblack = colored(' GreenOnBlack ', 'green', 'on black')
-    bold_greenonblack_bold = colored(' Bold ' + greenonblack + ' Bold ', 'bold')
-    expected = '\x1b[1m Bold \x1b[32;40m GreenOnBlack \x1b[39;49m Bold \x1b[0m'
-    
+    bold_greenonblack_bold = colored(' Bold ' + greenonblack + ' Bold ', 'bold') + ' NORMAL'
+    expected_str = rf'\x1b\[1m Bold {codes_perm(32, 40)} GreenOnBlack {codes_perm(39, 49)} Bold \x1b\[22m NORMAL'
+    expected = re.compile(expected_str)
     return bold_greenonblack_bold, expected
 
 
@@ -169,8 +172,9 @@ def test__bold__green_on_black__bold():
 @print_and_compare
 def test__redonblack__bold__redonblack():
     bold = colored(' Bold ', 'bold')
-    redonblack__bold__redonblack = colored(' RedOnBlack ' + bold + ' RedOnBlack ', 'red', 'on black')
-    expected = '\x1b[31;40m RedOnBlack \x1b[1m Bold \x1b[22m RedOnBlack \x1b[0m'
+    redonblack__bold__redonblack = colored(' RedOnBlack ' + bold + ' RedOnBlack ', 'red', 'on black') + ' NORMAL'
+    expected_str = rf'{codes_perm(31, 40)} RedOnBlack \x1b\[1m Bold \x1b\[22m RedOnBlack {codes_perm(39, 49)} NORMAL'
+    expected = re.compile(expected_str)
     
     return redonblack__bold__redonblack, expected
 
@@ -178,8 +182,9 @@ def test__redonblack__bold__redonblack():
 @print_and_compare
 def test__underlineonblack__red__underlineonblack():
     red = colored(' Red ', 'red')
-    underlineonblack__red__underlineonblack = colored(' UnderlineOnBlack ' + red + ' UnderlineOnBlack ', 'ul', 'on black')
-    expected = '\x1b[4;40m UnderlineOnBlack \x1b[31m Red \x1b[39m UnderlineOnBlack \x1b[0m'
+    underlineonblack__red__underlineonblack = colored(' UnderlineOnBlack ' + red + ' UnderlineOnBlack ', 'ul', 'on black') + ' NORMAL'
+    expected_str = rf'{codes_perm(4, 40)} UnderlineOnBlack \x1b\[31m Red \x1b\[39m UnderlineOnBlack {codes_perm(49, 24)} NORMAL'
+    expected = re.compile(expected_str)
     
     return underlineonblack__red__underlineonblack, expected
 
@@ -187,7 +192,8 @@ def test__underlineonblack__red__underlineonblack():
 @print_and_compare
 def test__underlinegreen__onblack__underlinegreen():
     onblack = colored(' OnBlack ', 'on black')
-    underlinegreen__onblack__underlinegreen = colored(' UnderlineGreen ' + onblack + ' UnderlineGreen ', 'ul', 'green')
-    expected = '\x1b[4;32m UnderlineGreen \x1b[40m OnBlack \x1b[49m UnderlineGreen \x1b[0m'
+    underlinegreen__onblack__underlinegreen = colored(' UnderlineGreen ' + onblack + ' UnderlineGreen ', 'ul', 'green') + ' NORMAL'
+    expected_str = rf'{codes_perm(4, 32)} UnderlineGreen \x1b\[40m OnBlack \x1b\[49m UnderlineGreen {codes_perm(39, 24)} NORMAL'
+    expected = re.compile(expected_str)
     
     return underlinegreen__onblack__underlinegreen, expected

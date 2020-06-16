@@ -171,5 +171,5 @@ def test__to_boundary():
         yield actual, expected
     
     actual = convert.to_boundary(1, '2', 'on bright black')
-    expected = common.codes_perm_re(1, 2, 100)
+    expected = re.compile(common.codes_perm(1, 2, 100))
     yield actual, expected

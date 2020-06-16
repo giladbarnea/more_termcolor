@@ -66,6 +66,11 @@ class ColorScope:
         self.has_non_foreground = None
         for name_or_code in names_or_codes:
             self.addcolor(name_or_code)
+        
+        if self.has_non_foreground is None:
+            # self.has_non_foreground remained None,
+            # because none of the colors was color.is_non_foreground == True
+            self.has_non_foreground = False
     
     def __bool__(self):
         return bool(self.colors)
@@ -78,6 +83,7 @@ class ColorScope:
         # check whether color.is_non_foreground only if needed
         if self.has_non_foreground is None and color.is_non_foreground:
             self.has_non_foreground = True
+        
         return color
     
     def open(self):
@@ -101,36 +107,43 @@ class Inside(ColorScope):
         color.text_idx = text_idx  # by ref
         if self.has_reset_all is None and color.code == '0':
             self.has_reset_all = True
+        
+        if self.has_reset_all is None:
+            # self.has_reset_all remained None,
+            # because none of the color codes was '0'
+            self.has_reset_all = False
         return color
     
-    # def from_text(self, text: str):
-    #     i = 0
-    #     while True:
-    #         try:
-    #             char = text[i]
-    #
-    #             if char == '\x1b':
-    #                 j = i + 2  # skip [
-    #                 digit_start_idx = j
-    #
-    #                 while True:
-    #                     jchar = text[j]
-    #                     if not jchar.isdigit():
-    #                         # ; or m
-    #                         code = text[digit_start_idx:j]
-    #                         self.addcolor(code)
-    #                         if jchar == 'm':
-    #                             i = j
-    #                             break
-    #                         # jchar is ';'
-    #                         digit_start_idx = j + 1
-    #                     j += 1
-    #             i += 1
-    #         except IndexError as e:
-    #             break
+    @classmethod
+    def from_text(cls, text: str):
+        instance = cls()
+        i = 0
+        while True:
+            try:
+                char = text[i]
+                
+                if char == '\x1b':
+                    j = i + 2  # skip [
+                    boundary_idx = j
+                    
+                    while True:
+                        jchar = text[j]
+                        if not jchar.isdigit():
+                            # ; or m
+                            code = text[boundary_idx:j]
+                            instance.addcolor(code, i)
+                            if jchar == 'm':
+                                i = j
+                                break
+                            # jchar is ';'
+                            boundary_idx = j + 1
+                        j += 1
+                i += 1
+            except IndexError as e:
+                return instance
 
 
-def colored(text: str, *colors: Union[str, int]) -> str:
+def colored_(text: str, *colors: Union[str, int]) -> str:
     """
     Multiple colors can be passed, and their color codes will be merged.
     The resulting string will always end with a 'reset all' code (0).
@@ -165,46 +178,34 @@ def colored(text: str, *colors: Union[str, int]) -> str:
         return ''
     text = str(text)
     outside = ColorScope(*colors)
-    inside = Inside()
-    # inside.from_text(text)
-    
-    ## Construct `inside` from text
-    i = 0
-    while True:
-        try:
-            char = text[i]
-            
-            if char == '\x1b':
-                j = i + 2  # skip [
-                boundary_idx = j
-                
-                while True:
-                    jchar = text[j]
-                    if not jchar.isdigit():
-                        # ; or m
-                        code = text[boundary_idx:j]
-                        inside.addcolor(code, i)
-                        
-                        if jchar == 'm':
-                            i = j
-                            break
-                        # jchar is ';'
-                        boundary_idx = j + 1
-                    j += 1
-            i += 1
-        except IndexError as e:
-            break
-    # inner_colors: List[re.Match] = list(re.finditer(COLOR_BOUNDARY_RE, text))
+    inside = Inside.from_text(text)
     
     if not inside:
+        return f'{outside.open()}{text}{outside.reset()}'
+    print(f'inside: {bool(inside)}',
+          f'\ninside.has_non_foreground: ', inside.has_non_foreground,
+          '\noutside.has_non_foreground: ', outside.has_non_foreground,
+          '\ninside.has_non_foreground ^ outside.has_non_foreground:', inside.has_non_foreground ^ outside.has_non_foreground,
+          end='\n\n'
+          )
+    return f'{outside.open()}{text}{outside.reset()}'
+    if not inside.has_non_foreground ^ outside.has_non_foreground:
+        # either:
+        # (a)
+        # text had no colors, in which case,
+        # just open and reset the given colors around it; or
+        # (b)
+        # text HAD some colors, but either:
+        #   I. no background/formatting colors in either inside or outside, or
+        #   II. both have background/formatting colors
+        # which means the colors can live together peacefully,
+        # and there's no need to alter the reset strings of the text.
         return f'{outside.open()}{text}{outside.reset()}'
     
     ## text includes some colors ##
     # TODO (performance): don't replace substrings if not needed
     # TODO: middle_already_formatted
     
-    # if inside has background or formatting colors,
-    # they need to be reset 'properly'.
     if inside.has_non_foreground:
         # replace existing inside reset codes with
         # the inside's colors' matching reset codes
@@ -231,7 +232,7 @@ def colored(text: str, *colors: Union[str, int]) -> str:
     return ret
 
 
-def coloredOLD(text: str, *colors: Union[str, int]) -> str:
+def colored(text: str, *colors: Union[str, int]) -> str:
     """
     Multiple colors can be passed, and their color codes will be merged.
     The resulting string will always end with a 'reset all' code (0).
@@ -290,6 +291,8 @@ def coloredOLD(text: str, *colors: Union[str, int]) -> str:
             outer_has_non_foreground = True
     
     text = str(text)
+    outside = ColorScope(*colors)
+    inside = Inside.from_text(text)
     try:
         # TODO (performance): don't replace substrings if not needed
         middle_already_formatted = True
@@ -355,7 +358,8 @@ def coloredOLD(text: str, *colors: Union[str, int]) -> str:
     except ValueError as e:
         # not enough values to unpack (COLOR_BOUNDARY_RE did not match)
         pass
-    reset = convert.to_boundary(0)
+    # reset = convert.to_boundary(0)
+    reset = outside.reset()
     try:
         ret = f'{start}{text}{reset}'
     except UnboundLocalError as e:

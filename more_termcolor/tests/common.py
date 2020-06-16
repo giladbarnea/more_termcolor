@@ -32,12 +32,12 @@ def spacyprint(*values):
     print('', *values, sep='\n', end='\x1b[0m\n')
 
 
-def codes_perm_re(*values):
+def codes_perm(*values) -> str:
     r"""
-    >>> assert codes_perm_re(1, 2) == re.compile(r'\x1b\[(1;2|2;1)m')
+    >>> assert codes_perm(1, 2) == r'\x1b\[(1;2|2;1)m'
     """
     perms = f"({'|'.join(map(lambda perm: ';'.join(perm), permutations(map(str, values), len(values))))})"
-    return re.compile(fr'\x1b\[{perms}m')
+    return rf'\x1b\[{perms}m'
 
 
 @overload
@@ -95,6 +95,9 @@ def _print(description, string):
     if isinstance(string, str) and '\x1b' in string:
         spacyprint(f'\x1b[4m{description}\x1b[0m:', string, repr(string))
     else:
+        if isinstance(string, re.Pattern):
+            
+            return spacyprint(f'\x1b[4m{description}\x1b[0m:', string.pattern)
         spacyprint(f'\x1b[4m{description}\x1b[0m:', string)
 
 
