@@ -1,22 +1,30 @@
 # more_termcolor
+#### Pass any number of colors, color-codes, or attributes
 
-- Pass any number of colors, color-codes, or attributes
-- All standard, background, bright, or attribute codes are available (or any combination of them)
-- Intelligently handles existing colors in the `text` as to allow adding or combining colors automatically, while ensuring the smallest string size possible
-- Convenience methods that expose shortcuts to common values (`bold('foo')`, `yellow('bar')` etc)
-- 100% compatible with the classic `termcolor` lib: anything that works with `termcolor` works the same with `more_termcolor` 
 
-## Example
+
 ```python
 from more_termcolor import cprint
 cprint('some text', 'red', 'on bright black', 'bold', 'italic')
 ```
-<div style='font-family: monospace; margin-left: 10px'>
-<span style="color: green">>>></span> 
-<span style="color: red; background: #555753">
-<i><b>some text</b></i>
-</span>
-</div>
+
+![](./0.png)
+
+
+
+#### All [standard](https://en.wikipedia.org/wiki/ANSI_escape_code#3/4_bit), [background](https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters), [bright](https://en.wikipedia.org/wiki/ANSI_escape_code#3/4_bit), or [attribute](https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters) codes are available (or any combination of them)
+
+
+#### Intelligently handles existing colors in the `text` as to allow adding or combining colors automatically, while ensuring the smallest string size possible
+
+
+#### Convenience methods that expose shortcuts to common values (`bold('foo')`, `yellow('bar')` etc)
+
+
+#### 100% compatible with the classic `termcolor` lib: anything that works with `termcolor` works the same with `more_termcolor` 
+
+## Example
+
 
 ```python
 # This is also possible:
