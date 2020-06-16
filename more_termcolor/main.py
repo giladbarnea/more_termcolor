@@ -1,5 +1,5 @@
 import re
-from typing import Union
+from typing import Union, List, Tuple, Set
 
 from more_termcolor import convert, core
 
@@ -17,6 +17,58 @@ ON_COLOR_RE = re.compile(fr'on[_ ]({"|".join(core.COLORS)})')
 
 def _is_non_foreground(_code):
     return _code not in core.FOREGROUND_CODES and _code not in core.BRIGHT_FOREGROUND_CODES
+
+
+class Color:
+    code: str
+    name: str
+    reset: str
+    is_non_foreground: bool
+    
+    def __init__(self, name_or_code: str):
+        self.name = convert.to_color(name_or_code)
+        self._code = None
+        self._reset = None
+        self._is_non_foreground = None
+    
+    def __hash__(self) -> int:
+        return hash(self.name)
+    
+    ## Lazy-evalulate everything ##
+    @property
+    def reset(self):
+        if self._reset is None:
+            self._reset = convert.to_reset_code(self.name)
+        return self._reset
+    
+    @property
+    def code(self):
+        if self._code is None:
+            self._code = convert.to_code(self.name)
+        return self._code
+    
+    @property
+    def is_non_foreground(self):
+        if self._is_non_foreground is None:
+            self._is_non_foreground = self.code not in core.FOREGROUND_CODES and self.code not in core.BRIGHT_FOREGROUND_CODES
+        return self._is_non_foreground
+
+
+class Outside:
+    colors: Set[Color]
+    has_non_foreground: bool
+    
+    def __init__(self, *colors: str):
+        self.colors = set()
+        self.has_non_foreground = None
+        for color in map(Color, filter(lambda c: c is not None, colors)):
+            self.colors.add(color)
+            # check whether color.is_non_foreground only if needed
+            if self.has_non_foreground is None and color.is_non_foreground:
+                self.has_non_foreground = True
+    
+    def open(self):
+        return convert.to_boundary(*map(lambda color: color.code, self.colors))
 
 
 def colored(text: str, *colors: Union[str, int]) -> str:
@@ -52,7 +104,13 @@ def colored(text: str, *colors: Union[str, int]) -> str:
         return text
     if not text:
         return ''
-    
+    # outside = Outside(*colors)
+    # inner_colors = list(re.finditer(COLOR_BOUNDARY_RE, text))
+    #
+    # if not inner_colors:
+    #     outside_open = outside.open()
+    #     outside_reset = convert.to_boundary(0)
+    #     return f'{outside_open}{text}{outside_reset}'
     outer_open_codes = []
     outer_reset_codes = []
     outer_reset_2_open = dict()

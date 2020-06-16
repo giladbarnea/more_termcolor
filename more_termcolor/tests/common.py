@@ -3,7 +3,7 @@ import inspect
 import re
 from contextlib import contextmanager
 from pathlib import Path
-from typing import overload, Union, Any
+from typing import overload, Union, Any, Generator
 
 from more_termcolor import core
 
@@ -104,6 +104,13 @@ def getsourcelineno(obj):
     return inspect.getsourcelines(obj)[1]
 
 
+def _print_and_compare(_actual, _expected):
+    actualprint(_actual)
+    expectedprint(_expected)
+    assert _actual == _expected
+    print('\x1b[32mOK\x1b[0m')
+
+
 def print_and_compare(fn_or_cls):
     """
     Examples:
@@ -140,25 +147,6 @@ def print_and_compare(fn_or_cls):
                  expected = 2
                  return actual, expected
     """
-    
-    def _print_and_compare(_actual, _expected):
-        actualprint(_actual)
-        expectedprint(_expected)
-        assert _actual == _expected
-        print('\x1b[32mOK\x1b[0m')
-    
-    @functools.wraps(fn_or_cls)
-    def wrap():
-        where = f'{getsourcefilename(fn_or_cls)}:{getsourcelineno(fn_or_cls)}'
-        # title = colored(f'\n\n{fn_or_cls.__name__}    {where}', 'bold', 'bright white', 'on black')
-        print(f'\n\n\x1b[1;97;40m{fn_or_cls.__name__}    \x1b[2m{where}\n\x1b[0m')
-        try:
-            actual, expected = fn_or_cls()
-            _print_and_compare(actual, expected)
-        except ValueError as e:  # returned a generator → 'not enough values to unpack (expected 2, got 1)'
-            for actual, expected in fn_or_cls():
-                _print_and_compare(actual, expected)
-    
     if isinstance(fn_or_cls, type):
         class Monkey(fn_or_cls):
             
@@ -170,4 +158,29 @@ def print_and_compare(fn_or_cls):
                 return attr
         
         return Monkey
+    
+    @functools.wraps(fn_or_cls)
+    def wrap():
+        
+        where = f'{getsourcefilename(fn_or_cls)}:{getsourcelineno(fn_or_cls)}'
+        
+        print(f'\n\n\x1b[1;97;40m{fn_or_cls.__name__}    \x1b[22;2m{where}\n\x1b[0m')
+        rv = fn_or_cls()
+        if isinstance(rv, tuple):
+            actual, expected = rv
+            _print_and_compare(actual, expected)
+        
+        else:  # returned a generator
+            rv: Generator
+            try:
+                for actual, expected in rv:
+                    try:
+                        _print_and_compare(actual, expected)
+                    except AssertionError as e:
+                        rv.throw(AssertionError, e)
+                    
+                    print('\x1b[32mOK\x1b[0m')
+            except StopIteration:
+                return
+    
     return wrap

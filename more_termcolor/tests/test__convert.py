@@ -58,14 +58,17 @@ def test__to_code__docstring_examples():
     assert convert.to_code(32) == '32' == convert.to_code('32')
 
 
+@common.print_and_compare
 def test__to_color__sanity():
     for color, code in core.FORMATTING_COLOR_CODES.items():
         actual = convert.to_color(code)
         try:
-            assert actual == color
+            yield actual, color
         except AssertionError as e:
+            print()
             # aliases
             if (actual, color) not in (
+                    ('ita', 'italic'),
                     ('ul', 'underline'),
                     ('conceal', 'concealed'),
                     ('ol', 'overline'),
@@ -75,7 +78,7 @@ def test__to_color__sanity():
     for color, code in core.FOREGROUND_COLOR_CODES.items():
         actual = convert.to_color(code)
         try:
-            assert actual == color
+            yield actual, color
         except AssertionError as e:
             if (actual, color) != ('black', 'grey'):
                 raise
@@ -84,7 +87,7 @@ def test__to_color__sanity():
         actual = convert.to_color(code)
         expected = f'bright {color}'
         try:
-            assert actual == expected
+            yield actual, expected
         except AssertionError as e:
             if (actual, expected) != ('bright black', 'bright grey'):
                 raise
@@ -93,7 +96,7 @@ def test__to_color__sanity():
         actual = convert.to_color(code)
         expected = f'on {color}'
         try:
-            assert actual == expected
+            yield actual, expected
         except AssertionError as e:
             if (actual, expected) != ('on black', 'on grey'):
                 raise
@@ -102,7 +105,7 @@ def test__to_color__sanity():
         actual = convert.to_color(code)
         expected = f'on bright {color}'
         try:
-            assert actual == expected
+            yield actual, expected
         except AssertionError as e:
             if (actual, expected) != ('on bright black', 'on bright grey'):
                 raise
@@ -111,11 +114,12 @@ def test__to_color__sanity():
         actual = convert.to_color(code)
         expected = f'reset {color}'
         try:
-            assert actual == expected
+            yield actual, expected
         except AssertionError as e:
             # same reset codes, different colors (or aliases)
             if (actual, expected) not in ((f'reset {pair[0]}', f'reset {pair[1]}') for pair in (
                     ('bold', 'dark'),
+                    ('ita', 'italic'),
                     ('ul', 'underline'),
                     ('ul', 'doubleul'),
                     ('blink', 'fastblink'),

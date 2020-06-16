@@ -23,7 +23,6 @@ FORMATTING_COLORS = (
     'conceal',  # 8,
     'concealed',  # termcolor compat
     'strike',  # 9,
-    # 'default',  # 10,
     'fraktur',  # 20 ?
     'doubleul',  # 21,
     'frame',  # 51, ?
@@ -32,33 +31,32 @@ FORMATTING_COLORS = (
     'overline',  # 53
     )
 FORMATTING_CODES = (
-    '1',
-    '2',
-    '3',
-    '3',
-    '4',
-    '4',  # termcolor compat
-    '5',
-    '6',
-    '7',
-    '8',
-    '8',  # termcolor compat
-    '9',
-    # '10',
+    '1',  # bold
+    '2',  # dark
+    '3',  # ita
+    '3',  # italic
+    '4',  # ul
+    '4',  # underline
+    '5',  # blink
+    '6',  # fastblink
+    '7',  # reverse
+    '8',  # conceal
+    '8',  # concealed
+    '9',  # strike
     # 16-231 → fg 38:5:<c>, bg 48:5:<c>
-    '20',
-    '21',
-    '51',
-    '52',
-    '53',
-    '53',
+    '20',  # fraktur
+    '21',  # doubleul
+    '51',  # frame
+    '52',  # circle
+    '53',  # ol
+    '53',  # overline
     )
 FORMATTING_COLOR_CODES = dict(zip(FORMATTING_COLORS, FORMATTING_CODES))
 RESET_COLOR_CODES = dict(all='0',
                          bold='22',
                          dark='22',
-                         italic='23',
                          ita='23',
+                         italic='23',
                          ul='24',
                          underline='24',  # termcolor compat
                          doubleul='24',
