@@ -2,7 +2,7 @@
 
 - Pass any number of colors, color-codes, or attributes
 - All standard, background, bright, or attribute codes are available (or any combination of them)
-- If found, handles existing colors in the `text` arg as to allow the surrounding, adding or combining of colors dynamically and automatically
+- Intelligently handles existing colors in the `text` as to allow adding or combining colors automatically, while ensuring the smallest string size possible
 - Convenience methods that expose shortcuts to common values (`bold('foo')`, `yellow('bar')` etc)
 - 100% compatible with the classic `termcolor` lib: anything that works with `termcolor` works the same with `more_termcolor` 
 
@@ -10,24 +10,76 @@
 ```python
 from more_termcolor import cprint
 cprint('some text', 'red', 'on bright black', 'bold', 'italic')
+```
+<div style='font-family: monospace; margin-left: 10px'>
+<span style="color: green">>>></span> 
+<span style="color: red; background: #555753">
+<i><b>some text</b></i>
+</span>
+</div>
 
+```python
 # This is also possible:
-from more_termcolor.colors import bold, brightred
+from more_termcolor.colors import bold, brightgreen
 bold_text = bold('text')
-fancy = brightred(f'this whole string, including this {bold_text} is bright red')
+fancy = brightgreen(f'this whole string, including this {bold_text} is bright green')
 ```
 
-## Roadmap
-- Parse complex `color` args, such as:
+<div style='font-family: monospace; margin-left: 10px'>
+<span style="color: green">>>></span> 
+<span style="color: #8AE234">
+this whole string, including this <b>text</b> is bright red
+</span>
+</div>
+
+## Roadmap (work in progress)
+##### - Parse complex `color` args, such as:
 ```python
-cprint('foo', 'bold red on bright blue')
+cprint('foo', 'bold bright blue on black')
 ``` 
-- `pygments`-like support for pseudo HTML tags, e.g.: 
+<div style='font-family: monospace; margin-left: 10px'>
+<span style="color: green">>>></span>
+ <span style="color: #727FCF; font-weight: 700; background: black">foo</span>
+</div>
+
+
+##### - `pygments`-like support for pseudo HTML tags, e.g.: 
 ```python
-cprint("<black>some text<on white>that examplifies</on white>what's <bold>planned</bold></black>") 
+text = "<magenta>some text<on yellow>that shows</on yellow>what's <bold ul>planned</bold ul></magenta>"
+cprint(text) 
 ```
-- Custom tags:
+<div style='font-family: monospace; margin-left: 10px'>
+<span style="color: green">>>></span> 
+<span style="color: magenta">
+some text
+<span style="background: yellow">that shows</span>
+what's
+<span style="font-weight: bold"><u>planned</u></span>
+</span>
+</div>
+
+##### - Custom tags:
 ```python
-cprint("<r>some text</r>", r='red') 
+text = "<m>some text<oy>that shows</oy>what's <bu>planned</bu></m>"
+cprint(text, m='magenta', oy='on yellow', bu='bold ul') 
 ``` 
+<div style='font-family: monospace; margin-left: 10px'>
+<span style="color: green">>>></span> 
+<span style="color: magenta">
+some text
+<span style="background: yellow">that shows</span>
+what's
+<span style="font-weight: bold"><u>planned</u></span>
+</span>
+</div>
+
+##### - Colorize by regex:
+```python
+stuff = {'food': 'pizza', 'love': 'wife'}
+cprint(stuff, bold=r"'\w+':")
+
+``` 
+<div style='font-family: monospace; margin-left: 10px'>
+<span style="color: green">>>></span> {<span style="font-weight: 700">'food':</span> 'pizza', <span style="font-weight: 700">'love':</span> 'wife'}
+</div>
 
