@@ -10,7 +10,12 @@ cprint('some text', 'red', 'on bright black', 'bold', 'italic')
 
 ![](./0.png)
 
-
+<div style='font-family: monospace; margin-left: 10px'>
+<span style="color: green">>>></span> 
+<span style="color: red; background: #555753">
+<i><b>some text</b></i>
+</span>
+</div>
 
 #### All [standard](https://en.wikipedia.org/wiki/ANSI_escape_code#3/4_bit), [background](https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters), [bright](https://en.wikipedia.org/wiki/ANSI_escape_code#3/4_bit), or [attribute](https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_parameters) codes are available (or any combination of them)
 
