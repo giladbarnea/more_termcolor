@@ -41,7 +41,8 @@ def test__italic_bold_italic():
 def test__italic_red_italic():
     """I    R       /FG
        3    31  →   39"""
-    italic_red_italic = colored(' Italic ' + colored(' Red ', 'red') + ' Italic ', 'italic') + ' NORMAL'
+    red = colored(' Red ', 'red')
+    italic_red_italic = colored(' Italic ' + red + ' Italic ', 'italic') + ' NORMAL'
     expected = '\x1b[3m Italic \x1b[31m Red \x1b[39m Italic \x1b[23m NORMAL'
     
     return italic_red_italic, expected

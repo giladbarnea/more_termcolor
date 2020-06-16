@@ -1,5 +1,5 @@
 import re
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Set, Dict, Generator
 
 from more_termcolor import convert, core
 
@@ -15,40 +15,22 @@ COLOR_BOUNDARY_RE = re.compile(fr'\x1b\[{COLOR_CODES_RE}m')
 ON_COLOR_RE = re.compile(fr'on[_ ]({"|".join(core.COLORS)})')
 
 
-def _is_non_foreground(_code):
-    return _code not in core.FOREGROUND_CODES and _code not in core.BRIGHT_FOREGROUND_CODES
-
-
 class Color:
     code: str
-    name: str
+    # name: str
     reset: str
-    text_idx: int  # the index where the color boundary started (where '\x1b' is)
+    text_start_i: int  # the index where the color code started (where the first digit is is)
+    text_end_i: int  # the index where the color code ended (where the last digit is + 1)
     is_non_foreground: bool
     
     def __init__(self, name_or_code: Union[str, int]):
-        self.name = convert.to_color(name_or_code)
-        # if text_idx is not None:
-        #     self.text_idx = text_idx
-        self._code = None
-        self._reset = None
+        name = convert.to_color(name_or_code)
+        self.reset = convert.to_reset_code(name)
+        self.code = convert.to_code(name)
         self._is_non_foreground = None
     
     def __hash__(self) -> int:
-        return hash(self.name)
-    
-    ## Lazy-evalulate everything ##
-    @property
-    def reset(self):
-        if self._reset is None:
-            self._reset = convert.to_reset_code(self.name)
-        return self._reset
-    
-    @property
-    def code(self):
-        if self._code is None:
-            self._code = convert.to_code(self.name)
-        return self._code
+        return hash(self.code)
     
     @property
     def is_non_foreground(self):
@@ -59,11 +41,13 @@ class Color:
 
 class ColorScope:
     colors: List[Color]
+    reset2color: Dict[str, Color]
     has_non_foreground: bool  # value is set in self.addcolor()
     
     def __init__(self, *names_or_codes: Union[str, int]):
         self.colors = []
-        self._colors_set = set()  # allows checking for duplicates in O(1) while keeping order
+        self._colors_set: Set[Color] = set()  # allows checking for duplicates in O(1) while keeping order
+        self.reset2color: Dict[str, Color] = dict()
         self.has_non_foreground = None
         for name_or_code in names_or_codes:
             self.addcolor(name_or_code)
@@ -84,6 +68,7 @@ class ColorScope:
         if color in self._colors_set:
             return None
         self._colors_set.add(color)
+        self.reset2color[color.reset] = color
         self.colors.append(color)
         # check whether color.is_non_foreground only if needed
         if self.has_non_foreground is None and color.is_non_foreground:
@@ -107,9 +92,10 @@ class ColorScope:
 class Inside(ColorScope):
     has_reset_all: bool = None
     
-    def addcolor(self, name_or_code: Union[str, int], text_idx: int) -> Color:
+    def addcolor(self, name_or_code: Union[str, int], text_start_i: int, text_end_i: int) -> Color:
         color = super().addcolor(name_or_code)
-        color.text_idx = text_idx  # by ref
+        color.text_start_i = text_start_i  # by ref
+        color.text_end_i = text_end_i
         if self.has_reset_all is None and color.code == '0':
             self.has_reset_all = True
         
@@ -129,23 +115,38 @@ class Inside(ColorScope):
                 
                 if char == '\x1b':
                     j = i + 2  # skip [
-                    boundary_idx = j
-                    
+                    # TODO: replace boundary_idx with list of chars, then join it instead of slice
+                    # boundary_idx = j
+                    code_digits = []
                     while True:
                         jchar = text[j]
-                        if not jchar.isdigit():
+                        if jchar.isdigit():
+                            code_digits.append(jchar)
+                        else:
                             # ; or m
-                            code = text[boundary_idx:j]
-                            instance.addcolor(code, i)
+                            
+                            code = ''.join(code_digits)
+                            instance.addcolor(code, i + 2, j)
                             if jchar == 'm':
                                 i = j
                                 break
                             # jchar is ';'
-                            boundary_idx = j + 1
+                            code_digits = []
                         j += 1
                 i += 1
             except IndexError as e:
                 return instance
+
+
+def get_same_reset_color_pairs(outside: ColorScope, inside: Inside) -> List[Tuple[Color, Color]]:
+    """[ ( out, in ), ( out, in ), ... ]"""
+    # TODO: complexity
+    pairs: List[Tuple[Color, Color]] = []
+    for in_reset, in_color in inside.reset2color.items():
+        out_color = outside.reset2color.get(in_reset)
+        if out_color is not None:
+            pairs.append((out_color, in_color))
+    return pairs
 
 
 def colored_(text: str, *colors: Union[str, int]) -> str:
@@ -268,73 +269,78 @@ def colored(text: str, *colors: Union[str, int]) -> str:
         return text
     if not text:
         return ''
-    # outside = Outside(*colors)
-    # inner_colors = list(re.finditer(COLOR_BOUNDARY_RE, text))
-    #
-    # if not inner_colors:
-    #     outside_open = outside.open()
-    #     outside_reset = convert.to_boundary(0)
-    #     return f'{outside_open}{text}{outside_reset}'
-    outer_open_codes = []
-    outer_reset_codes = []
-    outer_reset_2_open = dict()
-    outer_has_non_foreground = False
-    for color in filter(lambda c: c is not None, colors):
-        # if on_color is None by default in cprint()
-        open_code = convert.to_code(color)
-        # TODO: complexity
-        if open_code in outer_open_codes:
-            continue
-        outer_open_codes.append(open_code)
-        reset_code = convert.to_reset_code(open_code)
-        # TODO: this probably fails when open colors are bold,dark!
-        outer_reset_2_open[reset_code] = open_code
-        outer_reset_codes.append(reset_code)
-        if not outer_has_non_foreground and _is_non_foreground(open_code):
-            outer_has_non_foreground = True
-    
-    text = str(text)
     outside = ColorScope(*colors)
+    text = str(text)
     inside = Inside.from_text(text)
+    if not inside:
+        outside_open = outside.open()
+        outside_reset = outside.reset()
+        return f'{outside_open}{text}{outside_reset}'
+    
+    # outer_open_codes = []
+    # outer_reset_codes = []
+    # outer_reset_2_open = dict()
+    # outer_has_non_foreground = False
+    # for color in filter(lambda c: c is not None, colors):
+    #     # if on_color is None by default in cprint()
+    #     open_code = convert.to_code(color)
+    #     # TODO: complexity
+    #     if open_code in outer_open_codes:
+    #         continue
+    #     outer_open_codes.append(open_code)
+    #     reset_code = convert.to_reset_code(open_code)
+    #     # TODO: this probably fails when open colors are bold,dark!
+    #     outer_reset_2_open[reset_code] = open_code
+    #     outer_reset_codes.append(reset_code)
+    #     if not outer_has_non_foreground and _is_non_foreground(open_code):
+    #         outer_has_non_foreground = True
+    
     try:
         # TODO (performance): don't replace substrings if not needed
-        middle_already_formatted = True
-        inner_open, *inner_middle_matches, inner_reset = re.finditer(COLOR_BOUNDARY_RE, text)
+        # inner_open, *inner_middle_matches, inner_reset = re.finditer(COLOR_BOUNDARY_RE, text)
         
-        for inner_middle in inner_middle_matches:
-            codes = inner_middle.groups()
-            if any(code == '0' for code in codes):
-                middle_already_formatted = False
-                break
+        # inner_open_codes = []
+        # inner_has_non_foreground = False
+        # inner_reset_codes = []
+        # reopen_these_outer_open_codes = []
+        same_reset_color_pairs = get_same_reset_color_pairs(outside, inside)
+        if not same_reset_color_pairs:
+            outside_open = outside.open()
+            outside_reset = outside.reset()
+            return f'{outside_open}{text}{outside_reset}'
         
-        inner_open_codes = []
-        inner_has_non_foreground = False
-        inner_reset_codes = []
-        reopen_these_outer_open_codes = []
-        inner_and_outer_share_reset_code = False
-        for inner_open_code in inner_open.groups():
-            # build:
-            # (1) inner_open_codes
-            # (2) inner_reset_codes
-            # (3) reopen_these_outer_open_codes
-            if not inner_open_code:
-                continue
-            inner_open_codes.append(inner_open_code)
-            inner_reset_code = convert.to_reset_code(inner_open_code)
-            inner_reset_codes.append(inner_reset_code)
-            for outer_reset_code in outer_reset_codes:
-                if inner_reset_code == outer_reset_code:
-                    inner_and_outer_share_reset_code = True
-                    outer_open_code = outer_reset_2_open[outer_reset_code]
-                    reopen_these_outer_open_codes.append(outer_open_code)
-            if not inner_has_non_foreground and _is_non_foreground(inner_open_code):
-                inner_has_non_foreground = True
+        # for inner_open_code in inner_open.groups():
+        #     # build:
+        #     # (1) inner_open_codes
+        #     # (2) inner_reset_codes
+        #     # (3) reopen_these_outer_open_codes
+        #     if not inner_open_code:
+        #         continue
+        #     inner_open_codes.append(inner_open_code)
+        #     inner_reset_code = convert.to_reset_code(inner_open_code)
+        #     inner_reset_codes.append(inner_reset_code)
+        #     for outer_reset_code in outer_reset_codes:
+        #         if inner_reset_code == outer_reset_code:
+        #             inner_and_outer_share_reset_code = True
+        #             outer_open_code = outer_reset_2_open[outer_reset_code]
+        #             reopen_these_outer_open_codes.append(outer_open_code)
+        #     if not inner_has_non_foreground and _is_non_foreground(inner_open_code):
+        #         inner_has_non_foreground = True
         
-        start = convert.to_boundary(*outer_open_codes)
-        
-        # text does not end with a color boundary;
-        # this means there's text after last color boundary that
-        # needs to be reset separately from outer reset
+        # start = convert.to_boundary(*outer_open_codes)
+        rebuilt_chars = []
+        i = 0
+        for out_color, in_color in same_reset_color_pairs:
+            while i < in_color.text_start_i:
+                char = text[i]
+                rebuilt_chars.append(char)
+                i += 1
+            rebuilt_chars.extend(out_color.code)
+            i += in_color.text_end_i - in_color.text_start_i
+        rebuilt_text = ''.join(rebuilt_chars) + text[i:]
+        outside_open = outside.open()
+        outside_reset = outside.reset()
+        return f'{outside_open}{rebuilt_text}{outside_reset}'
         print(f'inner_has_non_foreground: ', inner_has_non_foreground,
               '\nouter_has_non_foreground: ', outer_has_non_foreground,
               f'\ninner_and_outer_share_reset_code:', inner_and_outer_share_reset_code,
