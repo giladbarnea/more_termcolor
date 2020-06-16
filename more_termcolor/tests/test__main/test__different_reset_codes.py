@@ -18,9 +18,9 @@ from more_termcolor.tests.common import print_and_compare
 def test__red_dark_red():
     """R    F       /F/B
        31   2   →   22"""
-    darkred = colored('DarkRed', 'dark')
-    red_dark_red = colored('Red' + darkred + 'Red', 'red')
-    expected = '\x1b[31mRed\x1b[2mDarkRed\x1b[22mRed\x1b[0m'
+    darkred = colored(' DarkRed ', 'dark')
+    red_dark_red = colored(' Red ' + darkred + ' Red ', 'red')
+    expected = '\x1b[31m Red \x1b[2m DarkRed \x1b[22m Red \x1b[0m'
     
     # smart reset dark in the middle, and does not re-open red
     return red_dark_red, expected

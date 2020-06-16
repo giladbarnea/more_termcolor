@@ -23,10 +23,13 @@ class Color:
     code: str
     name: str
     reset: str
+    text_idx: int  # the index where the color boundary started (where '\x1b' is)
     is_non_foreground: bool
     
-    def __init__(self, name_or_code: str):
+    def __init__(self, name_or_code: Union[str, int]):
         self.name = convert.to_color(name_or_code)
+        # if text_idx is not None:
+        #     self.text_idx = text_idx
         self._code = None
         self._reset = None
         self._is_non_foreground = None
@@ -54,24 +57,181 @@ class Color:
         return self._is_non_foreground
 
 
-class Outside:
+class ColorScope:
     colors: Set[Color]
-    has_non_foreground: bool
+    has_non_foreground: bool  # set in self.addcolor()
     
-    def __init__(self, *colors: str):
+    def __init__(self, *names_or_codes: Union[str, int]):
         self.colors = set()
         self.has_non_foreground = None
-        for color in map(Color, filter(lambda c: c is not None, colors)):
-            self.colors.add(color)
-            # check whether color.is_non_foreground only if needed
-            if self.has_non_foreground is None and color.is_non_foreground:
-                self.has_non_foreground = True
+        for name_or_code in names_or_codes:
+            self.addcolor(name_or_code)
+    
+    def __bool__(self):
+        return bool(self.colors)
+    
+    def addcolor(self, name_or_code: Union[str, int]) -> Color:
+        if name_or_code is None:
+            return None
+        color = Color(name_or_code)
+        self.colors.add(color)
+        # check whether color.is_non_foreground only if needed
+        if self.has_non_foreground is None and color.is_non_foreground:
+            self.has_non_foreground = True
+        return color
     
     def open(self):
+        """
+        >>> ColorScope('bold','red').open() == '\x1b[1;31m'
+        """
         return convert.to_boundary(*map(lambda color: color.code, self.colors))
+    
+    def reset(self):
+        """
+        >>> ColorScope('bold','red').reset() == '\x1b[22;39m'
+        """
+        return convert.to_boundary(*map(lambda color: color.reset, self.colors))
+
+
+class Inside(ColorScope):
+    has_reset_all: bool = None
+    
+    def addcolor(self, name_or_code: Union[str, int], text_idx: int) -> Color:
+        color = super().addcolor(name_or_code)
+        color.text_idx = text_idx  # by ref
+        if self.has_reset_all is None and color.code == '0':
+            self.has_reset_all = True
+        return color
+    
+    # def from_text(self, text: str):
+    #     i = 0
+    #     while True:
+    #         try:
+    #             char = text[i]
+    #
+    #             if char == '\x1b':
+    #                 j = i + 2  # skip [
+    #                 digit_start_idx = j
+    #
+    #                 while True:
+    #                     jchar = text[j]
+    #                     if not jchar.isdigit():
+    #                         # ; or m
+    #                         code = text[digit_start_idx:j]
+    #                         self.addcolor(code)
+    #                         if jchar == 'm':
+    #                             i = j
+    #                             break
+    #                         # jchar is ';'
+    #                         digit_start_idx = j + 1
+    #                     j += 1
+    #             i += 1
+    #         except IndexError as e:
+    #             break
 
 
 def colored(text: str, *colors: Union[str, int]) -> str:
+    """
+    Multiple colors can be passed, and their color codes will be merged.
+    The resulting string will always end with a 'reset all' code (0).
+    There will never be a 'reset all' code in the middle of the resulting string.
+
+    If any colors already exist within `text`, this function
+    tries to keep them intact as much as possible.
+
+    For example, if a user passes `colored(mytext, "bold")`,
+    and `mytext` is already underlined, the result will be both bold AND underlined.
+
+    If `mytext` only contains an underlined substring, surrounded by regular text,
+    the whole resulting text will be bold, but only the underlined substring will be underlined.
+
+    This behavior is similar to nesting html tags (i.e. "<b>bold <i>and italic</i></b>").
+
+    Any duplicate colors are merged.
+
+    I'm not sure about the maximum number of colors that can be passed,
+    because I stopped adding after `("foo", "red", "on black", "bold", "dark", "italic", "underline", "blink", "reverse", "strike", "overline")` worked.
+
+    :param colors: each color can have a "sat [color]", "on [color]", or "on sat [color]" preceding it, so "on sat blue"
+     will color the text with a saturated blue background.
+     If no color is passed, returns `text` unmodified.
+
+    :return: the formatted string.
+    """
+    
+    if not colors:
+        return text
+    if not text:
+        return ''
+    text = str(text)
+    outside = ColorScope(*colors)
+    inside = Inside()
+    # inside.from_text(text)
+    
+    ## Construct `inside` from text
+    i = 0
+    while True:
+        try:
+            char = text[i]
+            
+            if char == '\x1b':
+                j = i + 2  # skip [
+                boundary_idx = j
+                
+                while True:
+                    jchar = text[j]
+                    if not jchar.isdigit():
+                        # ; or m
+                        code = text[boundary_idx:j]
+                        inside.addcolor(code, i)
+                        
+                        if jchar == 'm':
+                            i = j
+                            break
+                        # jchar is ';'
+                        boundary_idx = j + 1
+                    j += 1
+            i += 1
+        except IndexError as e:
+            break
+    # inner_colors: List[re.Match] = list(re.finditer(COLOR_BOUNDARY_RE, text))
+    
+    if not inside:
+        return f'{outside.open()}{text}{outside.reset()}'
+    
+    ## text includes some colors ##
+    # TODO (performance): don't replace substrings if not needed
+    # TODO: middle_already_formatted
+    
+    # if inside has background or formatting colors,
+    # they need to be reset 'properly'.
+    if inside.has_non_foreground:
+        # replace existing inside reset codes with
+        # the inside's colors' matching reset codes
+        
+        if outside.has_non_foreground:
+            inner_reset_codes.extend(reopen_these_outer_open_codes)
+        proper_inner_reset = convert.to_boundary(*inner_reset_codes)
+        text = text.replace(inner_reset.group(), proper_inner_reset, 1)
+    
+    else:
+        if outer_has_non_foreground:
+            text = text.replace(inner_reset.group(), convert.to_boundary('reset fg'), 1)
+        else:
+            # replace inner reset with outer open
+            text = text.replace(inner_reset.group(), start, 1)
+    
+    reset = convert.to_boundary(0)
+    try:
+        ret = f'{start}{text}{reset}'
+    except UnboundLocalError as e:
+        
+        start = convert.to_boundary(*outer_open_codes)
+        ret = f'{start}{text}{reset}'
+    return ret
+
+
+def coloredOLD(text: str, *colors: Union[str, int]) -> str:
     """
     Multiple colors can be passed, and their color codes will be merged.
     The resulting string will always end with a 'reset all' code (0).

@@ -100,4 +100,4 @@ def to_reset_code(name_or_code: Union[str, int]) -> str:
 
 
 def to_boundary(*names_or_codes: Union[str, int]) -> str:
-    return f'\x1b[{";".join(map(to_code, names_or_codes))}m'
+    return f'\x1b[{";".join(set(map(to_code, names_or_codes)))}m'

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import overload, Union, Any, Generator
 
 from more_termcolor import core
+from itertools import permutations as permutations
 
 
 def memoize(fun):
@@ -29,6 +30,14 @@ def has_duplicates(collection) -> bool:
 
 def spacyprint(*values):
     print('', *values, sep='\n', end='\x1b[0m\n')
+
+
+def codes_perm_re(*values):
+    r"""
+    >>> assert codes_perm_re(1, 2) == re.compile(r'\x1b\[(1;2|2;1)m')
+    """
+    perms = f"({'|'.join(map(lambda perm: ';'.join(perm), permutations(map(str, values), len(values))))})"
+    return re.compile(fr'\x1b\[{perms}m')
 
 
 @overload
@@ -83,11 +92,14 @@ bright_bg_colors = list(core.BRIGHT_BACKGROUND_COLOR_CODES.keys())
 
 
 def _print(description, string):
-    spacyprint(f'\x1b[4m{description}\x1b[0m:', string, repr(string))
+    if isinstance(string, str) and '\x1b' in string:
+        spacyprint(f'\x1b[4m{description}\x1b[0m:', string, repr(string))
+    else:
+        spacyprint(f'\x1b[4m{description}\x1b[0m:', string)
 
 
 def actualprint(string):
-    _print('actual', string)
+    _print('\x1b[21;37mactual\x1b[24;39m', string)
 
 
 def expectedprint(string):
@@ -107,7 +119,10 @@ def getsourcelineno(obj):
 def _print_and_compare(_actual, _expected):
     actualprint(_actual)
     expectedprint(_expected)
-    assert _actual == _expected
+    if isinstance(_expected, re.Pattern):
+        assert _expected.fullmatch(_actual)
+    else:
+        assert _actual == _expected
     print('\x1b[32mOK\x1b[0m')
 
 

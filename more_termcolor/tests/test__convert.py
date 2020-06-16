@@ -1,5 +1,7 @@
 from more_termcolor import convert, core
 from more_termcolor.tests import common
+import re
+from itertools import permutations
 
 
 def test__to_code__sanity():
@@ -169,5 +171,5 @@ def test__to_boundary():
         yield actual, expected
     
     actual = convert.to_boundary(1, '2', 'on bright black')
-    expected = '\x1b[1;2;100m'
+    expected = common.codes_perm_re(1, 2, 100)
     yield actual, expected
