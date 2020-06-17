@@ -1,15 +1,31 @@
-# *** 8-bit (256 colors):
-# * fg: 38:5:<c>m
-# * bg: 48:5:<c>m
-# 0-7 std equiv: 30–37
-# 8-15 std equiv: 90–97
-# 16-213 is 6x6 cube (216 colors)
-# 232-255 is grayscale (24 steps)
+"""
+for future extension:
+8-bit (256 colors):
+fg: 38:5:<c>m
+bg: 48:5:<c>m
+0-7 std equiv: 30–37
+8-15 std equiv: 90–97
+16-213 is 6x6 cube (216 colors)
+232-255 is grayscale (24 steps)
 
-# *** rgb ('true color'):
-# * fg: 38;2;<r>;<g>;<b>m
-# * bg: 38;2;<r>;<g>;<b>m
+rgb ('true color'):
+fg: 38;2;<r>;<g>;<b>m
+bg: 38;2;<r>;<g>;<b>m
+"""
 
+COLORS = (
+    'black',
+    'grey',  # termcolor compat
+    'red',
+    'green',
+    'yellow',
+    'blue',
+    'magenta',
+    'cyan',
+    'white',
+    )
+
+# *** FORMATTING
 FORMATTING_COLORS = (
     'bold',  # 1,
     'dark',  # 2 (brighter than brightblack 90)
@@ -50,6 +66,9 @@ FORMATTING_CODES = (
     '53',  # overline
     )
 FORMATTING_COLOR_CODES = dict(zip(FORMATTING_COLORS, FORMATTING_CODES))
+
+# *** RESET
+
 RESET_COLOR_CODES = dict(all='0',
                          bold='22',
                          dark='22',
@@ -71,17 +90,8 @@ RESET_COLOR_CODES = dict(all='0',
                          ol='55',
                          overline='55',
                          )
-COLORS = (
-    'black',
-    'grey',  # termcolor compat
-    'red',
-    'green',
-    'yellow',
-    'blue',
-    'magenta',
-    'cyan',
-    'white',
-    )
+
+# *** FOREGROUND
 FOREGROUND_CODES = (
     '30',  # black
     '30',  # grey # termcolor compat
@@ -95,18 +105,8 @@ FOREGROUND_CODES = (
     # 38;5 for 8bit, 38;2 for rgb
     )
 FOREGROUND_COLOR_CODES = dict(zip(COLORS, FOREGROUND_CODES))
-BRIGHT_BACKGROUND_CODES = (
-    '100',  # black
-    '100',  # grey # termcolor compat
-    '101',  # red
-    '102',  # green
-    '103',  # yellow
-    '104',  # blue
-    '105',  # magenta
-    '106',  # cyan
-    '107',  # white
-    )
-BRIGHT_BACKGROUND_COLOR_CODES = dict(zip(COLORS, BRIGHT_BACKGROUND_CODES))
+# *** BACKGROUND
+# ** Standard
 STANDARD_BACKGROUND_CODES = (
     '40',  # black
     '40',  # grey # termcolor compat
@@ -120,9 +120,24 @@ STANDARD_BACKGROUND_CODES = (
     # 48;5 for 8bit, 48;2 for rgb
     )
 STANDARD_BACKGROUND_COLOR_CODES = dict(zip(COLORS, STANDARD_BACKGROUND_CODES))
+# ** Bright
+BRIGHT_BACKGROUND_CODES = (
+    '100',  # black
+    '100',  # grey # termcolor compat
+    '101',  # red
+    '102',  # green
+    '103',  # yellow
+    '104',  # blue
+    '105',  # magenta
+    '106',  # cyan
+    '107',  # white
+    )
+BRIGHT_BACKGROUND_COLOR_CODES = dict(zip(COLORS, BRIGHT_BACKGROUND_CODES))
+
 BACKGROUND_COLOR_CODES = dict(**STANDARD_BACKGROUND_COLOR_CODES,
                               bright=BRIGHT_BACKGROUND_COLOR_CODES,
                               )
+# *** BRIGHT FOREGROUND
 BRIGHT_FOREGROUND_CODES = (
     '90',  # black
     '90',  # grey # termcolor compat

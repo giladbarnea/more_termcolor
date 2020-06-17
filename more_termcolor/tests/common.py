@@ -56,25 +56,34 @@ def assert_raises(exc, *search_in_args, reg=None):
     try:
         yield
     except exc as e:
+        
         if not search_in_args and not reg:
-            return
+            return  # good
+        err_args = list(map(str, e.args))
         if reg:
             reg = re.compile(reg)
-            for a in list(map(str, e.args)):
-                if reg.fullmatch(a):
+            for errarg in err_args:
+                if reg.fullmatch(errarg):
                     return True
-            raise
-        for a in list(map(str, e.args)):
-            for s in search_in_args:
-                if not re.search(re.escape(s), a):
+            excname = exc.__qualname__
+            raise AssertionError(f"assert_raises({excname}): {excname} was raised but REG did not match:\n\t\treg={reg}")
+        for errarg in err_args:
+            for searchval in search_in_args:
+                if not re.search(re.escape(searchval), errarg):
+                    # we need one errarg that matches all search values;
+                    # if current errarg doesn't match even one search value,
+                    # break inner loop and try next errarg.
+                    # exhausting search_in_args without breaking == all search values matched current errarg
                     break
             else:
+                # loop finished without breaking
                 return True
-        raise
-    except Exception as e:
-        raise
+        excname = exc.__qualname__
+        raise AssertionError(f"assert_raises({excname}): {excname} was raised but no e.arg matched all search args:\n\t\terr_args: {err_args}\n\t\tsearch_in_args={search_in_args}")
     else:
-        raise AssertionError(f"assert_raises({exc.__qualname__}): {exc.__qualname__} was NOT raised")
+        
+        excname = exc.__qualname__
+        raise AssertionError(f"assert_raises({excname}): {excname} was NOT raised\n\t\treg={reg}, search_in_args={search_in_args}")
 
 
 @contextmanager
@@ -96,7 +105,6 @@ def _print(description, string):
         spacyprint(f'\x1b[0m\x1b[4m{description}\x1b[0m:', string, repr(string))
     else:
         if isinstance(string, re.Pattern):
-            
             return spacyprint(f'\x1b[0m\x1b[4m{description}\x1b[0m:', string.pattern)
         spacyprint(f'\x1b[0m\x1b[4m{description}\x1b[0m:', string)
 

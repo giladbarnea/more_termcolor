@@ -80,3 +80,28 @@ def test__darkbold__brightwhite__darkbold():
     expected_str = rf'{codes_perm(1, 2)} DarkBold \x1b\[97m BrightWhite \x1b\[39m DarkBold \x1b\[22m NORMAL'
     expected = re.compile(expected_str)
     return darkbold__brightwhite__darkbold, expected
+
+
+def test__colorfactory():
+    from more_termcolor.main import colorfactory, ColorReset, ColorOpen
+    actual = colorfactory('dark')
+    assert isinstance(actual, ColorOpen)
+    assert actual.code == '2'
+    assert actual._name == 'dark'
+    assert actual.resetcode == '22'
+    
+    actual = colorfactory('bold')
+    assert isinstance(actual, ColorOpen)
+    assert actual.code == '1'
+    assert actual._name == 'bold'
+    assert actual.resetcode == '22'
+    
+    actual = colorfactory('22')
+    assert isinstance(actual, ColorReset)
+    assert actual.code == '22'
+    assert actual._name == 'reset bold'
+    
+    actual = colorfactory('reset bold')
+    assert isinstance(actual, ColorReset)
+    assert actual.code == '22'
+    assert actual._name == 'reset bold'

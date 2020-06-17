@@ -146,21 +146,37 @@ def test__to_code__fonts():
     return actual, expected
 
 
-def test__to_reset_code():
+def test__to_reset_code__valid_values():
+    assert convert.to_reset_code('1') == '22'
+    assert convert.to_reset_code('reset 1') == '22'
     assert convert.to_reset_code('bold') == '22'
     assert convert.to_reset_code('dark') == '22'
     assert convert.to_reset_code(22) == '22' == convert.to_reset_code('22')
     assert convert.to_reset_code('green') == '39' == core.RESET_COLOR_CODES['fg']
+    assert convert.to_reset_code('reset green') == '39' == core.RESET_COLOR_CODES['fg']
     assert convert.to_reset_code('on red') == '49'
+    assert convert.to_reset_code('reset on red') == '49'
     assert convert.to_reset_code('bright red') == '39'
+    assert convert.to_reset_code('reset bright red') == '39'
     assert convert.to_reset_code('on bright yellow') == '49'
+    assert convert.to_reset_code('reset on bright yellow') == '49'
     assert convert.to_reset_code('on') == '49'
+    assert convert.to_reset_code('reset on') == '49'
+
+
+def test__to_reset_code__bad_values():
     for bad in ('BAD', 'on BAD', 'on bright BAD'):
         with common.assert_raises(KeyError, f"to_reset_code('{bad}'): color '{bad}' isn't recognized"):
+            # convert.to_reset_code(bad, trace_call=bad != 'BAD')
             convert.to_reset_code(bad)
     
     with common.assert_raises(KeyError, 'bright'):
         convert.to_reset_code('bright')
+    
+    with common.assert_raises(KeyError):
+        convert.to_reset_code('on bright dark')
+        convert.to_reset_code('on dark')
+        convert.to_reset_code('on bright all')
 
 
 @common.print_and_compare
@@ -171,5 +187,6 @@ def test__to_boundary():
         yield actual, expected
     
     actual = convert.to_boundary(1, '2', 'on bright black')
-    expected = re.compile(common.codes_perm(1, 2, 100))
+    # expected = re.compile(common.codes_perm(1, 2, 100))
+    expected = "\x1b[1;2;100m"
     yield actual, expected

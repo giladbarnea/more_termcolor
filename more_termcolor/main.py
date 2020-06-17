@@ -12,67 +12,117 @@ first.groups() → ('31', '1', '', '', '', '')
 
 COLOR_BOUNDARY_RE = re.compile(fr'\x1b\[{COLOR_CODES_RE}m')
 # COLOR_BOUNDARY_RE2 = re.compile(fr'\x1b\[{COLOR_CODES_RE}m([^\x1b]+)*')
-ON_COLOR_RE = re.compile(fr'on[_ ]({"|".join(core.COLORS)})')
+# ON_COLOR_RE = re.compile(fr'on[_ ]({"|".join(core.COLORS)})')
+SHORT_ID_RE = re.compile(r'(?<=0x[\w\d]{8})([\w\d]{4})')  # last 4 digits
 
 
 class Color:
     code: str
-    # name: str
-    reset: str
+    
     text_start_i: int  # the index where the color code started (where the first digit is is)
     text_end_i: int  # the index where the color code ended (where the last digit is + 1)
-    is_non_foreground: bool
     
-    def __init__(self, name_or_code: Union[str, int]):
-        name = convert.to_color(name_or_code)
-        self.reset = convert.to_reset_code(name)
-        self.code = convert.to_code(name)
-        self._is_non_foreground = None
+    def __init__(self, code: str, name: str):
+        self.code = code
+        self._name = name  # for repr; DONT use for lookups
     
     def __hash__(self) -> int:
         return hash(self.code)
     
-    @property
-    def is_non_foreground(self):
-        if self._is_non_foreground is None:
-            self._is_non_foreground = self.code not in core.FOREGROUND_CODES and self.code not in core.BRIGHT_FOREGROUND_CODES
-        return self._is_non_foreground
+    def __repr__(self) -> str:
+        return f'Color (open): "{self.code}"/{self._name}'
+    
+    def _shortid(self) -> str:
+        rpr = super().__repr__()
+        return f'0x...{SHORT_ID_RE.search(rpr).group()}'
+
+
+class ColorOpen(Color):
+    resetcode: str
+    reset: 'ColorReset'
+    
+    def __init__(self, code: str, name: str, resetcode: str):
+        super().__init__(code, name)
+        self.resetcode = resetcode
+        self.reset = None
+    
+    def __repr__(self) -> str:
+        superrepr = super().__repr__()
+        shortid = self._shortid()
+        if self.reset:
+            return f'{superrepr} (ColorReset: "{self.reset.code}" | {self.reset._shortid()}) | {shortid}'
+        else:
+            return f'{superrepr} (resetcode="{self.resetcode}") | {shortid}'
+
+
+class ColorReset(Color):
+    opencode: str
+    open: ColorOpen
+    
+    def __init__(self, code: str, name: str):
+        super().__init__(code, name)
+        self.opencode = None
+        self.open = None
+    
+    def __repr__(self) -> str:
+        superrepr = super().__repr__()
+        shortid = self._shortid()
+        if self.open:
+            return f'{superrepr} (ColorOpen: "{self.open.code}" | {self.open._shortid()}) | {shortid}'
+        else:
+            return f'{superrepr} (opencode="{self.opencode}") | {shortid}'
+
+
+def colorfactory(name_or_code: Union[str, int]) -> Color:
+    name = convert.to_color(name_or_code)
+    code = convert.to_code(name)
+    resetcode = convert.to_reset_code(name)
+    if code == resetcode:
+        return ColorReset(code, name)
+    else:
+        return ColorOpen(code, name, resetcode)
 
 
 class ColorScope:
     colors: List[Color]
     reset2color: Dict[str, Color]
-    has_non_foreground: bool  # value is set in self.addcolor()
+    
+    # has_non_foreground: bool  # value is set in self.addcolor()
     
     def __init__(self, *names_or_codes: Union[str, int]):
         self.colors = []
         self._colors_set: Set[Color] = set()  # allows checking for duplicates in O(1) while keeping order
         self.reset2color: Dict[str, Color] = dict()
-        self.has_non_foreground = None
+        # self.has_non_foreground = None
         for name_or_code in names_or_codes:
             self.addcolor(name_or_code)
         
-        if self.has_non_foreground is None:
-            # self.has_non_foreground remained None,
-            # because none of the colors was color.is_non_foreground == True
-            self.has_non_foreground = False
+        # if self.has_non_foreground is None:
+        #     # self.has_non_foreground remained None,
+        #     # because none of the colors was color.is_non_foreground == True
+        #     self.has_non_foreground = False
     
     def __bool__(self):
         return bool(self.colors)
     
     def addcolor(self, name_or_code: Union[str, int]) -> Color:
+        
         if name_or_code is None:
             return None
+        color = colorfactory(name_or_code)
         
-        color = Color(name_or_code)
         if color in self._colors_set:
             return None
         self._colors_set.add(color)
-        self.reset2color[color.reset] = color
         self.colors.append(color)
-        # check whether color.is_non_foreground only if needed
-        if self.has_non_foreground is None and color.is_non_foreground:
-            self.has_non_foreground = True
+        # if color.is_reset:
+        #     print()
+        # else:
+        #     self.reset2color[color.resetcode] = color
+        
+        # # check whether color.is_non_foreground only if needed
+        # if self.has_non_foreground is None and color.is_non_foreground:
+        #     self.has_non_foreground = True
         
         return color
     
@@ -86,7 +136,7 @@ class ColorScope:
         """
         >>> ColorScope('bold','red').reset() == '\x1b[22;39m'
         """
-        return convert.to_boundary(*map(lambda color: color.reset, self.colors))
+        return convert.to_boundary(*map(lambda color: color.resetcode, self.colors))
 
 
 class Inside(ColorScope):
@@ -331,10 +381,20 @@ def colored(text: str, *colors: Union[str, int]) -> str:
         rebuilt_chars = []
         i = 0
         for out_color, in_color in same_reset_color_pairs:
+            reset_inside_color = out_color.code in core.FORMATTING_CODES
+            # Usually colors that share a reset code are incompatible;
+            # for example, 'green', 'red' → both reset by '39', one cancels out the other.
+            # That means we can skip resetting the inside color, and just re-open the outside color instead.
+            # An exception is formatting colors, which are compatible:
+            # something can be both 'bold' and 'dark', even though '22' resets them both.
+            # In those cases, do reset the inside color, but re-open the outside code immediately after.
             while i < in_color.text_start_i:
                 char = text[i]
                 rebuilt_chars.append(char)
                 i += 1
+            if reset_inside_color:
+                rebuilt_chars.extend(in_color.resetcode)
+                rebuilt_chars.append(';')
             rebuilt_chars.extend(out_color.code)
             i += in_color.text_end_i - in_color.text_start_i
         rebuilt_text = ''.join(rebuilt_chars) + text[i:]

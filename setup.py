@@ -23,7 +23,14 @@ setup_args = dict(name='more_termcolor',
                   packages=packages,
                   keywords=["termcolor", "color", "colors", "terminal", "ansi", "formatting"],
                   # pip install -e .[dev]
-                  extras_require={'dev': ['pytest', 'ipdb', 'IPython', 'semver']},
+                  extras_require={
+                      'dev': ['pytest',
+                              'ipdb',
+                              'IPython',
+                              'semver',
+                              'birdseye'
+                              ]
+                      },
                   classifiers=[
                       # https://pypi.org/classifiers/
                       'Development Status :: 4 - Beta',
