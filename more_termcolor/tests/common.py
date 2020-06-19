@@ -102,11 +102,11 @@ bright_bg_colors = list(core.BRIGHT_BACKGROUND_COLOR_CODES.keys())
 
 def _print(description, string):
     if isinstance(string, str) and '\x1b' in string:
-        spacyprint(f'\x1b[0m\x1b[4m{description}\x1b[0m:', string, repr(string))
-    else:
-        if isinstance(string, re.Pattern):
-            return spacyprint(f'\x1b[0m\x1b[4m{description}\x1b[0m:', string.pattern)
-        spacyprint(f'\x1b[0m\x1b[4m{description}\x1b[0m:', string)
+        return spacyprint(f'\x1b[0m\x1b[4m{description}\x1b[0m:', string + '\x1b[0m', repr(string))
+    
+    if isinstance(string, re.Pattern):
+        return spacyprint(f'\x1b[0m\x1b[4m{description}\x1b[0m:', string.pattern + '\x1b[0m')
+    spacyprint(f'\x1b[0m\x1b[4m{description}\x1b[0m:', string + '\x1b[0m')
 
 
 def actualprint(string):
@@ -190,7 +190,7 @@ def print_and_compare(fn_or_cls):
         
         where = f'{getsourcefilename(fn_or_cls)}:{getsourcelineno(fn_or_cls)}'
         
-        print(f'\n\n\x1b[1;97;40m{fn_or_cls.__name__}    \x1b[22;2m{where}\n\x1b[0m')
+        print(f'\n\n\x1b[1;97;40m{fn_or_cls.__qualname__}    \x1b[22;2m{where}\n\x1b[0m')
         rv = fn_or_cls()
         if isinstance(rv, tuple):
             actual, expected = rv

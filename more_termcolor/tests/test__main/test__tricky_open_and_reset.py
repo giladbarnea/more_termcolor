@@ -2,12 +2,13 @@ import pytest
 import pickle
 from more_termcolor import colored, bold, dark, ita, brightgreen, ul
 from more_termcolor.tests.common import print_and_compare, codes_perm
+from more_termcolor.main import ColorScope, Inside
 from pathlib import Path
 import re
 
 
 @print_and_compare
-class Test:
+class TestMerge:
     def test__merge_open_codes_if_no_text(self):
         red = colored('Red', 'red')
         actual = colored(f'{red}Bold', 'bold') + ' NORMAL'
@@ -34,7 +35,10 @@ class Test:
         expected_str = rf'{codes_perm(1, 31)}Red{codes_perm(39, 22)} NORMAL'
         expected = re.compile(expected_str)
         return actual, expected
-    
+
+
+@print_and_compare
+class TestRealWorld:
     @pytest.mark.skip
     def test__exchandler(self):
         with open(Path(__file__).parent / 'exchandler_colors.pickle', mode='rb') as f:
