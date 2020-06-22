@@ -97,7 +97,7 @@ class Test_2_outside_colors:
         # TODO: why is bright restored when resetting dark?
         # In IPython:
         # # print('\x1b[97m Bright (#EEEEEC) \x1b[2m Bright and Dark (#9F9F9D) \x1b[22m Bright (#EEEEEC) \x1b[0m Normal (#AAAAAA) \x1b[2m Dark (#717171) \x1b[0m')
-        expected = f'\x1b[1;97m BoldBright \x1b[2m Dark \x1b[22;1m BoldBright \x1b[39;22m NORMAL'
+        expected = f'\x1b[1;97m BoldBright \x1b[2m Dark \x1b[22;1m BoldBright \x1b[22;39m NORMAL'
         return bold_brightwhite__dark__bold_brightwhite, expected
     
     def test__dark_bold__brightwhite__dark_bold(self):
@@ -109,6 +109,7 @@ class Test_2_outside_colors:
     
     def test__bold_dark__red_dark__bold_dark(self):
         reddark = colored(' RedDark ', 'red', 'dark')
+        assert reddark == '\x1b[31;2m RedDark \x1b[39;22m'
         bold_dark__red_dark__bold_dark = colored(' BoldDark ' + reddark + ' BoldDark ', 'bold', 'dark') + ' NORMAL'
         
         expected = f'\x1b[1;2m BoldDark \x1b[31m RedDark \x1b[39m BoldDark \x1b[22m NORMAL'
