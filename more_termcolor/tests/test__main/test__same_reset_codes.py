@@ -65,16 +65,20 @@ class Test_1_inside_color:
 @print_and_compare
 class Test_2_inside_colors:
     def test__bold__red_dark__bold(self):
+        # compare: test__different_reset_codes.py::Test_1_inside_color::test__bold_red_bold
         inside = colored(' RedDark ', 'red', 'dark')
         assert inside == '\x1b[31;2m RedDark \x1b[39;22m'
         actual = colored(f'Bold {inside} Bold', 'bold') + ' NORMAL'
-        expected = '\x1b[1mBold \x1b[31;2m RedDark \x1b[22;1;39m Bold\x1b[22m NORMAL'
+        # 22 resets dark; 1 reopens bold; 39 resets red
+        expected = '\x1b[1mBold \x1b[31;2m RedDark \x1b[39;22;1m Bold\x1b[22m NORMAL'
         return actual, expected
     
     def test__bold__red_bold__bold(self):
         inside = colored(' Inside ', 'red', 'bold')
-        actual = colored(f'Outside {inside} Outside', 'bold')
-        expected = '\x1b[1mOutside \x1b[31m Inside \x1b[39m Outside\x1b[22m'
+        assert inside == '\x1b[31;1m Inside \x1b[39;22m'
+        actual = colored(f' Outside {inside} Outside ', 'bold') + ' NORMAL'
+        # knows not to open bold inside because already open outside
+        expected = '\x1b[1m Outside \x1b[31m Inside \x1b[39m Outside \x1b[22m NORMAL'
         return actual, expected
 
 

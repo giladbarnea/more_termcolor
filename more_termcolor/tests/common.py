@@ -167,7 +167,7 @@ def print_and_compare(fn_or_cls):
          # decorate a class:
          
          @print_and_compare
-         class Foo:
+         class TestFoo:
              def test__foo(self):
                  actual = 1 + 1
                  expected = 2

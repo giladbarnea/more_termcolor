@@ -35,19 +35,22 @@ class Test_1_inside_color:
         
         return italic_bold_italic, expected
     
-    def test__italic_red_italic(self):
+    def test__bold_red_bold(self):
         """I    R       /FG
            3    31  →   39"""
         red = colored(' Red ', 'red')
-        italic_red_italic = colored(' Italic ' + red + ' Italic ', 'italic') + ' NORMAL'
-        expected = '\x1b[3m Italic \x1b[31m Red \x1b[39m Italic \x1b[23m NORMAL'
+        assert red == '\x1b[31m Red \x1b[39m'
+        bold_red_bold = colored(' Bold ' + red + ' Bold ', 'bold') + ' NORMAL'
+        expected = '\x1b[1m Bold \x1b[31m Red \x1b[39m Bold \x1b[22m NORMAL'
         
-        return italic_red_italic, expected
+        return bold_red_bold, expected
     
     def test__italic_brightgreen_italic(self):
         """I    SG      /FG
            3    92  →   39"""
-        italic_brightgreen_italic = colored(' Italic ' + colored(' BrightGreen ', 'bright green') + ' Italic ', 'italic') + ' NORMAL'
+        brightgreen = colored(' BrightGreen ', 'bright green')
+        assert brightgreen == '\x1b[92m BrightGreen \x1b[39m'
+        italic_brightgreen_italic = colored(' Italic ' + brightgreen + ' Italic ', 'italic') + ' NORMAL'
         expected = '\x1b[3m Italic \x1b[92m BrightGreen \x1b[39m Italic \x1b[23m NORMAL'
         
         return italic_brightgreen_italic, expected
@@ -55,7 +58,9 @@ class Test_1_inside_color:
     def test__bold_italic_bold(self):
         """B    I       /I
            1    3   →   23"""
-        bold_italic_bold = colored(' Bold ' + colored(' Italic ', 'italic') + ' Bold ', 'bold') + ' NORMAL'
+        italic = colored(' Italic ', 'italic')
+        assert italic == '\x1b[3m Italic \x1b[23m'
+        bold_italic_bold = colored(' Bold ' + italic + ' Bold ', 'bold') + ' NORMAL'
         expected = '\x1b[1m Bold \x1b[3m Italic \x1b[23m Bold \x1b[22m NORMAL'
         
         # smart reset italic (23), no reopen bold
@@ -64,7 +69,9 @@ class Test_1_inside_color:
     def test__brightwhite_dark_brightwhite(self):
         """S    F       /F
            97   2   →   22"""
-        brightwhite_dark_brightwhite = colored(' Bright ' + colored(' Dark ', 'dark') + ' Bright ', 'bright white') + ' NORMAL'
+        dark = colored(' Dark ', 'dark')
+        assert dark == '\x1b[2m Dark \x1b[22m'
+        brightwhite_dark_brightwhite = colored(' Bright ' + dark + ' Bright ', 'bright white') + ' NORMAL'
         expected = '\x1b[97m Bright \x1b[2m Dark \x1b[22m Bright \x1b[39m NORMAL'
         # smart reset dark, no re-open bright
         
