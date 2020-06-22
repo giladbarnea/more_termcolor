@@ -69,6 +69,13 @@ class ColorOpener(Color):
         if isinstance(other, ColorOpener):
             return self.resetcode == other.resetcode
         return True
+    
+    def compatwith(self, other: 'ColorOpener') -> bool:
+        """If two colors are compatible, opening them consecutively doesn't cancel out the first"""
+        if self.code in core.FORMATTING_CODES or other.code in core.FORMATTING_CODES:
+            # formatting colors are compatible with all other colors (including formatting)
+            return True
+        return self.resetcode != other.resetcode
 
 
 class ColorResetter(Color):
@@ -96,12 +103,8 @@ class Cluster(List[Color]):
     end_idx: int  # where the m char is
     code2color: TOrderedDict[str, Color]
     openers: TOrderedDict[str, ColorOpener]  # key = code
-    # resetters: TOrderedDict[str, ColorResetter]
     rogue_openers: TOrderedDict[str, ColorOpener]
     rogue_resetters: TOrderedDict[str, ColorResetter]
-    
-    # matched_openers: TOrderedDict[str, ColorOpener]
-    # matched_resetters: TOrderedDict[str, ColorResetter]
     
     def __init__(self, *names_or_codes: Union[str, int], start_idx=None) -> None:
         super().__init__()
@@ -109,11 +112,8 @@ class Cluster(List[Color]):
         self.end_idx = None
         self.code2color = OrderedDict()
         self.openers = OrderedDict()
-        # self.resetters = OrderedDict()
         self.rogue_openers = OrderedDict()
         self.rogue_resetters = OrderedDict()
-        # self.matched_openers = OrderedDict()
-        # self.matched_resetters = OrderedDict()
         for code in map(convert.to_code, filter(lambda x: x is not None, names_or_codes)):
             self.append(code)
     
@@ -173,10 +173,10 @@ class Cluster(List[Color]):
         
         opener.resetter = matching_resetter
         del self.rogue_resetters[matching_resetter.code]
-        # self.matched_resetters[matching_resetter.code] = matching_resetter
         if is_in_cluster:
-            del self.rogue_openers[opener.code]
-            # self.matched_openers[opener.code] = opener
+            with suppress(KeyError):
+                # Can happen when appending a color
+                del self.rogue_openers[opener.code]
         return matching_resetter
     
     def _find_matching_opener(self, resetter: ColorResetter) -> ColorOpener:
@@ -185,7 +185,6 @@ class Cluster(List[Color]):
         # checks if `color` belongs to this cluster
         # `match(color)` can be called externally with a foreign color
         if is_in_cluster:
-            # self.resetters[resetter.code] = resetter
             resetter.cluster = self
         matching_opener = self.last_rogue_opener(resetter.code)
         if matching_opener is None:
@@ -195,10 +194,11 @@ class Cluster(List[Color]):
         
         matching_opener.resetter = resetter
         del self.rogue_openers[matching_opener.code]
-        # self.matched_openers[matching_opener.code] = matching_opener
         if is_in_cluster:
-            del self.rogue_resetters[resetter.code]
-            # self.matched_resetters[resetter.code] = resetter
+            with suppress(KeyError):
+                # Can happen when appending a color
+                del self.rogue_resetters[resetter.code]
+        
         return matching_opener
     
     @overload
@@ -225,20 +225,27 @@ class Cluster(List[Color]):
         return self._find_matching_opener(color)
     
     @overload
-    def append(self, code: str) -> Tuple[ColorOpener, ColorResetter]:
+    def append(self, code_or_color: Union[str, Color]) -> Tuple[ColorOpener, ColorResetter]:
         ...
     
     @overload
-    def append(self, code: str) -> Tuple[ColorResetter, ColorOpener]:
+    def append(self, code_or_color: Union[str, Color]) -> Tuple[ColorResetter, ColorOpener]:
         ...
     
-    def append(self, code):
+    def append(self, code_or_color):
         """Inits and appends color, updates `self.code2color`, tries to match it, sets `color.cluster=self` if Resetter, and returns (Color, match)"""
-        if code is None:
+        if code_or_color is None:
             return None, None
-        if code in self.code2color:
+        is_color = isinstance(code_or_color, Color)
+        if is_color:
+            if code_or_color.code in self.code2color:
+                return None, None
+        elif code_or_color in self.code2color:
             return None, None
-        color = colorfactory(code)
+        if is_color:
+            color = code_or_color
+        else:
+            color = colorfactory(code_or_color)
         super().append(color)
         self.code2color[color.code] = color
         return color, self.match(color)
@@ -399,6 +406,41 @@ def openers_with_same_reset_code(outside_cluster: Cluster, inside: ColorScope) -
     return pairs
 
 
+def foo(outside_cluster: Cluster, inside_cluster: Cluster):
+    remove = []
+    # first remove redundant inside colors (already opened from the outside)
+    for inside_opener in inside_cluster.openers.values():
+        for outside_opener in outside_cluster.openers.values():
+            if inside_opener.resetcode == outside_opener.resetcode:
+                # both fg / bg / formatting
+                if inside_opener.code == outside_opener.code:
+                    inside_resetter_cluster = inside_opener.resetter.cluster
+                    # same exact color
+                    remove.append(inside_opener)
+                    inside_resetter_cluster.remove(inside_opener.resetter)
+    for inside_opener in remove:
+        inside_cluster.remove(inside_opener)
+    
+    # then either swap between inside reset color and outside open color if fg/bg
+    # or just append outside open color if formatting
+    for inside_opener in inside_cluster.openers.values():
+        for outside_opener in outside_cluster.openers.values():
+            if inside_opener.resetcode == outside_opener.resetcode:
+                print(f'\ninside_opener: ', inside_opener,
+                      '\noutside_opener: ', outside_opener,
+                      '\ninside_opener.resetter: ', inside_opener.resetter)
+                # both fg / bg / formatting
+                inside_resetter_cluster = inside_opener.resetter.cluster
+                if inside_opener.code in core.FORMATTING_CODES:
+                    print('formatting; appending outside_opener to inside_resetter_cluster')
+                    # neccessarily also outside_opener.code in core.FORMATTING_CODES
+                    inside_resetter_cluster.append(outside_opener)
+                else:
+                    print('incompat; replacing inside_opener.resetter with outside_opener')
+                    inside_resetter_cluster.remove(inside_opener.resetter)
+                    inside_resetter_cluster.append(outside_opener)
+
+
 def colored(text: str, *colors: Union[str, int], **kwargs) -> str:
     """
     Multiple colors can be passed, and their color codes will be merged.
@@ -448,8 +490,19 @@ def colored(text: str, *colors: Union[str, int], **kwargs) -> str:
         outside_reset = outside_cluster.reset()
         return f'{outside_open}{text}{outside_reset}'
     
-    rebuilt_chars = [outside_cluster.open()]
+    foo(outside_cluster, inside[0])
+    rebuilt_chars = [outside_cluster.open(),
+                     text[:inside[0].start_idx],
+                     inside[0].open(),
+                     text[inside[0].end_idx + 1:inside[1].start_idx],
+                     inside[1].finalize(),
+                     text[inside[1].end_idx + 1:],
+                     outside_cluster.reset()
+                     ]
+    rebuilt_text = ''.join(rebuilt_chars)
+    return rebuilt_text
     i = 0
+    # rebuilt_chars.append(text[:inside[0].start_idx])
     for outside_opener, inside_opener in openers_with_same_reset:
         assert inside_opener.resetter is not None
         # Resetting the inside when it shares reset codes with outside:
@@ -478,7 +531,8 @@ def colored(text: str, *colors: Union[str, int], **kwargs) -> str:
             rebuilt_chars.append(text[i:inside_opener.resetter.cluster.start_idx])
         
         if reset_inside_color:
-            inside_resetters = map(lambda opener: opener.resetter, inside_cluster.openers.values())
+            # TODO: just map when done debugging
+            inside_resetters = list(map(lambda opener: opener.resetter, inside_cluster.openers.values()))
             if is_inside_opener_redundant:
                 # If there was no redundancy, we would've reset inside_opener by now,
                 # which would mean re-opening the outside (because same reset codes for in/out).

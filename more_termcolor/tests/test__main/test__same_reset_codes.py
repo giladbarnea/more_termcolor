@@ -122,7 +122,8 @@ class Test_2_outside_colors:
     
     def test__bold_green__red_dark__bold_green(self):
         reddark = colored(' RedDark ', 'red', 'dark')
+        assert reddark == '\x1b[31;2m RedDark \x1b[39;22m'
         bold_green__red_dark__bold_green = colored(' BoldGreen ' + reddark + ' BoldGreen ', 'bold', 'green') + ' NORMAL'
         
-        expected = f'\x1b[1;32m BoldGreen \x1b[31;2m RedDark \x1b[22;1;32m BoldGreen \x1b[22;39m NORMAL'
+        expected = f'\x1b[1;32m BoldGreen \x1b[31;2m RedDark \x1b[22;32;1m BoldGreen \x1b[22;39m NORMAL'
         return bold_green__red_dark__bold_green, expected
