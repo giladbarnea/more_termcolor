@@ -23,14 +23,9 @@ class Color(ABC):
     code: str
     cluster: 'Cluster'
     
-    # start_idx: int  # the index where the color code started (where the first digit is is)
-    # end_idx: int  # the index where the color code ended (where the last digit is + 1)
-    
     def __init__(self, code: str):
         self.code = code
         self.cluster = None
-        # self.start_idx = None
-        # self.end_idx = None
     
     # def __hash__(self) -> int:
     # frozen = frozenset(map(lambda x: x is not None, (self.end_idx, self.start_idx, self.code)))
@@ -263,9 +258,21 @@ class Cluster(List[Color]):
                 del self.rogue_resetters[color.code]
     
     def codes(self) -> Iterator[str]:
+        # TODO: this can return with duplicates?
         return map(lambda color: color.code, self)
     
+    def unique_opener_resetcodes(self):
+        resetcodes = []
+        resetcodes_set = set()
+        for resetcode in map(lambda opener: opener.resetcode, self.openers.values()):
+            if resetcode in resetcodes_set:
+                continue
+            resetcodes_set.add(resetcode)
+            resetcodes.append(resetcode)
+        return resetcodes
+    
     def finalize(self):
+        # TODO: this can return with duplicates?
         """Uses all colors (agnostic to color type)"""
         return f'\x1b[{";".join(self.codes())}m'
     
@@ -274,13 +281,13 @@ class Cluster(List[Color]):
         return f'\x1b[{";".join(self.openers)}m'
     
     def reset(self):
-        """Opener RESET codes"""
-        return f'\x1b[{";".join(map(lambda opener: opener.resetcode, self.openers.values()))}m'
+        """OPENER reset codes"""
+        unique_opener_resetcodes = self.unique_opener_resetcodes()
+        return f'\x1b[{";".join(unique_opener_resetcodes)}m'
 
 
 class ColorScope(List[Cluster]):
     def __init__(self, *clusters: Cluster):
-        
         super().__init__()
         if not clusters:
             return
@@ -305,7 +312,6 @@ class ColorScope(List[Cluster]):
                     cluster = Cluster(start_idx=i)
                     j = i + 2  # skip [
                     
-                    # boundary_idx = j
                     code_digits = []
                     while True:
                         jchar = text[j]
@@ -383,11 +389,12 @@ def openers_with_same_reset_code(outside_cluster: Cluster, inside: ColorScope) -
     for inside_cluster in inside:
         for code, inside_opener in inside_cluster.openers.items():
             inside_openers[inside_opener.resetcode] = inside_opener
-    
+    paired_inside_openers = set()
     for code, outside_opener in outside_cluster.openers.items():
         inside_opener = inside_openers.get(outside_opener.resetcode)
-        if inside_opener is not None:
+        if inside_opener is not None and inside_opener not in paired_inside_openers:
             pairs.append((outside_opener, inside_opener))
+            paired_inside_openers.add(inside_opener)
     
     return pairs
 
@@ -425,38 +432,37 @@ def colored(text: str, *colors: Union[str, int], **kwargs) -> str:
         return text
     if not text:
         return ''
-    # TODO: outside = Cluster(*colors)?
-    # outside = ColorScope(Cluster(*colors))
-    outside = Cluster(*colors)
+    outside_cluster = Cluster(*colors)
     text = str(text)
+    # TODO: from_text is the only ctor used
     inside = ColorScope.from_text(text)
     if not inside:
-        outside_open = outside.open()
-        outside_reset = outside.reset()
+        outside_open = outside_cluster.open()
+        outside_reset = outside_cluster.reset()
         return f'{outside_open}{text}{outside_reset}'
     
     # TODO (performance): don't replace substrings if not needed
-    openers_with_same_reset = openers_with_same_reset_code(outside, inside)
+    openers_with_same_reset = openers_with_same_reset_code(outside_cluster, inside)
     if not openers_with_same_reset:
-        outside_open = outside.open()
-        outside_reset = outside.reset()
+        outside_open = outside_cluster.open()
+        outside_reset = outside_cluster.reset()
         return f'{outside_open}{text}{outside_reset}'
     
-    rebuilt_chars = [outside.open()]
+    rebuilt_chars = [outside_cluster.open()]
     i = 0
     for outside_opener, inside_opener in openers_with_same_reset:
         assert inside_opener.resetter is not None
         # Resetting the inside when it shares reset codes with outside:
         # Usually this is easy, because colors that share a reset code are incompatible;
-        # for example, 'green', 'red' are both reset by '39', one cancels out the other.
+        # for example, 'green', 'red' are both reset by '39', and one cancels out the other.
         # That means we can skip resetting the inside color altogether, and just re-open the outside color instead.
         # A problem arises with formatting colors, which ARE compatible:
         # something can be both 'bold' and 'dark', even though '22' resets them both.
         # In those cases, do reset the inside color, but re-open the outside code immediately after.
         inside_cluster = inside_opener.cluster
-        outside_cluster = outside_opener.cluster
         reset_inside_color = outside_opener.code in core.FORMATTING_CODES
-        is_inside_opener_redundant = inside_opener.softeq(outside_opener)
+        # TODO: complexity
+        is_inside_opener_redundant = any(inside_opener.softeq(color) for color in outside_cluster)
         if is_inside_opener_redundant:
             # Opening the inside when it shares opening codes with outside:
             # inside_opener and outside_opener represent the same exact color;

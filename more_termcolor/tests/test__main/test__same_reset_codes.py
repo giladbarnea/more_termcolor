@@ -111,6 +111,14 @@ class Test_2_outside_colors:
         
         expected = f'\x1b[1;2m BoldDark \x1b[31m RedDark \x1b[39m BoldDark \x1b[22m NORMAL'
         return bold_dark__red_dark__bold_dark, expected
+
+    def test__bold_dark__dark_red__bold_dark(self):
+        darkred = colored(' DarkRed ', 'dark', 'red')
+        assert darkred == '\x1b[2;31m DarkRed \x1b[22;39m'
+        bold_dark__dark_red__bold_dark = colored(' BoldDark ' + darkred + ' BoldDark ', 'bold', 'dark') + ' NORMAL'
+    
+        expected = f'\x1b[1;2m BoldDark \x1b[31m DarkRed \x1b[39m BoldDark \x1b[22m NORMAL'
+        return bold_dark__dark_red__bold_dark, expected
     
     def test__bold_green__red_dark__bold_green(self):
         reddark = colored(' RedDark ', 'red', 'dark')
