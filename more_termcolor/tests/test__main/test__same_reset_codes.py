@@ -11,8 +11,7 @@ import re
 ## Same reset codes ##
 ######################
 
-# 1 inner color
-###############
+
 @print_and_compare
 class Test_1_inside_color:
     
@@ -27,7 +26,9 @@ class Test_1_inside_color:
         return bold_dark_bold, expected
     
     def test__dark_bold_dark(self):
-        dark_bold_dark = colored(' Dark ' + colored(' Bold ', 'bold') + ' Dark ', 'dark') + ' NORMAL'
+        bold = colored(' Bold ', 'bold')
+        assert bold == '\x1b[1m Bold \x1b[22m'
+        dark_bold_dark = colored(' Dark ' + bold + ' Dark ', 'dark') + ' NORMAL'
         expected = f'\x1b[2m Dark \x1b[1m Bold \x1b[22;2m Dark \x1b[22m NORMAL'
         # expected = re.compile(expected_str)
         return dark_bold_dark, expected
@@ -37,6 +38,7 @@ class Test_1_inside_color:
            31   32  →   31"""
         
         green = colored(' Green ', 'green')
+        assert green == '\x1b[32m Green \x1b[39m'
         red_green_red = colored(' Red ' + green + ' Red ', 'red') + ' NORMAL'
         # doesn't reset green, just re-opens red (because incompatible)
         expected = '\x1b[31m Red \x1b[32m Green \x1b[31m Red \x1b[39m NORMAL'
@@ -44,18 +46,17 @@ class Test_1_inside_color:
     
     def test__onblack_ongreen_onblack(self):
         ongreen = colored(' OnGreen ', 'on green')
+        assert ongreen == '\x1b[42m OnGreen \x1b[49m'
         onblack_ongreen_onblack = colored(' OnBlack ' + ongreen + ' OnBlack ', 'on black') + ' NORMAL'
         # doesn't reset OnGreen, just re-opens OnBlack (because incompatible)
         
         expected = '\x1b[40m OnBlack \x1b[42m OnGreen \x1b[40m OnBlack \x1b[49m NORMAL'
         return onblack_ongreen_onblack, expected
     
-    # 2 outer colors
-    ################
-    
     @pytest.mark.skip('advanced')
     def test__inside_opens_already_open(self):
         inside = colored('Inside', 'dark')
+        assert inside == '\x1b[2mInside\x1b[22m'
         actual = colored(f'Outside {inside} Outside', 'dark')
         expected = '\x1b[2mOutside Inside Outside\x1b[22m'
         return actual, expected
