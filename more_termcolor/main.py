@@ -7,7 +7,7 @@ from ipdb import set_trace
 import inspect
 from collections import deque, OrderedDict
 from snoop import snoop
-
+from contextlib import suppress
 from more_termcolor import convert, core
 
 COLOR_CODES_RE = r'(\d{,3})(?:;)?' * 6
@@ -258,6 +258,20 @@ class Cluster(List[Color]):
             matching_opener = self._find_matching_opener(color)
             return color, matching_opener
     
+    def remove(self, color: TColor) -> None:
+        # TODO: this doesn't nullify start_idx and end_idx
+        super().remove(color)
+        del self.code2color[color.code]
+        if isinstance(color, ColorOpener):
+            # might be a resetter
+            del self.openers[color.code]
+            with suppress(KeyError):
+                del self.rogue_openers[color.code]
+        else:
+            with suppress(KeyError):
+                del self.rogue_resetters[color.code]
+            color.cluster = None
+    
     def finalize(self):
         """Uses all colors (agnostic to color type)"""
         return f'\x1b[{";".join(map(lambda color: color.code, self))}m'
@@ -439,19 +453,38 @@ def colored(text: str, *colors: Union[str, int], **kwargs) -> str:
     i = 0
     for (outside_opener, outside_cluster), (inside_opener, inside_cluster) in openers_with_same_reset:
         assert inside_opener.resetter is not None
-        reset_inside_color = outside_opener.code in core.FORMATTING_CODES
-        
-        # Usually colors that share a reset code are incompatible;
-        # for example, 'green', 'red' → both reset by '39', one cancels out the other.
-        # That means we can skip resetting the inside color, and just re-open the outside color instead.
-        # An exception is formatting colors, which are compatible:
+        # Resetting the inside when it shares reset codes with outside:
+        # Usually this is easy, because colors that share a reset code are incompatible;
+        # for example, 'green', 'red' are both reset by '39', one cancels out the other.
+        # That means we can skip resetting the inside color altogether, and just re-open the outside color instead.
+        # A problem arises with formatting colors, which ARE compatible:
         # something can be both 'bold' and 'dark', even though '22' resets them both.
         # In those cases, do reset the inside color, but re-open the outside code immediately after.
-        rebuilt_chars.append(text[i:inside_opener.resetter.cluster.start_idx])
+        reset_inside_color = outside_opener.code in core.FORMATTING_CODES
+        is_inside_opener_redundant = inside_opener.softeq(outside_opener)
+        if is_inside_opener_redundant:
+            # Opening the inside when it shares opening codes with outside:
+            # inside_opener and outside_opener represent the same exact color;
+            # this means outside already opened for inside, and inside opener isn't needed.
+            
+            rebuilt_chars.append(text[i:inside_cluster.start_idx])  # outside's wrapped text, no colors.
+            inside_cluster.remove(inside_opener)  # because already opened outside
+            rebuilt_chars.append(inside_cluster.open())  # trimmed
+            
+            # inside's wrapped text, no colors. NOTE: assumes end_idx doesn't change in cluster.remove()
+            rebuilt_chars.append(text[inside_cluster.end_idx + 1:inside_opener.resetter.cluster.start_idx])
+        else:
+            rebuilt_chars.append(text[i:inside_opener.resetter.cluster.start_idx])
         if reset_inside_color:
             inside_resetters = map(lambda opener: opener.resetter, inside_cluster.openers.values())
-            # hybrid_cluster = Cluster.from_colors(inside_opener.resetter, outside_opener)
-            hybrid_cluster = Cluster.from_colors(*inside_resetters, outside_opener)
+            if is_inside_opener_redundant:
+                # If there was no redundancy, we would've reset inside_opener by now,
+                # which would mean re-opening the outside (because same reset codes for in/out).
+                # But the redundant inside color was removed, which means it hadn't been reset,
+                # which means there's no need to re-open the outside.
+                hybrid_cluster = Cluster.from_colors(*inside_resetters)
+            else:
+                hybrid_cluster = Cluster.from_colors(*inside_resetters, outside_opener)
             rebuilt_chars.extend(hybrid_cluster.finalize())
         else:
             rebuilt_chars.extend(outside_cluster.open())

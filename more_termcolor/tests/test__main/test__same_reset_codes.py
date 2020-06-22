@@ -79,6 +79,7 @@ class Test_2_inside_colors:
         actual = colored(f' Outside {inside} Outside ', 'bold') + ' NORMAL'
         # knows not to open bold inside because already open outside
         expected = '\x1b[1m Outside \x1b[31m Inside \x1b[39m Outside \x1b[22m NORMAL'
+        assert actual != '\x1b[1m Outside \x1b[31;1m Inside \x1b[39;22;1m Outside \x1b[22m NORMAL'
         return actual, expected
 
 
