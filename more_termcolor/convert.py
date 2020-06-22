@@ -41,16 +41,18 @@ FORMATTING_COLOR_RE = re.compile(fr'(?:reset )?(?P<actual_color>{"|".join(core.R
 COLOR_CODE_RE = re.compile(fr'(?:reset )?(?P<color_code>{"|".join(map(str, (*range(0, 10), *range(21, 38), *range(39, 56), *range(90, 98), *range(100, 108))))})')
 
 
-def to_color(name_or_code: Union[str, int], obj: dict = None) -> Optional[str]:
+def to_name(name_or_code: Union[str, int], obj: dict = None) -> Optional[str]:
     """
-    >>> to_color(32)
+    >>> to_name(32)
     'green'
-    >>> to_color(41)
+    >>> to_name('41')
     'on red'
-    >>> to_color(103)
+    >>> to_name(103)
     'on bright yellow'
-    >>> to_color('green')
+    >>> to_name('green')
     'green'
+    >>> to_name('grin') # doesn't raise!
+    'grin'
     """
     
     if isinstance(name_or_code, int):
@@ -62,7 +64,7 @@ def to_color(name_or_code: Union[str, int], obj: dict = None) -> Optional[str]:
         obj = core.COLOR_CODES
     for k, v in obj.items():
         if isinstance(v, dict):
-            nested = to_color(name_or_code, obj[k])
+            nested = to_name(name_or_code, obj[k])
             if nested is not None:
                 return f'{k} {nested}'
         else:
@@ -113,7 +115,9 @@ def to_reset_code(name_or_code: Union[str, int]) -> str:
      '49'
      >>> to_reset_code(22)
      '22'
-     >>> to_reset_code(1)
+     >>> to_reset_code('1')
+     '22'
+     >>> to_reset_code('reset bold')
      '22'
      >>> to_reset_code('BAD')
      Traceback (most recent call last):
@@ -121,7 +125,7 @@ def to_reset_code(name_or_code: Union[str, int]) -> str:
      KeyError: "to_reset_code('BAD'): color 'BAD' isn't recognized"
     
     """
-    color = to_color(name_or_code)
+    color = to_name(name_or_code)
     try:
         return core.RESET_COLOR_CODES[color]
     except KeyError as e:
@@ -139,7 +143,7 @@ def to_reset_code(name_or_code: Union[str, int]) -> str:
         code_match = COLOR_CODE_RE.fullmatch(color)
         if code_match:
             color_code = code_match.groupdict()['color_code']
-            actual_color = to_color(color_code)
+            actual_color = to_name(color_code)
             return core.RESET_COLOR_CODES[actual_color]
         raise KeyError(f"to_reset_code({repr(name_or_code)}): color {repr(color)} isn't recognized") from e
 

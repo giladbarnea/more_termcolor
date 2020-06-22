@@ -19,6 +19,7 @@ def test__red_dark_red():
     """R    F       /F/B
        31   2   →   22"""
     dark = colored(' Dark ', 'dark')
+    assert dark == '\x1b[2m Dark \x1b[22m'
     red_dark_red = colored(' Red ' + dark + ' Red ', 'red') + ' NORMAL'
     expected = '\x1b[31m Red \x1b[2m Dark \x1b[22m Red \x1b[39m NORMAL'
     
@@ -85,6 +86,7 @@ def test__brightwhite_red_brightwhite():
     """S    R       S
        97   31  →   97"""
     red = colored(' Red ', 'red')
+    assert red == '\x1b[31m Red \x1b[39m'
     brightwhite_red_brightwhite = colored(' Bright ' + red + ' Bright ', 'bright white') + ' NORMAL'
     expected = '\x1b[97m Bright \x1b[31m Red \x1b[97m Bright \x1b[39m NORMAL'
     
@@ -103,6 +105,7 @@ def test__red_onblack_red():
 @print_and_compare
 def test__brightred_onblack_brightred():
     onblack = colored(' OnBlack ', 'on black')
+    assert onblack == '\x1b[40m OnBlack \x1b[49m'
     brightred_onblack_brightred = colored(' BrightRed ' + onblack + ' BrightRed ', 'bright red') + ' NORMAL'
     expected = "\x1b[91m BrightRed \x1b[40m OnBlack \x1b[49m BrightRed \x1b[39m NORMAL"
     
@@ -141,10 +144,10 @@ def test__underline_onblack_underline():
 @print_and_compare
 def test__brightred__onblack_bold__brightred():
     onblackbold = colored(' OnBlackBold ', 'on black', 'bold')
+    assert onblackbold == '\x1b[40;1m OnBlackBold \x1b[49;22m'
     brightred_onblackbold_brightred = colored(' BrightRed ' + onblackbold + ' BrightRed ', 'bright red') + ' NORMAL'
     
-    expected_str = rf"\x1b\[91m BrightRed {codes_perm(40, 1)} OnBlackBold {codes_perm(49, 22)} BrightRed \x1b\[39m NORMAL"
-    expected = re.compile(expected_str)
+    expected = f"\x1b[91m BrightRed \x1b[40;1m OnBlackBold \x1b[49;22m BrightRed \x1b[39m NORMAL"
     
     return brightred_onblackbold_brightred, expected
 
@@ -153,8 +156,7 @@ def test__brightred__onblack_bold__brightred():
 def test__onblack__brightred_bold__onblack():
     brightredbold = colored(' BrightRedBold ', 'bright red', 'bold')
     onblack_brightredbold_onblack = colored(' OnBlack ' + brightredbold + ' OnBlack ', 'on black') + ' NORMAL'
-    expected_str = rf'\x1b\[40m OnBlack {codes_perm(91, 1)} BrightRedBold {codes_perm(39, 22)} OnBlack \x1b\[49m NORMAL'
-    expected = re.compile(expected_str)
+    expected = f'\x1b[40m OnBlack \x1b[91;1m BrightRedBold \x1b[39;22m OnBlack \x1b[49m NORMAL'
     
     return onblack_brightredbold_onblack, expected
 
@@ -163,8 +165,7 @@ def test__onblack__brightred_bold__onblack():
 def test__bold__green_on_black__bold():
     greenonblack = colored(' GreenOnBlack ', 'green', 'on black')
     bold_greenonblack_bold = colored(' Bold ' + greenonblack + ' Bold ', 'bold') + ' NORMAL'
-    expected_str = rf'\x1b\[1m Bold {codes_perm(32, 40)} GreenOnBlack {codes_perm(39, 49)} Bold \x1b\[22m NORMAL'
-    expected = re.compile(expected_str)
+    expected = f'\x1b[1m Bold \x1b[32;40m GreenOnBlack \x1b[39;49m Bold \x1b[22m NORMAL'
     return bold_greenonblack_bold, expected
 
 
@@ -174,8 +175,7 @@ def test__bold__green_on_black__bold():
 def test__redonblack__bold__redonblack():
     bold = colored(' Bold ', 'bold')
     redonblack__bold__redonblack = colored(' RedOnBlack ' + bold + ' RedOnBlack ', 'red', 'on black') + ' NORMAL'
-    expected_str = rf'{codes_perm(31, 40)} RedOnBlack \x1b\[1m Bold \x1b\[22m RedOnBlack {codes_perm(39, 49)} NORMAL'
-    expected = re.compile(expected_str)
+    expected = f'\x1b[31;40m RedOnBlack \x1b[1m Bold \x1b[22m RedOnBlack \x1b[39;49m NORMAL'
     
     return redonblack__bold__redonblack, expected
 
@@ -184,8 +184,7 @@ def test__redonblack__bold__redonblack():
 def test__underlineonblack__red__underlineonblack():
     red = colored(' Red ', 'red')
     underlineonblack__red__underlineonblack = colored(' UnderlineOnBlack ' + red + ' UnderlineOnBlack ', 'ul', 'on black') + ' NORMAL'
-    expected_str = rf'{codes_perm(4, 40)} UnderlineOnBlack \x1b\[31m Red \x1b\[39m UnderlineOnBlack {codes_perm(49, 24)} NORMAL'
-    expected = re.compile(expected_str)
+    expected = f'\x1b[4;40m UnderlineOnBlack \x1b[31m Red \x1b[39m UnderlineOnBlack \x1b[24;49m NORMAL'
     
     return underlineonblack__red__underlineonblack, expected
 
@@ -194,7 +193,6 @@ def test__underlineonblack__red__underlineonblack():
 def test__underlinegreen__onblack__underlinegreen():
     onblack = colored(' OnBlack ', 'on black')
     underlinegreen__onblack__underlinegreen = colored(' UnderlineGreen ' + onblack + ' UnderlineGreen ', 'ul', 'green') + ' NORMAL'
-    expected_str = rf'{codes_perm(4, 32)} UnderlineGreen \x1b\[40m OnBlack \x1b\[49m UnderlineGreen {codes_perm(39, 24)} NORMAL'
-    expected = re.compile(expected_str)
+    expected = f'\x1b[4;32m UnderlineGreen \x1b[40m OnBlack \x1b[49m UnderlineGreen \x1b[24;39m NORMAL'
     
     return underlinegreen__onblack__underlinegreen, expected

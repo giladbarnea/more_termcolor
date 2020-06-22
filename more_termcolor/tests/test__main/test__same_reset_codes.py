@@ -1,8 +1,9 @@
+import pytest
 from snoop import snoop
 
 from more_termcolor import colored, cprint
 from more_termcolor.tests.common import print_and_compare, codes_perm
-from more_termcolor.main import colors_with_same_reset_code, ColorScope, Inside, ColorOpener
+from more_termcolor.main import openers_with_same_reset_code, ColorScope, Inside, ColorOpener
 import re
 
 
@@ -19,6 +20,7 @@ class Test_1_inside_color:
         """B    F       /F/B B
            1    2   →   22;1"""
         dark = colored(' Dark ', 'dark')
+        assert dark == '\x1b[2m Dark \x1b[22m'
         bold_dark_bold = colored(' Bold ' + dark + ' Bold ', 'bold') + ' NORMAL'
         expected = '\x1b[1m Bold \x1b[2m Dark \x1b[22;1m Bold \x1b[22m NORMAL'
         # expected = re.compile(expected_str)
@@ -26,8 +28,8 @@ class Test_1_inside_color:
     
     def test__dark_bold_dark(self):
         dark_bold_dark = colored(' Dark ' + colored(' Bold ', 'bold') + ' Dark ', 'dark') + ' NORMAL'
-        expected_str = rf'\x1b\[2m Dark \x1b\[1m Bold {codes_perm(22, 2)} Dark \x1b\[22m NORMAL'
-        expected = re.compile(expected_str)
+        expected = f'\x1b[2m Dark \x1b[1m Bold \x1b[22;2m Dark \x1b[22m NORMAL'
+        # expected = re.compile(expected_str)
         return dark_bold_dark, expected
     
     def test__red_green_red(self):
@@ -51,6 +53,7 @@ class Test_1_inside_color:
     # 2 outer colors
     ################
     
+    @pytest.mark.skip('advanced')
     def test__inside_opens_already_open(self):
         inside = colored('Inside', 'dark')
         actual = colored(f'Outside {inside} Outside', 'dark')
@@ -61,9 +64,10 @@ class Test_1_inside_color:
 @print_and_compare
 class Test_2_inside_colors:
     def test__bold__red_dark__bold(self):
-        inside = colored(' Inside ', 'red', 'dark')
-        actual = colored(f'Outside {inside} Outside', 'bold')
-        expected = '\x1b[1mOutside \x1b[31;2m Inside \x1b[39;22;1m Outside\x1b[22m'
+        inside = colored(' RedDark ', 'red', 'dark')
+        assert inside == '\x1b[31;2m RedDark \x1b[39;22m'
+        actual = colored(f'Bold {inside} Bold', 'bold') + ' NORMAL'
+        expected = '\x1b[1mBold \x1b[31;2m RedDark \x1b[22;1;39m Bold\x1b[22m NORMAL'
         return actual, expected
     
     def test__bold__red_bold__bold(self):
@@ -112,10 +116,10 @@ class Test_2_outside_colors:
         return bold_green__red_dark__bold_green, expected
 
 
-def test__colors_with_same_reset_code():
+def test__openers_with_same_reset_code():
     outside = ColorScope('bold')
     inside = Inside.from_text('\x1b[31;2 lorem \x1b[39;22')
-    outside_bold, inside_dark = colors_with_same_reset_code(outside, inside)
+    outside_bold, inside_dark = openers_with_same_reset_code(outside, inside)
     expected_bold = ColorOpener('1', 'bold', '22')
     expected_dark = ColorOpener('2', 'dark', '22')
     assert outside_bold.softeq(expected_bold) and inside_dark.softeq(expected_dark)

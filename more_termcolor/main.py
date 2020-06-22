@@ -1,9 +1,10 @@
 import re
 from abc import ABC, abstractmethod
-from typing import Union, List, Tuple, Set, Dict, Generator, Deque
+from itertools import chain
+from typing import Union, List, Tuple, Set, Dict, Generator, Deque, Optional, overload, Iterable, OrderedDict as TOrderedDict
 from ipdb import set_trace
 import inspect
-from collections import deque
+from collections import deque, OrderedDict
 from snoop import snoop
 
 from more_termcolor import convert, core
@@ -23,38 +24,38 @@ SHORT_ID_RE = re.compile(r'(?<=0x[\w\d]{8})([\w\d]{4})')  # last 4 digits
 
 class Color(ABC):
     code: str
-    text_start_i: int  # the index where the color code started (where the first digit is is)
-    text_end_i: int  # the index where the color code ended (where the last digit is + 1)
     
-    @abstractmethod
-    def __init__(self, code: str, name: str):
+    # start_idx: int  # the index where the color code started (where the first digit is is)
+    # end_idx: int  # the index where the color code ended (where the last digit is + 1)
+    
+    def __init__(self, code: str):
         self.code = code
-        self.text_start_i = None
-        self.text_end_i = None
-        self._name = name  # for repr; DONT use for lookups
+        # self.start_idx = None
+        # self.end_idx = None
     
     # def __hash__(self) -> int:
-    # frozen = frozenset(map(lambda x: x is not None, (self.text_end_i, self.text_start_i, self.code)))
+    # frozen = frozenset(map(lambda x: x is not None, (self.end_idx, self.start_idx, self.code)))
     # return hash(frozen)
     
     @abstractmethod
     def __repr__(self) -> str:
-        return f'{self.__class__.__qualname__}: "{self.code}"/{self._name}'
+        return f'{self.__class__.__qualname__}: "{self.code}"/{convert.to_name(self.code)}'
     
     def _shortid(self) -> str:
         rpr = super().__repr__()
         return f'0x...{SHORT_ID_RE.search(rpr).group()}'
     
     def softeq(self, other: 'Color') -> bool:
-        return self.code == other.code and self._name == other._name
+        """Compares code"""
+        return self.code == other.code
 
 
 class ColorOpener(Color):
     resetcode: str
     resetter: 'ColorResetter'
     
-    def __init__(self, code: str, name: str, resetcode: str):
-        super().__init__(code, name)
+    def __init__(self, code: str, resetcode: str):
+        super().__init__(code)
         self.resetcode = resetcode
         self.resetter = None
     
@@ -67,159 +68,228 @@ class ColorOpener(Color):
             return f'{superrepr} (resetcode="{self.resetcode}") | {shortid}'
     
     def softeq(self, other: 'Color') -> bool:
+        """Compares code (and resetcode if `other` is a ColorOpener)"""
         supersofteq = super().softeq(other)
+        if not supersofteq:
+            return False
         if isinstance(other, ColorOpener):
-            return supersofteq and self.resetcode == other.resetcode and self.resetter == other.resetter
-        return supersofteq
+            return self.resetcode == other.resetcode
+        return True
 
 
 class ColorResetter(Color):
-    # opencode: str
-    
-    # open: ColorOpener
-    
-    def __init__(self, code: str, name: str):
-        super().__init__(code, name)
-        # self.opencode = None  # TODO: any use for this besides repr?
-        # self.open = None
+    cluster: 'Cluster'
     
     def __repr__(self) -> str:
         superrepr = super().__repr__()
         shortid = self._shortid()
         return f'{superrepr} | {shortid}'
-        # if self.open:
-        #     return f'{superrepr} (ColorOpen: "{self.open.code}" | {self.open._shortid()}) | {shortid}'
-        # else:
-        #     return f'{superrepr} (opencode="{self.opencode}") | {shortid}'
 
 
-# @snoop
-def colorfactory(name_or_code: Union[str, int]) -> Union[ColorOpener, ColorResetter]:
-    name = convert.to_color(name_or_code)
-    code = convert.to_code(name)
-    resetcode = convert.to_reset_code(name)
+TColor = Union[ColorOpener, ColorResetter]
+
+
+def colorfactory(code: str) -> TColor:
+    # name = convert.to_name(name_or_code)
+    resetcode = convert.to_reset_code(code)
     if code == resetcode:
-        return ColorResetter(code, name)
+        return ColorResetter(code)
     else:
-        return ColorOpener(code, name, resetcode)
+        return ColorOpener(code, resetcode)
 
 
-class ColorScope:
-    colors: List[ColorOpener]
-    _colors_set: Set[ColorOpener]
-    # _unreset_colors: Deque[ColorOpener]
+class Cluster(List[Color]):
+    start_idx: int  # where the \x1b char is
+    end_idx: int  # where the m char is
+    code2color: TOrderedDict[str, Color]
+    openers: TOrderedDict[str, ColorOpener]  # key = code
+    rogue_openers: TOrderedDict[str, ColorOpener]  # key = code
+    rogue_resetters: TOrderedDict[str, ColorResetter]  # key = code
+    matched_openers: TOrderedDict[str, ColorOpener]  # key = code
+    matched_resetters: TOrderedDict[str, ColorResetter]  # key = code
     
-    reset2color: Dict[str, ColorOpener]
-    
-    # has_non_foreground: bool  # value is set in self.addcolor()
-    
-    def __init__(self, *names_or_codes: Union[str, int]):
-        self.colors = []
-        self._colors_set = set()  # allows checking for duplicates in O(1) while keeping order
-        self.reset2color = dict()
-        # self.has_non_foreground = None
-        for name_or_code in names_or_codes:
-            self.addcolor(name_or_code)
-        
-        # if self.has_non_foreground is None:
-        #     # self.has_non_foreground remained None,
-        #     # because none of the colors was color.is_non_foreground == True
-        #     self.has_non_foreground = False
-    
-    def __bool__(self):
-        return bool(self.colors)
-    
-    def _shortid(self) -> str:
-        rpr = super().__repr__()
-        return f'0x...{SHORT_ID_RE.search(rpr).group()}'
+    def __init__(self, *names_or_codes: Union[str, int], start_idx=None) -> None:
+        super().__init__()
+        self.start_idx = start_idx
+        self.end_idx = None
+        self.code2color = OrderedDict()
+        self.openers = OrderedDict()
+        self.rogue_openers = OrderedDict()
+        self.rogue_resetters = OrderedDict()
+        self.matched_openers = OrderedDict()
+        self.matched_resetters = OrderedDict()
+        for code in map(convert.to_code, filter(lambda x: x is not None, names_or_codes)):
+            self.append(code)
     
     def __repr__(self) -> str:
-        return f'ColorScope ({len(self.colors)} colors) | {self._shortid()}'
+        # rpr = super().__repr__()
+        # shortid = f'0x...{SHORT_ID_RE.search(rpr).group()}'
+        return f'Cluster ({len(self)} colors) | {str(id(self))[-4:]}'
     
-    def get_last_unreset_color(self, resetcode) -> ColorOpener:
-        for c in reversed(self.colors):
-            if c.resetcode == resetcode and c.resetter is None:
-                return c
-        # for err msg
-        colors_len = len(self.colors)
-        # color_openers = [c for c in self.colors if isinstance(c, ColorOpener)]
-        # color_opener_count = len(color_openers)
-        unreset_color_openers_count = len([c for c in self.colors if c.resetter is None])
-        errmsg = [f"Failed finding a color with no reset whose resetcode == {resetcode}.",
-                  f'colors_len: {colors_len}',
-                  f'unreset_color_openers_count: {unreset_color_openers_count}'
-                  ]
-        raise ValueError('\n\t'.join(errmsg))
+    def last_rogue_opener(self, by_resetcode: str) -> ColorOpener:
+        for code, opener in reversed(self.rogue_openers.items()):
+            assert opener.resetter is None
+            if opener.resetcode == by_resetcode:
+                return opener
+        return None
     
-    def addcolor(self, name_or_code: Union[str, int]) -> ColorOpener:
-        if name_or_code is None:
+    def first_rogue_resetter(self, by_resetcode: str) -> ColorResetter:
+        for code, resetter in self.rogue_resetters.items():
+            if resetter.code == by_resetcode:
+                return resetter
+        return None
+    
+    def _find_matching_resetter(self, opener: ColorOpener) -> ColorResetter:
+        is_in_cluster = self.code2color.get(opener.code) == opener
+        # checks if `color` belongs to this cluster
+        # `match(color)` can be called externally with a foreign color
+        if is_in_cluster:
+            self.openers[opener.code] = opener
+        matching_resetter = self.first_rogue_resetter(opener.resetcode)
+        if matching_resetter is None:
+            if is_in_cluster:
+                self.rogue_openers[opener.code] = opener
             return None
-        color = colorfactory(name_or_code)
         
-        if color in self._colors_set:  # TODO: does this ever happen? (hash)
-            set_trace(inspect.currentframe(), context=30)
+        opener.resetter = matching_resetter
+        del self.rogue_resetters[matching_resetter.code]
+        self.matched_resetters[matching_resetter.code] = matching_resetter
+        if is_in_cluster:
+            del self.rogue_openers[opener.code]
+            self.matched_openers[opener.code] = opener
+        return matching_resetter
+    
+    def _find_matching_opener(self, resetter: ColorResetter) -> ColorOpener:
+        
+        is_in_cluster = self.code2color.get(resetter.code) == resetter
+        # checks if `color` belongs to this cluster
+        # `match(color)` can be called externally with a foreign color
+        if is_in_cluster:
+            resetter.cluster = self
+        matching_opener = self.last_rogue_opener(resetter.code)
+        if matching_opener is None:
+            if is_in_cluster:
+                self.rogue_resetters[resetter.code] = resetter
             return None
-        if isinstance(color, ColorResetter):
-            color_opener = self.get_last_unreset_color(color.code)
-            color_opener.resetter = color
-            # self._unreset_colors.remove(color_opener)
-            # color.open = color_opener
+        
+        matching_opener.resetter = resetter
+        del self.rogue_openers[matching_opener.code]
+        self.matched_openers[matching_opener.code] = matching_opener
+        if is_in_cluster:
+            del self.rogue_resetters[resetter.code]
+            self.matched_resetters[resetter.code] = resetter
+        return matching_opener
+    
+    @overload
+    def match(self, color: ColorOpener) -> ColorResetter:
+        ...
+    
+    @overload
+    def match(self, color: ColorResetter) -> ColorOpener:
+        ...
+    
+    def match(self, color):
+        """Tries to find a matching Opener/Resetter to passed `color`, among this cluster's rogue colors.
+        
+        If found a match, sets `color.resetter` and returns the match.
+        
+        If no match is found, returns None.
+        
+        Updates `self.[rogue|matched]_` dicts as needed.
+        
+        Note: it's possible that `color` does not belong to this cluster."""
+        
+        if isinstance(color, ColorOpener):
+            return self._find_matching_resetter(color)
+        return self._find_matching_opener(color)
+    
+    @overload
+    def append(self, code: str) -> Tuple[ColorOpener, ColorResetter]:
+        ...
+    
+    @overload
+    def append(self, code: str) -> Tuple[ColorResetter, ColorOpener]:
+        ...
+    
+    def append(self, code):
+        """Inits and appends color, updates `self.code2color`, tries to match it, sets `color.cluster=self` if Resetter, and returns (Color, match)"""
+        if code is None:
+            return None, None
+        if code in self.code2color:
+            return None, None
+        color = colorfactory(code)
+        super().append(color)
+        self.code2color[color.code] = color
+        if isinstance(color, ColorOpener):
+            matching_resetter = self._find_matching_resetter(color)
+            return color, matching_resetter
         else:
-            if color.resetter is not None:  # bug?
-                set_trace(inspect.currentframe(), context=30)
-            self._colors_set.add(color)
-            # self._unreset_colors.append(color)
-            self.colors.append(color)
-        
-        # if color.is_reset:
-        #     print()
-        # else:
-        #     self.reset2color[color.resetcode] = color
-        
-        # # check whether color.is_non_foreground only if needed
-        # if self.has_non_foreground is None and color.is_non_foreground:
-        #     self.has_non_foreground = True
-        
-        return color
+            color.cluster = self
+            matching_opener = self._find_matching_opener(color)
+            return color, matching_opener
     
     def open(self):
-        """
-        >>> ColorScope('bold','red').open() == '\x1b[1;31m'
-        """
-        return convert.to_boundary(*map(lambda color: color.code, self.colors))
+        return f'\x1b[{";".join(self.openers)}m'
     
     def reset(self):
-        """
-        >>> ColorScope('bold','red').reset() == '\x1b[22;39m'
-        """
-        return convert.to_boundary(*map(lambda color: color.resetcode, self.colors))
+        # return f'\x1b[{";".join(map(lambda resetter: resetter.code, filter(lambda c: isinstance(c, ColorResetter), self)))}m'
+        return f'\x1b[{";".join(map(lambda opener: opener.resetcode, self.openers.values()))}m'
+
+
+class ColorScope(List[Cluster]):
+    def __init__(self, *clusters: Cluster):
+        
+        super().__init__()
+        if not clusters:
+            return
+        for cluster in clusters:
+            self.append(cluster, trymatch=False)
+    
+    def __bool__(self):
+        return any(bool(cluster) for cluster in self)
+    
+    def __repr__(self) -> str:
+        return f'{self.__class__.__qualname__} ({len(self)} clusters) | {str(id(self))[-4:]}'
+    
+    def match(self, cluster: Cluster):
+        """Tries to find all matches between all of this scope's Clusters."""
+        for opencode, rogue_opener in cluster.rogue_openers.items():
+            for other_cluster in self:
+                matching_resetter = other_cluster.match(rogue_opener)
+                if matching_resetter:
+                    assert matching_resetter.cluster is other_cluster
+                    # cluster.match(matching_resetter)
+        for resetcode, rogue_resetter in cluster.rogue_resetters.items():
+            assert rogue_resetter.cluster is cluster
+            for other_cluster in self:
+                matching_opener = other_cluster.match(rogue_resetter)
+                assert matching_opener.resetter is rogue_resetter
+                # if matching_opener:
+                #     cluster.match(matching_opener)
+    
+    def append(self, cluster: Cluster, *, trymatch=True) -> None:
+        if not cluster:
+            return
+        if trymatch:
+            self.match(cluster)
+        
+        super().append(cluster)
 
 
 class Inside(ColorScope):
-    # has_reset_all: bool = None
-    
-    def __repr__(self) -> str:
-        shortid = super()._shortid()
-        return f'Inside ({len(self.colors)} colors) | {shortid}'
-    
-    def addcolor(self, name_or_code: Union[str, int], text_start_i: int, text_end_i: int) -> ColorOpener:
-        color = super().addcolor(name_or_code)
-        color.text_start_i = text_start_i  # by ref
-        color.text_end_i = text_end_i
-        
-        return color
     
     @classmethod
     def from_text(cls, text: str):
-        instance = cls()
+        inside = cls()
         i = 0
         while True:
             try:
                 char = text[i]
                 
                 if char == '\x1b':
+                    cluster = Cluster(start_idx=i)
                     j = i + 2  # skip [
-                    # TODO: replace boundary_idx with list of chars, then join it instead of slice
+                    
                     # boundary_idx = j
                     code_digits = []
                     while True:
@@ -230,20 +300,22 @@ class Inside(ColorScope):
                             # ; or m
                             
                             code = ''.join(code_digits)
-                            instance.addcolor(code, i + 2, j)
+                            cluster.append(code)
                             if jchar == 'm':
                                 i = j
+                                inside.append(cluster)
+                                cluster.end_idx = j
                                 break
                             # jchar is ';'
                             code_digits = []
                         j += 1
                 i += 1
             except IndexError as e:
-                return instance
+                return inside
 
 
-def colors_with_same_reset_code(outside: ColorScope, inside: Inside) -> List[Tuple[ColorOpener, ColorOpener]]:
-    """[ ( out, in ), ( out, in ), ... ]
+def openers_with_same_reset_code(outside: ColorScope, inside: Inside) -> List[Tuple[Tuple[ColorOpener, Cluster], Tuple[ColorOpener, Cluster]]]:
+    """[ ( (out,cluster), (in,cluster) ), ( (out,cluster), (in,cluster) ), ... ]
     
     <bold> A [ <red;dark> B </fg;dark> ] C </bold>
     (bold, dark)
@@ -264,19 +336,22 @@ def colors_with_same_reset_code(outside: ColorScope, inside: Inside) -> List[Tup
     
     """
     # TODO: complexity
-    pairs: List[Tuple[ColorOpener, ColorOpener]] = []
-    matched = set()
-    for inside_color in inside.colors:
-        for outside_color in filter(lambda c: c not in matched, outside.colors):
-            if outside_color.resetcode == inside_color.resetcode:
-                pairs.append((outside_color, inside_color))
-                matched.add(outside_color)
-                break
+    pairs: List[Tuple[Tuple[ColorOpener, Cluster], Tuple[ColorOpener, Cluster]]] = []
+    inside_resetcodes = dict()
+    for inside_cluster in inside:
+        for code, inside_opener in inside_cluster.openers.items():
+            inside_resetcodes[inside_opener.resetcode] = (inside_opener, inside_cluster)
+    
+    for outside_cluster in outside:
+        for code, outside_opener in outside_cluster.openers.items():
+            inside_opener2cluster = inside_resetcodes.get(outside_opener.resetcode)
+            if inside_opener2cluster is not None:
+                pairs.append(((outside_opener, outside_cluster), inside_opener2cluster))
     
     return pairs
 
 
-def colored(text: str, *colors: Union[str, int]) -> str:
+def colored(text: str, *colors: Union[str, int], **kwargs) -> str:
     """
     Multiple colors can be passed, and their color codes will be merged.
     The resulting string will always end with a 'reset all' code (0).
@@ -309,12 +384,13 @@ def colored(text: str, *colors: Union[str, int]) -> str:
         return text
     if not text:
         return ''
-    outside = ColorScope(*colors)
+    
+    outside = ColorScope(Cluster(*colors))
     text = str(text)
     inside = Inside.from_text(text)
     if not inside:
-        outside_open = outside.open()
-        outside_reset = outside.reset()
+        outside_open = outside[0].open()
+        outside_reset = outside[0].reset()
         return f'{outside_open}{text}{outside_reset}'
     
     # outer_open_codes = []
@@ -343,10 +419,10 @@ def colored(text: str, *colors: Union[str, int]) -> str:
         # inner_has_non_foreground = False
         # inner_reset_codes = []
         # reopen_these_outer_open_codes = []
-        same_reset_color_pairs = colors_with_same_reset_code(outside, inside)
-        if not same_reset_color_pairs:
-            outside_open = outside.open()
-            outside_reset = outside.reset()
+        openers_with_same_reset = openers_with_same_reset_code(outside, inside)
+        if not openers_with_same_reset:
+            outside_open = outside[0].open()
+            outside_reset = outside[0].reset()
             return f'{outside_open}{text}{outside_reset}'
         
         # for inner_open_code in inner_open.groups():
@@ -368,11 +444,12 @@ def colored(text: str, *colors: Union[str, int]) -> str:
         #         inner_has_non_foreground = True
         
         # start = convert.to_boundary(*outer_open_codes)
-        rebuilt_chars = [*outside.open()]
+        # TODO: consider storing strings, not chars
+        rebuilt_chars = [outside[0].open()]
         i = 0
-        for out_color, in_color in same_reset_color_pairs:
-            assert in_color.resetter is not None
-            reset_inside_color = out_color.code in core.FORMATTING_CODES
+        for (outside_opener, outside_cluster), (inside_opener, inside_cluster) in openers_with_same_reset:
+            assert inside_opener.resetter is not None
+            reset_inside_color = outside_opener.code in core.FORMATTING_CODES
             
             # Usually colors that share a reset code are incompatible;
             # for example, 'green', 'red' → both reset by '39', one cancels out the other.
@@ -380,18 +457,22 @@ def colored(text: str, *colors: Union[str, int]) -> str:
             # An exception is formatting colors, which are compatible:
             # something can be both 'bold' and 'dark', even though '22' resets them both.
             # In those cases, do reset the inside color, but re-open the outside code immediately after.
-            
-            while i < in_color.resetter.text_start_i:
-                # until the boundary starts
-                char = text[i]
-                rebuilt_chars.append(char)
-                i += 1
+            # TODO: cluster start_idx instead of color start idx
+            rebuilt_chars.append(text[i:inside_opener.resetter.cluster.start_idx])
+            # while i < inside_cluster.start_idx:
+            #     # until the boundary starts
+            #     char = text[i]
+            #     rebuilt_chars.append(char)
+            #     i += 1
             if reset_inside_color:
-                rebuilt_chars.extend(in_color.resetcode)
+                rebuilt_chars.extend(inside_opener.resetcode)
                 rebuilt_chars.append(';')
-            rebuilt_chars.extend(out_color.code)
-            i += in_color.resetter.text_end_i - in_color.resetter.text_start_i
-            rebuilt_chars.extend(text[i:] + f'\x1b[{out_color.resetcode}m')
+            # TODO: CONTINUE HERE: test__brightwhite_red_brightwhite
+            #  use individual colors? or outside_cluster?
+            rebuilt_chars.extend(outside_cluster.open())
+            rebuilt_chars.extend(text[inside_opener.resetter.cluster.end_idx + 1:])
+            rebuilt_chars.extend(outside_cluster.reset())
+        
         rebuilt_text = ''.join(rebuilt_chars)
         # outside_open = outside.open()
         # outside_reset = outside.reset()
@@ -468,93 +549,6 @@ def cprint(text, color=None, on_color=None, attrs=(), *colors, **kwargs):
         print((colored(text, color, on_color, attrs, *colors)), **kwargs)
     else:
         print((colored(text, color, on_color, *attrs, *colors)), **kwargs)
-
-
-def colored_(text: str, *colors: Union[str, int]) -> str:
-    """
-    Multiple colors can be passed, and their color codes will be merged.
-    The resulting string will always end with a 'reset all' code (0).
-    There will never be a 'reset all' code in the middle of the resulting string.
-
-    If any colors already exist within `text`, this function
-    tries to keep them intact as much as possible.
-
-    For example, if a user passes `colored(mytext, "bold")`,
-    and `mytext` is already underlined, the result will be both bold AND underlined.
-
-    If `mytext` only contains an underlined substring, surrounded by regular text,
-    the whole resulting text will be bold, but only the underlined substring will be underlined.
-
-    This behavior is similar to nesting html tags (i.e. "<b>bold <i>and italic</i></b>").
-
-    Any duplicate colors are merged.
-
-    I'm not sure about the maximum number of colors that can be passed,
-    because I stopped adding after `("foo", "red", "on black", "bold", "dark", "italic", "underline", "blink", "reverse", "strike", "overline")` worked.
-
-    :param colors: each color can have a "sat [color]", "on [color]", or "on sat [color]" preceding it, so "on sat blue"
-     will color the text with a saturated blue background.
-     If no color is passed, returns `text` unmodified.
-
-    :return: the formatted string.
-    """
-    
-    if not colors:
-        return text
-    if not text:
-        return ''
-    text = str(text)
-    outside = ColorScope(*colors)
-    inside = Inside.from_text(text)
-    
-    if inside.has_non_foreground or outside.has_non_foreground:
-        return f'{outside.open()}{text}{outside.reset()}'
-    print(f'inside: {bool(inside)}',
-          '\ninside.has_non_foreground ^ outside.has_non_foreground:', inside.has_non_foreground ^ outside.has_non_foreground,
-          end='\n\n'
-          )
-    return f'{outside.open()}{text}{outside.reset()}'
-    if not inside.has_non_foreground ^ outside.has_non_foreground:
-        # either:
-        # (a)
-        # text had no colors, in which case,
-        # just open and reset the given colors around it; or
-        # (b)
-        # text HAD some colors, but either:
-        #   I. no background/formatting colors in either inside or outside, or
-        #   II. both have background/formatting colors
-        # which means the colors can live together peacefully,
-        # and there's no need to alter the reset strings of the text.
-        return f'{outside.open()}{text}{outside.reset()}'
-    
-    ## text includes some colors ##
-    # TODO (performance): don't replace substrings if not needed
-    # TODO: middle_already_formatted
-    
-    if inside.has_non_foreground:
-        # replace existing inside reset codes with
-        # the inside's colors' matching reset codes
-        
-        if outside.has_non_foreground:
-            inner_reset_codes.extend(reopen_these_outer_open_codes)
-        proper_inner_reset = convert.to_boundary(*inner_reset_codes)
-        text = text.replace(inner_reset.group(), proper_inner_reset, 1)
-    
-    else:
-        if outer_has_non_foreground:
-            text = text.replace(inner_reset.group(), convert.to_boundary('reset fg'), 1)
-        else:
-            # replace inner reset with outer open
-            text = text.replace(inner_reset.group(), start, 1)
-    
-    reset = convert.to_boundary(0)
-    try:
-        ret = f'{start}{text}{reset}'
-    except UnboundLocalError as e:
-        
-        start = convert.to_boundary(*outer_open_codes)
-        ret = f'{start}{text}{reset}'
-    return ret
 
 
 __all__ = [

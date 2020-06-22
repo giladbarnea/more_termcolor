@@ -63,7 +63,7 @@ def test__to_code__docstring_examples():
 @common.print_and_compare
 def test__to_color__sanity():
     for color, code in core.FORMATTING_COLOR_CODES.items():
-        actual = convert.to_color(code)
+        actual = convert.to_name(code)
         try:
             yield actual, color
         except AssertionError as e:
@@ -78,7 +78,7 @@ def test__to_color__sanity():
                 raise
     
     for color, code in core.FOREGROUND_COLOR_CODES.items():
-        actual = convert.to_color(code)
+        actual = convert.to_name(code)
         try:
             yield actual, color
         except AssertionError as e:
@@ -86,7 +86,7 @@ def test__to_color__sanity():
                 raise
     
     for color, code in core.BRIGHT_FOREGROUND_COLOR_CODES.items():
-        actual = convert.to_color(code)
+        actual = convert.to_name(code)
         expected = f'bright {color}'
         try:
             yield actual, expected
@@ -95,7 +95,7 @@ def test__to_color__sanity():
                 raise
     
     for color, code in core.STANDARD_BACKGROUND_COLOR_CODES.items():
-        actual = convert.to_color(code)
+        actual = convert.to_name(code)
         expected = f'on {color}'
         try:
             yield actual, expected
@@ -104,7 +104,7 @@ def test__to_color__sanity():
                 raise
     
     for color, code in core.BRIGHT_BACKGROUND_COLOR_CODES.items():
-        actual = convert.to_color(code)
+        actual = convert.to_name(code)
         expected = f'on bright {color}'
         try:
             yield actual, expected
@@ -113,7 +113,7 @@ def test__to_color__sanity():
                 raise
     
     for color, code in core.RESET_COLOR_CODES.items():
-        actual = convert.to_color(code)
+        actual = convert.to_name(code)
         expected = f'reset {color}'
         try:
             yield actual, expected
@@ -133,10 +133,10 @@ def test__to_color__sanity():
 
 
 def test__to_color__docstring_examples():
-    assert convert.to_color(32) == 'green' == convert.to_color('32')
-    assert convert.to_color(41) == 'on red' == convert.to_color('41')
-    assert convert.to_color(103) == 'on bright yellow' == convert.to_color('103')
-    assert convert.to_color('green') == 'green'
+    assert convert.to_name(32) == 'green' == convert.to_name('32')
+    assert convert.to_name(41) == 'on red' == convert.to_name('41')
+    assert convert.to_name(103) == 'on bright yellow' == convert.to_name('103')
+    assert convert.to_name('green') == 'green'
 
 
 @common.print_and_compare

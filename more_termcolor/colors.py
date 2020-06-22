@@ -5,144 +5,144 @@ from more_termcolor import colored
 # Formatting (some) #
 #####################
 
-def bold(text, *colors):
-    return colored(text, 'bold', *colors)
+def bold(text, *colors, **kwargs):
+    return colored(text, 'bold', *colors, **kwargs)
 
 
-def dark(text, *colors):
-    return colored(text, 'dark', *colors)
+def dark(text, *colors, **kwargs):
+    return colored(text, 'dark', *colors, **kwargs)
 
 
-def italic(text, *colors):
-    return colored(text, 'italic', *colors)
+def italic(text, *colors, **kwargs):
+    return colored(text, 'italic', *colors, **kwargs)
 
 
 ita = italic
 
 
-def underline(text, *colors):
-    return colored(text, 'ul', *colors)
+def underline(text, *colors, **kwargs):
+    return colored(text, 'ul', *colors, **kwargs)
 
 
 ul = underline
 
 
-def reverse(text, *colors):
-    return colored(text, 'reverse', *colors)
+def reverse(text, *colors, **kwargs):
+    return colored(text, 'reverse', *colors, **kwargs)
 
 
 ######################
 # Foreground (30-37) #
 ######################
-def black(text, *colors):
-    return colored(text, 'black', *colors)
+def black(text, *colors, **kwargs):
+    return colored(text, 'black', *colors, **kwargs)
 
 
 grey = black
 
 
-def red(text, *colors):
-    return colored(text, 'red', *colors)
+def red(text, *colors, **kwargs):
+    return colored(text, 'red', *colors, **kwargs)
 
 
-def green(text, *colors):
-    return colored(text, 'green', *colors)
+def green(text, *colors, **kwargs):
+    return colored(text, 'green', *colors, **kwargs)
 
 
-def yellow(text, *colors):
-    return colored(text, 'yellow', *colors)
+def yellow(text, *colors, **kwargs):
+    return colored(text, 'yellow', *colors, **kwargs)
 
 
-def blue(text, *colors):
-    return colored(text, 'blue', *colors)
+def blue(text, *colors, **kwargs):
+    return colored(text, 'blue', *colors, **kwargs)
 
 
-def magenta(text, *colors):
-    return colored(text, 'magenta', *colors)
+def magenta(text, *colors, **kwargs):
+    return colored(text, 'magenta', *colors, **kwargs)
 
 
-def cyan(text, *colors):
-    return colored(text, 'cyan', *colors)
+def cyan(text, *colors, **kwargs):
+    return colored(text, 'cyan', *colors, **kwargs)
 
 
-def white(text, *colors):
-    return colored(text, 'white', *colors)
+def white(text, *colors, **kwargs):
+    return colored(text, 'white', *colors, **kwargs)
 
 
 ###############################
 # Bright foreground (100-107) #
 ###############################
-def brightblack(text, *colors):
-    return colored(text, 'bright black', *colors)
+def brightblack(text, *colors, **kwargs):
+    return colored(text, 'bright black', *colors, **kwargs)
 
 
 brightgrey = brightblack
 
 
-def brightred(text, *colors):
-    return colored(text, 'bright red', *colors)
+def brightred(text, *colors, **kwargs):
+    return colored(text, 'bright red', *colors, **kwargs)
 
 
-def brightgreen(text, *colors):
-    return colored(text, 'bright green', *colors)
+def brightgreen(text, *colors, **kwargs):
+    return colored(text, 'bright green', *colors, **kwargs)
 
 
-def brightyellow(text, *colors):
-    return colored(text, 'bright yellow', *colors)
+def brightyellow(text, *colors, **kwargs):
+    return colored(text, 'bright yellow', *colors, **kwargs)
 
 
-def brightblue(text, *colors):
-    return colored(text, 'bright blue', *colors)
+def brightblue(text, *colors, **kwargs):
+    return colored(text, 'bright blue', *colors, **kwargs)
 
 
-def brightmagenta(text, *colors):
-    return colored(text, 'bright magenta', *colors)
+def brightmagenta(text, *colors, **kwargs):
+    return colored(text, 'bright magenta', *colors, **kwargs)
 
 
-def brightcyan(text, *colors):
-    return colored(text, 'bright cyan', *colors)
+def brightcyan(text, *colors, **kwargs):
+    return colored(text, 'bright cyan', *colors, **kwargs)
 
 
-def brightwhite(text, *colors):
-    return colored(text, 'bright white', *colors)
+def brightwhite(text, *colors, **kwargs):
+    return colored(text, 'bright white', *colors, **kwargs)
 
 
 ######################
 # Background (40-47) #
 ######################
-def on_black(text, *colors):
-    return colored(text, 'on black', *colors)
+def on_black(text, *colors, **kwargs):
+    return colored(text, 'on black', *colors, **kwargs)
 
 
 on_grey = on_black
 
 
-def on_red(text, *colors):
-    return colored(text, 'on red', *colors)
+def on_red(text, *colors, **kwargs):
+    return colored(text, 'on red', *colors, **kwargs)
 
 
-def on_green(text, *colors):
-    return colored(text, 'on green', *colors)
+def on_green(text, *colors, **kwargs):
+    return colored(text, 'on green', *colors, **kwargs)
 
 
-def on_yellow(text, *colors):
-    return colored(text, 'on yellow', *colors)
+def on_yellow(text, *colors, **kwargs):
+    return colored(text, 'on yellow', *colors, **kwargs)
 
 
-def on_blue(text, *colors):
-    return colored(text, 'on blue', *colors)
+def on_blue(text, *colors, **kwargs):
+    return colored(text, 'on blue', *colors, **kwargs)
 
 
-def on_magenta(text, *colors):
-    return colored(text, 'on magenta', *colors)
+def on_magenta(text, *colors, **kwargs):
+    return colored(text, 'on magenta', *colors, **kwargs)
 
 
-def on_cyan(text, *colors):
-    return colored(text, 'on cyan', *colors)
+def on_cyan(text, *colors, **kwargs):
+    return colored(text, 'on cyan', *colors, **kwargs)
 
 
-def on_white(text, *colors):
-    return colored(text, 'on white', *colors)
+def on_white(text, *colors, **kwargs):
+    return colored(text, 'on white', *colors, **kwargs)
 
 
 __all__ = [
