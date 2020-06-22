@@ -1,10 +1,7 @@
 import pytest
-from snoop import snoop
 
-from more_termcolor import colored, cprint
-from more_termcolor.tests.common import print_and_compare, codes_perm
-from more_termcolor.main import openers_with_same_reset_code, ColorScope, Inside, ColorOpener
-import re
+from more_termcolor import colored
+from more_termcolor.tests.common import print_and_compare
 
 
 ######################

@@ -1,10 +1,11 @@
-import pytest
 import pickle
+import re
+from pathlib import Path
+
+import pytest
+
 from more_termcolor import colored, bold, dark, ita, brightgreen, ul
 from more_termcolor.tests.common import print_and_compare, codes_perm
-from more_termcolor.main import ColorScope, Inside
-from pathlib import Path
-import re
 
 
 @print_and_compare
