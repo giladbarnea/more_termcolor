@@ -114,12 +114,3 @@ class Test_2_outside_colors:
         
         expected = f'\x1b[1;32m BoldGreen \x1b[31;2m RedDark \x1b[22;1;32m BoldGreen \x1b[22;39m NORMAL'
         return bold_green__red_dark__bold_green, expected
-
-
-def test__openers_with_same_reset_code():
-    outside = ColorScope('bold')
-    inside = Inside.from_text('\x1b[31;2 lorem \x1b[39;22')
-    outside_bold, inside_dark = openers_with_same_reset_code(outside, inside)
-    expected_bold = ColorOpener('1', 'bold', '22')
-    expected_dark = ColorOpener('2', 'dark', '22')
-    assert outside_bold.softeq(expected_bold) and inside_dark.softeq(expected_dark)

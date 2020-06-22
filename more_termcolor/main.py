@@ -122,9 +122,32 @@ class Cluster(List[Color]):
             self.append(code)
     
     def __repr__(self) -> str:
-        # rpr = super().__repr__()
-        # shortid = f'0x...{SHORT_ID_RE.search(rpr).group()}'
-        return f'Cluster ({len(self)} colors) | {str(id(self))[-4:]}'
+        all_openers = True
+        all_resetters = True
+        for color in self:
+            if isinstance(color, ColorOpener):
+                all_resetters = False
+            elif isinstance(color, ColorResetter):
+                all_openers = False
+        if all_openers:
+            description = 'openers'
+        elif all_resetters:
+            description = 'resetters'
+        else:
+            description = 'mixed colors'
+        return f'Cluster ({len(self)} {description}) i:{self.start_idx} | {str(id(self))[-4:]}'
+    
+    @classmethod
+    def from_colors(cls, *colors: Color, trymatch=False) -> 'Cluster':
+        """Does NOT convert `colors` to codes and builds new colors from them,
+        but instead wraps `colors` by ref.
+        Does not popuplate other self dicts besides `code2color`.
+        """
+        cluster = cls()
+        for color in filter(lambda x: x is not None, colors):
+            super(cls, cluster).append(color)
+            cluster.code2color[color.code] = color
+        return cluster
     
     def last_rogue_opener(self, by_resetcode: str) -> ColorOpener:
         for code, opener in reversed(self.rogue_openers.items()):
@@ -224,15 +247,22 @@ class Cluster(List[Color]):
             matching_resetter = self._find_matching_resetter(color)
             return color, matching_resetter
         else:
+            # TODO: this may be redundant, because happens in _find_matching_opener()
+            #  (and if so, just call self.match() instead of if/else)
             color.cluster = self
             matching_opener = self._find_matching_opener(color)
             return color, matching_opener
     
+    def finalize(self):
+        """Uses all colors (agnostic to color type)"""
+        return f'\x1b[{";".join(map(lambda color: color.code, self))}m'
+    
     def open(self):
+        """Opener codes"""
         return f'\x1b[{";".join(self.openers)}m'
     
     def reset(self):
-        # return f'\x1b[{";".join(map(lambda resetter: resetter.code, filter(lambda c: isinstance(c, ColorResetter), self)))}m'
+        """Opener RESET codes"""
         return f'\x1b[{";".join(map(lambda opener: opener.resetcode, self.openers.values()))}m'
 
 
@@ -465,11 +495,10 @@ def colored(text: str, *colors: Union[str, int], **kwargs) -> str:
             #     rebuilt_chars.append(char)
             #     i += 1
             if reset_inside_color:
-                rebuilt_chars.extend(inside_opener.resetcode)
-                rebuilt_chars.append(';')
-            # TODO: CONTINUE HERE: test__brightwhite_red_brightwhite
-            #  use individual colors? or outside_cluster?
-            rebuilt_chars.extend(outside_cluster.open())
+                hybrid_cluster = Cluster.from_colors(inside_opener.resetter, outside_opener)
+                rebuilt_chars.extend(hybrid_cluster.finalize())
+            else:
+                rebuilt_chars.extend(outside_cluster.open())
             rebuilt_chars.extend(text[inside_opener.resetter.cluster.end_idx + 1:])
             rebuilt_chars.extend(outside_cluster.reset())
         
