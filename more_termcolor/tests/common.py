@@ -194,7 +194,10 @@ def print_and_compare(fn_or_cls):
         rv = fn_or_cls()
         if isinstance(rv, tuple):
             actual, expected = rv
-            _print_and_compare(actual, expected)
+            try:
+                _print_and_compare(actual, expected)
+            except AssertionError as e:
+                raise AssertionError(f'actual != expected', f'actual: \n', actual, f'expected: \n', expected) from None
         
         else:  # returned a generator
             rv: Generator
