@@ -194,10 +194,7 @@ def print_and_compare(fn_or_cls):
         rv = fn_or_cls()
         if isinstance(rv, tuple):
             actual, expected = rv
-            try:
-                _print_and_compare(actual, expected)
-            except AssertionError as e:
-                raise AssertionError(f'actual != expected', f'actual: \n', actual, f'expected: \n', expected) from None
+            _print_and_compare(actual, expected)
         
         else:  # returned a generator
             rv: Generator
@@ -211,5 +208,9 @@ def print_and_compare(fn_or_cls):
                     print('\x1b[32mOK\x1b[0m')
             except StopIteration:
                 return
+            except TypeError as e:
+                if e.args[0] == "'NoneType' object is not iterable":
+                    return  #
+                raise
     
     return wrap
