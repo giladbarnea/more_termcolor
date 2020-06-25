@@ -12,7 +12,7 @@ with open("README.md", "r") as fh:
 packages = find_packages(exclude=["tests?", "*.tests*", "*.tests*.*", "tests*.*", 'pypi_publish.py'])
 setup_args = dict(name='more_termcolor',
                   # https://packaging.python.org/tutorials/packaging-projects/
-                  version='1.1.2',
+                  version='1.1.2.1',
                   description='All colors, with support for nested colors, convenience methods and full original termcolor compatability.',
                   long_description=long_description,
                   long_description_content_type="text/markdown",

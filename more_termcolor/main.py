@@ -315,7 +315,6 @@ class ColorScope(List[OpenCluster]):
         super().__init__()
         clusters = self.clusters_from_text(text)
         for cluster in clusters:
-            print(f'{repr(self)} appending {repr(cluster)}')
             self.append(cluster)
     
     def __bool__(self):
