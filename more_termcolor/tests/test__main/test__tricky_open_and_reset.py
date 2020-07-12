@@ -11,9 +11,12 @@ from more_termcolor.tests.common import print_and_compare, codes_perm
 @print_and_compare
 class TestMerge:
     def test__merge_open_codes_if_no_text__different_reset(self):
-        red = colored('Red', 'red')
-        actual = colored(f'{red}Bold', 'bold') + ' NORMAL'
-        expected = f'\x1b[1;31mRed\x1b[39mBold\x1b[22m NORMAL'
+        expected = '\x1b[31mRed \x1b[39m'
+        red = colored('Red ', 'red')
+        assert red == expected
+        expected = f'\x1b[1;31mRed \x1b[39m Bold \x1b[22m NORMAL'
+        actual = colored(f'{red} Bold ', 'bold') + ' NORMAL'
+        assert actual != f'\x1b[1m\x1b[31mRed \x1b[39m Bold \x1b[22m NORMAL'
         return actual, expected
     
     def test__merge_reset_codes_if_no_text__different_reset(self):
@@ -33,13 +36,13 @@ class TestMerge:
         actual = colored(f'Bold {dark_}', 'bold') + ' NORMAL'
         expected = f'\x1b[1mBold \x1b[2mDark\x1b[22m NORMAL'
         return actual, expected
-
+    
     def test__merge_open_codes_if_no_text__same_open(self):
         bold_ = colored('Bold', 'bold')
         actual = colored(f'{bold_}Bold', 'bold') + ' NORMAL'
         expected = f'\x1b[2mBoldBold\x1b[22m NORMAL'
         return actual, expected
-
+    
     def test__merge_reset_codes_if_no_text__same_open(self):
         bold_ = colored('Bold', 'bold')
         actual = colored(f'Bold {bold_}', 'bold') + ' NORMAL'

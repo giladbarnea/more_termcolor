@@ -2,7 +2,7 @@ import re
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from contextlib import suppress
-from typing import Union, List, Tuple, overload, OrderedDict as TOrderedDict, Iterator, Dict
+from typing import Union, List, Tuple, overload, OrderedDict as TOrderedDict, Iterator, Dict, NoReturn
 
 from more_termcolor import convert, core
 
@@ -21,7 +21,7 @@ SHORT_ID_RE = re.compile(r'(?<=0x[\w\d]{8})([\w\d]{4})')  # last 4 digits
 
 class Color(ABC):
     code: str
-    cluster: 'OpenCluster'
+    cluster: 'Cluster'
     
     def __init__(self, code: str):
         self.code = code
@@ -42,6 +42,10 @@ class Color(ABC):
     def softeq(self, other: 'Color') -> bool:
         """Compares code"""
         return self.code == other.code
+    
+    @abstractmethod
+    def entangle(self, other: 'Color') -> NoReturn:
+        ...
 
 
 class ColorOpener(Color):
@@ -70,12 +74,8 @@ class ColorOpener(Color):
             return self.resetcode == other.resetcode
         return True
     
-    def compatwith(self, other: 'ColorOpener') -> bool:
-        """If two colors are compatible, opening them consecutively doesn't cancel out the first"""
-        if self.code in core.FORMATTING_CODES or other.code in core.FORMATTING_CODES:
-            # formatting colors are compatible with all other colors (including formatting)
-            return True
-        return self.resetcode != other.resetcode
+    def entangle(self, other: 'ColorResetter') -> NoReturn:
+        self.resetter = other
 
 
 class ColorResetter(Color):
@@ -84,6 +84,9 @@ class ColorResetter(Color):
         superrepr = super().__repr__()
         shortid = self._shortid()
         return f'{superrepr} | {shortid}'
+    
+    def entangle(self, other: ColorOpener) -> NoReturn:
+        other.resetter = self
 
 
 TColor = Union[ColorOpener, ColorResetter]
@@ -102,7 +105,7 @@ class Cluster(List[Color]):
     """A list of colors which represents the str content beginning with '\x1b[' and ending with 'm' (i.e. 'cluster').
     Holds:
     
-    - `OpenCluster`'s bounding indices;
+    - `Cluster`'s bounding indices;
     - `code2color` dict for containment evaluation in O(1);
     - `openers` dict that holds only ColorOpeners;
     - `rogue_openers` and `rogue_resetters` - colors whose match wasn't found yet
@@ -114,7 +117,7 @@ class Cluster(List[Color]):
     rogue_openers: TOrderedDict[str, ColorOpener]
     rogue_resetters: TOrderedDict[str, ColorResetter]
     
-    def __init__(self, *names_or_codes: Union[str, int], start_idx=None) -> None:
+    def __init__(self, *names_or_codes: Union[str, int], start_idx=None, trymatch=True) -> None:
         super().__init__()
         self.start_idx = start_idx
         self.end_idx = None
@@ -123,7 +126,7 @@ class Cluster(List[Color]):
         self.rogue_openers = OrderedDict()
         self.rogue_resetters = OrderedDict()
         for code in map(convert.to_code, filter(lambda x: x is not None, names_or_codes)):
-            self.append(code)
+            self.append(code, trymatch=trymatch)
     
     def __repr__(self) -> str:
         all_openers = True
@@ -139,7 +142,7 @@ class Cluster(List[Color]):
             description = 'resetters'
         else:
             description = 'mixed colors'
-        return f'OpenCluster ({len(self)} {description}) [{self.start_idx}:{self.end_idx}] | {str(id(self))[-4:]}'
+        return f'Cluster ({len(self)} {description}) [{self.start_idx}:{self.end_idx}] | {str(id(self))[-4:]}'
     
     # @classmethod
     # def from_colors(cls, *colors: Color, trymatch=False) -> 'OpenCluster':
@@ -153,14 +156,14 @@ class Cluster(List[Color]):
     #         cluster.code2color[color.code] = color
     #     return cluster
     
-    def last_rogue_opener(self, by_resetcode: str) -> ColorOpener:
+    def _last_rogue_opener(self, by_resetcode: str) -> ColorOpener:
         for code, opener in reversed(self.rogue_openers.items()):
             assert opener.resetter is None
             if opener.resetcode == by_resetcode:
                 return opener
         return None
     
-    def first_rogue_resetter(self, by_resetcode: str) -> ColorResetter:
+    def _first_rogue_resetter(self, by_resetcode: str) -> ColorResetter:
         for code, resetter in self.rogue_resetters.items():
             if resetter.code == by_resetcode:
                 return resetter
@@ -171,56 +174,67 @@ class Cluster(List[Color]):
         if is_in_cluster:
             opener.cluster = self
             self.openers[opener.code] = opener
-        matching_resetter = self.first_rogue_resetter(opener.resetcode)
+        matching_resetter = self._first_rogue_resetter(opener.resetcode)
         if matching_resetter is None:
             if is_in_cluster:
                 self.rogue_openers[opener.code] = opener
             return None
         
+        # TODO: assert opener.resetter is None or opener.resetter is not matching_resetter
         opener.resetter = matching_resetter
+        # TODO: assert self.rogue_resetters[matching_resetter.code] is None
         del self.rogue_resetters[matching_resetter.code]
         if is_in_cluster:
             with suppress(KeyError):
-                # Can happen when appending a color (or is it a bug?)
+                # Can happen when appending a color that wasn't ever added to self.rogue_openers
                 del self.rogue_openers[opener.code]
         else:
+            # TODO: assert opener.cluster is not self
             del opener.cluster.rogue_openers[opener.code]
         return matching_resetter
     
     def _find_matching_opener(self, resetter: ColorResetter) -> ColorOpener:
         is_in_cluster = self.code2color.get(resetter.code) == resetter
         if is_in_cluster:
+            # TODO: assert opener.cluster is not self
             resetter.cluster = self
-        matching_opener = self.last_rogue_opener(resetter.code)
+        matching_opener = self._last_rogue_opener(resetter.code)
         if matching_opener is None:
             if is_in_cluster:
+                # TODO: assert self.rogue_resetters[resetter.code] is None
                 self.rogue_resetters[resetter.code] = resetter
             return None
         
+        # TODO: assert opener.resetter is None or opener.resetter is not matching_resetter
         matching_opener.resetter = resetter
         del self.rogue_openers[matching_opener.code]
         if is_in_cluster:
             with suppress(KeyError):
-                # Can happen when appending a color (or is it a bug?)
+                # Can happen when appending a color that wasn't ever added to self.rogue_openers
                 del self.rogue_resetters[resetter.code]
         else:
+            # TODO: assert resetter.cluster is not self
             del resetter.cluster.rogue_resetters[resetter.code]
         return matching_opener
     
-    @overload
-    def match(self, color: ColorOpener) -> ColorResetter:
-        ...
-    
-    @overload
-    def match(self, color: ColorResetter) -> ColorOpener:
-        ...
-    
-    def match(self, color):
+    def match(self, color: TColor) -> TColor:
         """- Tries to find an internal matching Opener/Resetter to passed `color` (and set `color.resetter`);
         - Sets `color.cluster` to `self` if indeed `color` belongs to this cluster;
         - Updates `self.openers` and `self.rogue_` dicts as needed
         - Returns `match` if found, else `None`"""
         
+        # is_opener = isinstance(color, ColorOpener)
+        # if is_opener:
+        #     matching_rogue = self._first_rogue_resetter(color.resetcode)
+        # else:
+        #     matching_rogue = self._last_rogue_opener(color.code)
+        # if matching_rogue is None:
+        #     is_in_cluster = self.code2color.get(color.code) == color
+        #     if is_in_cluster:
+        #         rogue_collection = self.rogue_openers if is_opener else self.rogue_resetters
+        #         rogue_collection[color.code] = color
+        #     return None
+        # color.entangle(matching_rogue)
         if isinstance(color, ColorOpener):
             return self._find_matching_resetter(color)
         return self._find_matching_opener(color)
@@ -245,6 +259,18 @@ class Cluster(List[Color]):
             color = colorfactory(code_or_color)
         super().append(color)
         self.code2color[color.code] = color
+        
+        # GREEN
+        # TODO: (conitnue)
+        #  continue merging _find fns into match,
+        #  move as much responsibility as possible into append and outside match (remember match() is called separately from append sometimems)
+        #  more Color methods like entangle()
+        is_opener = isinstance(color, ColorOpener)
+        is_in_cluster = self.code2color.get(color.code) == color
+        if is_in_cluster:
+            color.cluster = self
+            if is_opener:
+                self.openers[color.code] = color
         if trymatch:
             match = self.match(color)
         else:
@@ -302,20 +328,22 @@ class Cluster(List[Color]):
         return f'\x1b[{";".join(unique_opener_resetcodes)}m'
 
 
-class OpenCluster(Cluster):
-    resetter: Cluster
-    
-    def __init__(self, *names_or_codes: Union[str, int], start_idx=None) -> None:
-        super().__init__(*names_or_codes, start_idx=start_idx)
-        self.resetter = Cluster()
+# class OpenCluster(Cluster):
+# resetter: Cluster
 
+# def __init__(self, *names_or_codes: Union[str, int], start_idx=None) -> None:
+#     super().__init__(*names_or_codes, start_idx=start_idx)
+# self.resetter = Cluster()
+# def create_resetter_cluster(self):
+#     self.codes()
 
-class ColorScope(List[OpenCluster]):
-    def __init__(self, text: str):
+class ColorScope(List[Cluster]):
+    def __init__(self, text: str = None):
         super().__init__()
-        clusters = self.clusters_from_text(text)
-        for cluster in clusters:
-            self.append(cluster)
+        if text:
+            clusters = self.clusters_from_text(text)
+            for cluster in clusters:
+                self.append(cluster)
     
     def __bool__(self):
         return any(bool(cluster) for cluster in self)
@@ -324,7 +352,7 @@ class ColorScope(List[OpenCluster]):
         return f'{self.__class__.__qualname__} ({len(self)} clusters) | {str(id(self))[-4:]}'
     
     @staticmethod
-    def clusters_from_text(text: str) -> List[OpenCluster]:
+    def clusters_from_text(text: str) -> List[Cluster]:
         # TODO:
         #  1) test if faster with for loop
         #  2) handle broken clusters ('\x1b1mTEXT', '\x1b[1TEXT', ...)
@@ -336,7 +364,7 @@ class ColorScope(List[OpenCluster]):
                 char = text[i]
                 
                 if char == '\x1b':
-                    open_cluster = OpenCluster(start_idx=i)
+                    open_cluster = Cluster(start_idx=i)
                     j = i + 2  # skip [
                     
                     code_digits = []
@@ -361,27 +389,23 @@ class ColorScope(List[OpenCluster]):
             except IndexError as e:
                 return open_clusters
     
-    def match(self, cluster: OpenCluster):
+    def match(self, cluster: Cluster):
         """Tries to find all matches between all of this scope's OpenClusters."""
-        for opencode, rogue_opener in cluster.rogue_openers.items():
+        for rogue_opener in list(cluster.rogue_openers.values()):
             assert rogue_opener.cluster is cluster
             for other_cluster in self:
                 matching_resetter = other_cluster.match(rogue_opener)
                 if matching_resetter:
                     assert matching_resetter.cluster is other_cluster
-                    # cluster.match(matching_resetter)
-        for resetcode, rogue_resetter in cluster.rogue_resetters.items():
+        for rogue_resetter in list(cluster.rogue_resetters.values()):
             assert rogue_resetter.cluster is cluster
             for other_cluster in self:
                 matching_opener = other_cluster.match(rogue_resetter)
                 if matching_opener:
                     assert matching_opener.resetter is rogue_resetter
                     assert matching_opener.cluster is other_cluster
-                
-                # if matching_opener:
-                #     cluster.match(matching_opener)
     
-    def append(self, cluster: OpenCluster, *, trymatch=True) -> None:
+    def append(self, cluster: Cluster, *, trymatch=True) -> None:
         if not cluster:
             return
         if trymatch:
@@ -389,7 +413,7 @@ class ColorScope(List[OpenCluster]):
         
         super().append(cluster)
     
-    def make_self_transparent_to(self, surrounding_cluster: OpenCluster):
+    def make_self_transparent_to(self, surrounding_scope: 'ColorScope'):
         """Modifies `self` such that:
          
          - The colors of the `surrounding_cluster` will be in effect after this scope's end
@@ -406,17 +430,29 @@ class ColorScope(List[OpenCluster]):
         # TODO:
         #  1) complexity
         #  2) modify all self clusters
+        # text = next(frame for frame in inspect.getouterframes(inspect.currentframe()) if frame.function == 'colored').frame.f_locals['text']
+        # expected = next(frame for frame in inspect.getouterframes(inspect.currentframe()) if frame.function.startswith('test__')).frame.f_locals['expected']
         inside_cluster = self[0]
         inside_1_cluster = self[1]
         if inside_cluster.start_idx == 0:
             # there's no text before inside_cluster → merge color openers
             for inside_opener in list(inside_cluster.openers.values()):
-                surrounding_cluster.append(inside_opener)
                 inside_cluster.remove(inside_opener)
+                if not inside_cluster:
+                    self.remove(inside_cluster)
+                # surrounding_scope.append(inside_opener)
+                surrounding_scope[0].append(inside_opener)
+                assert not (inside_opener in inside_cluster)
+                assert inside_cluster.code2color.get(inside_opener.code) is None
+                assert not (inside_opener.code in inside_cluster.openers)
+                assert not (inside_opener in inside_cluster.openers.values())
+                assert not (inside_opener.code in inside_cluster.rogue_openers)
+                assert not (inside_opener in inside_cluster.rogue_openers.values())
         
         # remove redundant inside colors (already opened from the outside)
         for inside_opener in list(inside_cluster.openers.values()):
-            for outside_opener in surrounding_cluster.openers.values():
+            # for outside_opener in surrounding_scope.openers.values():
+            for outside_opener in surrounding_scope[0].openers.values():
                 # both fg / bg / formatting
                 if inside_opener.code == outside_opener.code:
                     inside_resetter_cluster = inside_opener.resetter.cluster
@@ -428,7 +464,8 @@ class ColorScope(List[OpenCluster]):
         # then either swap between inside reset color and outside open color if fg/bg
         # or just append outside open color if formatting
         for inside_opener in inside_cluster.openers.values():
-            for outside_opener in surrounding_cluster.openers.values():
+            # for outside_opener in surrounding_scope.openers.values():
+            for outside_opener in surrounding_scope[0].openers.values():
                 if inside_opener.resetcode == outside_opener.resetcode:
                     # print(f'\ninside_opener: ', inside_opener,
                     #       '\noutside_opener: ', outside_opener,
@@ -478,23 +515,42 @@ def colored(text: str, *colors: Union[str, int], **kwargs) -> str:
         return text
     if not text:
         return ''
-    outside_cluster = OpenCluster(*colors)
+    outside_opener_cluster = Cluster(*colors)
+    outside_resetter_cluster = Cluster(*map(lambda opener: opener.resetcode, outside_opener_cluster.openers.values()))
+    outside = ColorScope()
+    outside.append(outside_opener_cluster)
+    outside.append(outside_resetter_cluster)
     text = str(text)
     inside = ColorScope(text)
     if not inside:
-        outside_open = outside_cluster.open()
-        outside_reset = outside_cluster.reset()
+        outside_open = outside_opener_cluster.finalize()
+        outside_reset = outside_resetter_cluster.finalize()
         return f'{outside_open}{text}{outside_reset}'
+    # TODO (continue): outside now has 2 clusters, an opener and resetter.
+    #  this is so we don't use outside_cluster.reset() (actually, delete reset() fn)
+    #  and just call next cluster finalize() (i.e. the resetter cluster)
+    #  for merge tests: this will allow transferring inside's first cluster's openers to outside's opener cluster,
+    #  while keeping inside's resetter cluster and outside resetter cluster separate and intact (separate calls).
+    inside.make_self_transparent_to(outside)
     
-    inside.make_self_transparent_to(outside_cluster)
-    rebuilt_chars = [outside_cluster.open(),
-                     text[:inside[0].start_idx],
-                     inside[0].open(),
-                     text[inside[0].end_idx + 1:inside[1].start_idx],
-                     inside[1].finalize(),
-                     text[inside[1].end_idx + 1:],
-                     outside_cluster.reset()
-                     ]
+    rebuilt_chars = [
+        # outside_cluster.open(),  # \x1b[1m
+        outside_opener_cluster.open(),
+        text[:inside[0].start_idx]]  # text before inside's first cluster
+    
+    for i, inside_cluster in enumerate(inside[:-1]):
+        rebuilt_chars.extend([
+            # text[:inside_cluster.start_idx],
+            inside_cluster.open(),  # \x1b[31m
+            text[inside_cluster.end_idx + 1:inside[i + 1].start_idx],  # inside text
+            inside[i + 1].finalize()  # inside first resetter \x1b[39m
+            ])
+    
+    rebuilt_chars.extend([text[inside[-1].end_idx + 1:],  # text after inside's last cluster
+                          # outside_cluster.reset()
+                          outside_resetter_cluster.finalize()
+                          ]
+                         )
     rebuilt_text = ''.join(rebuilt_chars)
     return rebuilt_text
 
