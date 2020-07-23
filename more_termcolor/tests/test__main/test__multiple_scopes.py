@@ -54,3 +54,11 @@ def test__real_world__mm_apt():
     expected = '\x1b[2;1mapt-file\x1b[22;2m searches pkgs containing specific file\x1b[22m'
     
     return actual, expected
+
+
+@print_and_compare
+def test__real_world__loggr():
+    actual = c("\x1b[4mmain_topic\x1b[24m: 'rst' \x1b[2m(str)\x1b[22m, \x1b[4msub_topic\x1b[24m: None \x1b[2m(NoneType)\x1b[22m NORMAL")
+    # knows to remove inside dark
+    expected = "\x1b[2;4mmain_topic\x1b[24m: 'rst' (str), \x1b[4msub_topic\x1b[24m: None (NoneType)\x1b[24m NORMAL"
+    return actual, expected
