@@ -5,12 +5,12 @@ fg: 38:5:<c>m
 bg: 48:5:<c>m
 0-7 std equiv: 30–37
 8-15 std equiv: 90–97
-16-213 is 6x6 cube (216 colors)
+16-213 is 6x6 cube (216 colors); 16 + 36 × r + 6 × g + b (0 ≤ r, g, b ≤ 5)
 232-255 is grayscale (24 steps)
 
 rgb ('true color'):
 fg: 38;2;<r>;<g>;<b>m
-bg: 38;2;<r>;<g>;<b>m
+bg: 48;2;<r>;<g>;<b>m
 """
 
 COLORS = (

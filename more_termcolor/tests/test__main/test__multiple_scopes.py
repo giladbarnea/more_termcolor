@@ -1,3 +1,4 @@
+"""-s --tb=native -k mm_apt"""
 import pickle
 from pathlib import Path
 
@@ -39,9 +40,11 @@ def test__real_world__git():
     return actual, expected
 
 
-@pytest.mark.skip("unskip when merge tests pass")
+# @pytest.mark.skip("unskip when merge tests pass")
 @print_and_compare
 def test__real_world__guy():
+    # test fails because actual is: (oct 20 2020)
+    # '\x1b[1mhello \x1b[31mthere\x1b[39m \x1b[3m\x1b[3meveryone\x1b[23m \x1b[46m\x1b[46mhi\x1b[49m\x1b[22m'
     actual = colors.bold(f'hello {colors.red("there")} {colors.italic("everyone")} {colors.on_cyan("hi")}')
     expected = '\x1b[1mhello \x1b[31mthere\x1b[39m \x1b[3meveryone\x1b[23m \x1b[46mhi\x1b[49;22m'
     return actual, expected
@@ -49,9 +52,23 @@ def test__real_world__guy():
 
 @print_and_compare
 def test__real_world__mm_apt():
+    # test fails because actual is: (oct 20 2020)
+    # '\x1b[2;1m\x1b[1mapt-file searches pkgs containing specific file\x1b[22m'
     apt_file = b("apt-file")
     actual = f"""{c(f'{apt_file} searches pkgs containing specific file')}"""
     expected = '\x1b[2;1mapt-file\x1b[22;2m searches pkgs containing specific file\x1b[22m'
+    
+    return actual, expected
+
+
+@print_and_compare
+def test__real_world__mm_regex():
+    # test fails because actual is: (oct 20 2020)
+    # '\x1b[3;2m\x1b[2mhello-notes\x1b[23m'
+    dark = c("hello-notes")
+    actual = rf'''{i(dark)}'''
+    
+    expected = '\x1b[3;2mhello-notes\x1b[22;23m'
     
     return actual, expected
 

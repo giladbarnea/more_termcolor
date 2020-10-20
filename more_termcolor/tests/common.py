@@ -114,7 +114,7 @@ def actualprint(string):
 
 
 def expectedprint(string):
-    _print('expected', string)
+    _print('\x1b[0m\x1b[21;37mexpected\x1b[0m', string)
 
 
 @memoize

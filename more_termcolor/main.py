@@ -579,6 +579,9 @@ def cprint(text, color=None, on_color=None, attrs=(), *colors, **kwargs):
         #     on_color = f'on {actual_color}'
         else:
             colors += (on_color,)
+    
+    # if `attrs` is a collection, *spread it.
+    # otherwise, pass it as-is.
     if isinstance(attrs, (str, int)):
         print((colored(text, color, on_color, attrs, *colors)), **kwargs)
     else:
