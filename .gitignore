@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 pypitoken
-.idea/more_termcolor.iml
+.idea
 
 
 original_termcolor
